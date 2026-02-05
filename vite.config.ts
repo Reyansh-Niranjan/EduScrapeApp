@@ -1,0 +1,78 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "path";
+
+// https://vite.dev/config/
+export default defineConfig(({ mode }) => ({
+  build: {
+    target: 'es2015',
+    minify: 'esbuild',
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'convex-vendor': ['convex'],
+          'pdf-vendor': ['react-pdf', 'pdfjs-dist'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+  },
+  esbuild: {
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
+  },
+  plugins: [
+    react(),
+    // The code below enables dev tools like taking screenshots of your site
+    // while it is being developed on chef.convex.dev.
+    // Feel free to remove this code if you're no longer developing your app with Chef.
+    mode === "development"
+      ? {
+        name: "inject-chef-dev",
+        transform(code: string, id: string) {
+          if (id.includes("main.tsx")) {
+            return {
+              code: `${code}
+
+/* Added by Vite plugin inject-chef-dev */
+window.addEventListener('message', async (message) => {
+  if (message.source !== window.parent) return;
+  if (message.data.type !== 'chefPreviewRequest') return;
+
+  const worker = await import('https://chef.convex.dev/scripts/worker.bundled.mjs');
+  await worker.respondToMessage(message);
+});
+            `,
+              map: null,
+            };
+          }
+          return null;
+        },
+      }
+      : null,
+    // End of code for taking screenshots on chef.convex.dev.
+  ].filter(Boolean),
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+      // Workaround: some installs of framer-motion can be missing the ESM entry
+      // file (dist/es/index.mjs) even though package.json points to it.
+      // Aliasing to the CJS entry keeps Vite builds working.
+      "framer-motion": path.resolve(__dirname, "./node_modules/framer-motion/dist/cjs/index.js"),
+    },
+  },
+  server: {
+    proxy: {
+      '/api/library': {
+        target: 'https://eduscrape-host.web.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/library/, ''),
+        secure: true,
+      },
+    },
+  },
+  optimizeDeps: {
+    exclude: ['pdfjs-dist'],
+  },
+}));
