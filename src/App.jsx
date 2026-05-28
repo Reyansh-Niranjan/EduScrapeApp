@@ -127,15 +127,6 @@ export default function App() {
       <div className="ambient-glow-2"></div>
       <canvas ref={canvasRef} className="starfield"></canvas>
 
-      <nav className="navbar">
-        <div className="nav-brand">GEMINI</div>
-        <div className="nav-links">
-          <a href="#manifesto">MANIFESTO</a>
-          <a href="#core">CORE</a>
-          <a href="#network">NETWORK</a>
-        </div>
-        <button className="nav-btn">RESERVE ACCESS</button>
-      </nav>
 
       <main className="main-content">
         <div className="glass-card">
@@ -193,16 +184,6 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="footer">
-        <div className="footer-copyright">
-          © 2026 GEMINI SYSTEMS. PROTOCOL_v0.1
-        </div>
-        <div className="footer-links">
-          <a href="#comms">ENCRYPTED_COMMS</a>
-          <a href="#docs">NEURAL_DOCS</a>
-          <a href="#status">SYSTEM_STATUS</a>
-        </div>
-      </footer>
     </div>
   );
 }
