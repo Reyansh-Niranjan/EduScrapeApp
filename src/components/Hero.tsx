@@ -74,24 +74,6 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.8 }}
           >
-            <motion.button
-              onClick={() => document.getElementById("projects")?.scrollIntoView({ behavior: "smooth" })}
-              className="btn-primary px-8 py-4 text-lg"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              Explore Features
-            </motion.button>
-            <motion.button
-              onClick={() => document.getElementById("creator")?.scrollIntoView({ behavior: "smooth" })}
-              className="btn-outline px-8 py-4 text-lg"
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              See Outcomes
-            </motion.button>
           </motion.div>
 
           <motion.div
