@@ -93,6 +93,28 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <motion.a
+                  href="/#privacy"
+                  className="transition-colors"
+                  style={{ color: "var(--theme-text-secondary)" }}
+                  whileHover={{ color: "#14B8A6", x: 5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  Privacy Policy
+                </motion.a>
+              </li>
+              <li>
+                <motion.a
+                  href="/#terms"
+                  className="transition-colors"
+                  style={{ color: "var(--theme-text-secondary)" }}
+                  whileHover={{ color: "#14B8A6", x: 5 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  Terms of Service
+                </motion.a>
+              </li>
+              <li>
+                <motion.a
                   href="https://github.com/Reyansh-Niranjan/eduscrapeappweb"
                   target="_blank"
                   rel="noopener noreferrer"

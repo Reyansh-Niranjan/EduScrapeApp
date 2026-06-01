@@ -48,7 +48,8 @@
   --theme-footer-bg: #FFFFFF;
 }
 
-/* Dark Mode Theme */
+/* Dark Mode Theme (Tailwind dark class + data attribute) */
+.dark,
 [data-theme="dark"] {
   --theme-bg: #0F172A;
   --theme-bg-secondary: #1E293B;
@@ -225,6 +226,29 @@ img {
 .card:hover {
   box-shadow: 0 4px 12px var(--theme-card-shadow);
   transform: translateY(-2px);
+}
+
+/* Auth form focus animation (matches Copy) */
+.auth-input-field {
+  @apply w-full px-4 py-3 rounded-lg border outline-none transition-all shadow-sm hover:shadow;
+  background: var(--theme-input-bg);
+  border-color: var(--theme-border);
+  color: var(--theme-text);
+}
+
+.auth-input-field::placeholder {
+  color: var(--theme-text-secondary);
+}
+
+.auth-input-field:focus {
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .auth-input-field:focus,
+.dark .auth-input-field:focus {
+  border-color: var(--color-teal);
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.25);
 }
 
 /* Modern button styles */
