@@ -6,6 +6,7 @@ import Header from "./components/Header";
 import Hero from "./components/Hero";
 import Projects from "./components/Projects";
 import Creator from "./components/Creator";
+import { supabase } from "./lib/supabaseClient";
 
 const Login = lazy(() => import("./components/Login"));
 const Dashboard = lazy(() => import("./components/Dashboard"));
@@ -54,6 +55,15 @@ export default function App() {
     document.documentElement.classList.toggle("dark", shouldBeDark);
 
     const handleRouteChange = () => {
+      if (window.location.hash.includes("access_token")) {
+        const baseHash = window.location.hash.split("#")[1] || "";
+        const target = baseHash ? `#${baseHash}` : "#";
+        try {
+          window.history.replaceState({}, "", `${window.location.pathname}${target}`);
+        } catch {
+          // noop
+        }
+      }
       setCurrentView(getViewFromURL());
     };
 
@@ -65,6 +75,42 @@ export default function App() {
       window.removeEventListener("popstate", handleRouteChange);
     };
   }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const goToDashboard = () => {
+      try {
+        window.history.pushState({}, "", "/");
+      } catch {
+        // noop
+      }
+      window.location.hash = "#dashboard";
+      setCurrentView("dashboard");
+    };
+
+    const checkSession = async () => {
+      if (currentView !== "home" && currentView !== "login") return;
+      const { data } = await supabase.auth.getSession();
+      if (!isMounted) return;
+      if (data.session) {
+        goToDashboard();
+      }
+    };
+
+    checkSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") return;
+      if (session && (currentView === "home" || currentView === "login")) {
+        goToDashboard();
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [currentView]);
 
   useEffect(() => {
     if (currentView === "privacy" || currentView === "terms") {
