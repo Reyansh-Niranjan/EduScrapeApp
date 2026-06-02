@@ -28,10 +28,10 @@ type View = "home" | "login" | "dashboard" | "privacy" | "terms";
 const getViewFromURL = (): View => {
   const { pathname, hash } = window.location;
 
-  if (hash === "#login") return "login";
-  if (hash === "#dashboard") return "dashboard";
-  if (hash === "#privacy") return "privacy";
-  if (hash === "#terms") return "terms";
+  if (hash.startsWith("#login")) return "login";
+  if (hash.startsWith("#dashboard")) return "dashboard";
+  if (hash.startsWith("#privacy")) return "privacy";
+  if (hash.startsWith("#terms")) return "terms";
 
   if (pathname === "/login") return "login";
   if (pathname === "/dashboard") return "dashboard";

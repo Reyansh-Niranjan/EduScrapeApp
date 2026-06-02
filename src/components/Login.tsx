@@ -265,7 +265,8 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
                   if (isSubmitting) return;
                   setErrorMessage(null);
                   setIsSubmitting(true);
-                  const redirectTo = `${window.location.origin}/#dashboard`;
+                  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+                  const redirectTo = `${siteUrl}/#dashboard`;
                   const { error } = await supabase.auth.signInWithOAuth({
                     provider: "google",
                     options: { redirectTo },
