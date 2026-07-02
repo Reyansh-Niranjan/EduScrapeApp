@@ -1,18 +1,41 @@
 import { useEffect, useState } from "react";
 
+const getTheme = () => {
+  const savedTheme = localStorage.getItem("theme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return savedTheme === "dark" || (!savedTheme && prefersDark) ? "dark" : "light";
+};
+
+const applyTheme = (theme: "light" | "dark") => {
+  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.classList.toggle("dark", theme === "dark");
+  document.body.setAttribute("data-theme", theme);
+  document.body.classList.toggle("dark", theme === "dark");
+};
+
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(false);
+  const [isDark, setIsDark] = useState(() => getTheme() === "dark");
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const syncTheme = () => {
+      const shouldBeDark = getTheme() === "dark";
+      setIsDark(shouldBeDark);
+      applyTheme(shouldBeDark ? "dark" : "light");
+    };
 
-    const shouldBeDark = savedTheme === "dark" || (!savedTheme && prefersDark);
-    setIsDark(shouldBeDark);
-    document.documentElement.setAttribute("data-theme", shouldBeDark ? "dark" : "light");
-    document.documentElement.classList.toggle("dark", shouldBeDark);
-    document.body.setAttribute("data-theme", shouldBeDark ? "dark" : "light");
-    document.body.classList.toggle("dark", shouldBeDark);
+    syncTheme();
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === "theme") {
+        syncTheme();
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+    };
   }, []);
 
   const toggleTheme = () => {
@@ -20,10 +43,7 @@ export default function ThemeToggle() {
     setIsDark(newTheme);
 
     const themeValue = newTheme ? "dark" : "light";
-    document.documentElement.setAttribute("data-theme", themeValue);
-    document.documentElement.classList.toggle("dark", newTheme);
-    document.body.setAttribute("data-theme", themeValue);
-    document.body.classList.toggle("dark", newTheme);
+    applyTheme(themeValue);
     localStorage.setItem("theme", themeValue);
   };
 

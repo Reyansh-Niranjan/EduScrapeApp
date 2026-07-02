@@ -144,7 +144,7 @@ function Card({
 }) {
   return (
     <motion.article
-      className="flex flex-col justify-between rounded-2xl border border-[#1F2A3D] bg-[rgba(16,28,44,0.78)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md transition-transform duration-300 hover:-translate-y-1"
+      className="flex flex-col justify-between rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md transition-transform duration-300 hover:-translate-y-1"
       whileHover={{ y: -2 }}
       transition={{ duration: 0.2 }}
     >
@@ -177,7 +177,7 @@ function FileCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-[#1F2A3D] bg-[rgba(7,18,31,0.72)] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)]">
+    <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold text-[var(--theme-text)]">{title}</p>
@@ -204,7 +204,7 @@ function FileCard({
 
 function EmptyState({ title, message }: { title: string; message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#24344b] bg-[rgba(7,18,31,0.48)] p-8 text-center">
+    <div className="rounded-2xl border border-dashed border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-8 text-center">
       <p className="text-lg font-semibold text-[var(--theme-text)]">{title}</p>
       <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--theme-text-secondary)]">{message}</p>
     </div>
@@ -236,11 +236,11 @@ function DashboardOverview({
     >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
         <motion.header
-          className="relative overflow-hidden rounded-2xl border border-[#1F2A3D] bg-[rgba(16,28,44,0.78)] p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md"
+          className="relative overflow-hidden rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md"
           whileHover={{ y: -2 }}
           transition={{ duration: 0.2 }}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.18),transparent_42%),radial-gradient(circle_at_left,rgba(139,92,246,0.18),transparent_38%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.14),transparent_42%),radial-gradient(circle_at_left,rgba(139,92,246,0.14),transparent_38%)]" />
           <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold text-[var(--theme-text)] md:text-4xl">Dashboard</h1>
@@ -249,16 +249,16 @@ function DashboardOverview({
               </p>
             </div>
 
-            <div className="flex items-center gap-4 rounded-2xl border border-[#24344b] bg-[#0b1726]/70 px-4 py-3 backdrop-blur-sm">
+            <div className="flex items-center gap-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] px-4 py-3 backdrop-blur-sm">
               <div className="relative flex-shrink-0">
                 {profile.avatarUrl ? (
                   <img
                     src={profile.avatarUrl}
                     alt={profile.name}
-                    className="h-12 w-12 rounded-full border border-[#24344b] object-cover"
+                    className="h-12 w-12 rounded-full border border-[var(--theme-border)] object-cover"
                   />
                 ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[#24344b] bg-[linear-gradient(135deg,rgba(20,184,166,0.2),rgba(139,92,246,0.2))] text-teal-200">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--theme-border)] bg-[linear-gradient(135deg,rgba(20,184,166,0.14),rgba(139,92,246,0.14))] text-teal-300">
                     <UserCircle2 className="h-7 w-7" />
                   </div>
                 )}
@@ -293,7 +293,7 @@ function DashboardOverview({
                 const height = Math.max(16, count * 18 + 16);
                 return (
                   <div key={weekLabels[index]} className="flex flex-1 flex-col items-center gap-2">
-                    <div className="flex h-28 w-full items-end rounded-xl bg-[#122131] px-2 py-2">
+                    <div className="flex h-28 w-full items-end rounded-xl bg-[var(--theme-bg-secondary)] px-2 py-2">
                       <div
                         className="w-full rounded-lg bg-gradient-to-t from-teal-500 to-cyan-400 transition-all"
                         style={{ height: `${height}px` }}
@@ -333,7 +333,7 @@ function DashboardOverview({
 
         <div className="grid gap-6 xl:grid-cols-12">
           <motion.section
-            className="xl:col-span-8 rounded-2xl border border-[#1F2A3D] bg-[rgba(16,28,44,0.78)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md"
+            className="xl:col-span-8 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.16 }}
@@ -355,7 +355,7 @@ function DashboardOverview({
 
             <div className="p-6">
               {latestItem ? (
-                <div className="rounded-2xl border border-[#24344b] bg-[#0b1726]/80 p-6">
+                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-6">
                   <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-xs uppercase tracking-[0.22em] text-teal-300">Last Chapter</p>
@@ -368,7 +368,7 @@ function DashboardOverview({
                     <button
                       type="button"
                       onClick={() => onTabChange("books")}
-                      className="inline-flex items-center gap-2 self-start rounded-xl border border-[#24344b] bg-[#122131] px-4 py-2 text-sm font-semibold text-[var(--theme-text)] transition-colors hover:border-teal-400/50 hover:text-teal-200"
+                      className="inline-flex items-center gap-2 self-start rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] px-4 py-2 text-sm font-semibold text-[var(--theme-text)] transition-colors hover:border-teal-400/50 hover:text-teal-200"
                     >
                       Open Your Books
                       <ChevronRight className="h-4 w-4" />
@@ -390,29 +390,29 @@ function DashboardOverview({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <div className="rounded-2xl border border-[#1F2A3D] bg-[rgba(16,28,44,0.78)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
+            <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Library summary</h2>
                 <BookOpen className="h-5 w-5 text-teal-300" />
               </div>
               <div className="mt-5 grid grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-[#24344b] bg-[#0b1726]/70 p-4">
+                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">NCERT files</p>
                   <p className="mt-2 text-2xl font-bold text-[var(--theme-text)]">{libraryBooks.length}</p>
                 </div>
-                <div className="rounded-2xl border border-[#24344b] bg-[#0b1726]/70 p-4">
+                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
                   <p className="text-xs uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Private files</p>
                   <p className="mt-2 text-2xl font-bold text-[var(--theme-text)]">{userBooks.length}</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#1F2A3D] bg-[rgba(16,28,44,0.78)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
+            <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Class</h2>
                 <CalendarDays className="h-5 w-5 text-sky-300" />
               </div>
-              <div className="mt-4 rounded-2xl border border-[#24344b] bg-[#0b1726]/70 p-4">
+              <div className="mt-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
                 <p className="text-3xl font-bold text-[var(--theme-text)]">{classLabel}</p>
                 <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">Pulled from your account metadata.</p>
               </div>
@@ -479,7 +479,7 @@ function BooksSection({ items }: { items: StorageItem[] }) {
         {items.length ? (
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {items.map((item) => (
-              <div key={item.fullPath} className="rounded-2xl border border-[#1F2A3D] bg-[rgba(16,28,44,0.78)] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+              <div key={item.fullPath} className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-[var(--theme-text)]">{formatTitle(item.name)}</p>
@@ -618,8 +618,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#051424] text-[var(--theme-text)]">
-      <aside className="fixed left-0 top-0 bottom-0 z-50 flex w-64 flex-col border-r border-[#1F2A3D] bg-[#051424] px-6 py-8">
+    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)]">
+      <aside className="fixed left-0 top-0 bottom-0 z-50 flex w-64 flex-col border-r border-[var(--theme-border)] bg-[var(--theme-bg)] px-6 py-8">
         <div className="mb-10 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#571bc1] to-teal-400 shadow-lg shadow-purple-500/10">
             <BookOpen className="h-5 w-5 text-white" />
@@ -639,7 +639,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                 onClick={() => setActiveTab(item.id)}
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors duration-300 ${
                   isActive
-                    ? "bg-[#571bc1] text-white shadow-lg shadow-[#571bc1]/35"
+                    ? "bg-[var(--color-purple)] text-white shadow-lg shadow-[#571bc1]/35"
                     : "text-[var(--theme-text-secondary)] hover:bg-[#122131] hover:text-[var(--theme-text)]"
                 }`}
               >
@@ -650,7 +650,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           })}
         </nav>
 
-        <div className="mt-auto space-y-6 border-t border-[#1F2A3D] pt-4">
+        <div className="mt-auto space-y-6 border-t border-[var(--theme-border)] pt-4">
           <div className="flex items-center justify-between px-2">
             <ThemeToggle />
             <button type="button" onClick={handleLogout} className="p-2 text-[var(--theme-text-secondary)] transition-colors hover:text-red-400" title="Logout">
@@ -678,7 +678,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       </aside>
 
       <div className="flex min-h-screen flex-1 flex-col pl-64">
-        <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-[#1F2A3D]/40 bg-[#051424]/80 px-8 backdrop-blur-xl">
+        <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-[var(--theme-border)]/40 bg-[var(--theme-bg)]/80 px-8 backdrop-blur-xl">
           <h2 className="text-lg font-bold capitalize text-[var(--theme-text)]">{activeTab}</h2>
           <div className="text-sm text-[var(--theme-text-secondary)]">Everything is free</div>
         </header>
