@@ -1,50 +1,44 @@
-import { Toaster } from "sonner";
+import { Suspense, lazy, useEffect, useState } from "react";
+import About from "./components/About";
+import ErrorBoundary from "./components/ErrorBoundary";
+import Footer from "./components/Footer";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-import About from "./components/About";
 import Projects from "./components/Projects";
-import Team from "./components/Team";
-import Updates from "./components/Updates";
-import Footer from "./components/Footer";
-import AIAssistant from "./components/AIAssistant";
-import { ErrorBoundary } from "./components/ErrorBoundary";
-import { lazy, Suspense, useEffect, useState } from "react";
+import Creator from "./components/Creator";
+import { supabase } from "./lib/supabaseClient";
 
-const Admin = lazy(() => import("./components/Admin"));
-const Login = lazy(() => import("./components/Login.tsx"));
-const Dashboard = lazy(() => import("./components/Dashboard.tsx"));
+const Login = lazy(() => import("./components/Login"));
+const Dashboard = lazy(() => import("./components/Dashboard"));
+const PrivacyPolicy = lazy(() => import("./components/PrivacyPolicy"));
+const TermsOfService = lazy(() => import("./components/TermsOfService"));
 
 function FullPageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--theme-bg)' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--theme-bg)" }}>
       <div className="flex flex-col items-center gap-4">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
-        <p style={{ color: 'var(--theme-text-secondary)' }}>Loading…</p>
+        <p style={{ color: "var(--theme-text-secondary)" }}>Loading…</p>
       </div>
     </div>
   );
 }
 
-type View = "home" | "admin" | "login" | "dashboard";
+type View = "home" | "login" | "dashboard" | "privacy" | "terms";
 
 const getViewFromURL = (): View => {
-  const { pathname, hash, search } = window.location;
+  const { pathname, hash } = window.location;
 
-  // Check hash first (works reliably with static hosts + rewrites)
-  if (hash === "#admin") return "admin";
-  if (hash === "#login") return "login";
-  if (hash === "#dashboard") return "dashboard";
+  if (hash.startsWith("#login")) return "login";
+  if (hash.startsWith("#dashboard")) return "dashboard";
+  if (hash.startsWith("#privacy")) return "privacy";
+  if (hash.startsWith("#terms")) return "terms";
 
-  // Then check pathname (for direct links like /dashboard)
-  if (pathname === "/admin") return "admin";
   if (pathname === "/login") return "login";
   if (pathname === "/dashboard") return "dashboard";
-  
-  // Check search params
-  const params = new URLSearchParams(search);
-  if (params.get("admin") === "true") return "admin";
-  if (params.get("dashboard") === "true") return "dashboard";
-  
+  if (pathname === "/privacy") return "privacy";
+  if (pathname === "/terms") return "terms";
+
   return "home";
 };
 
@@ -54,13 +48,22 @@ export default function App() {
   useEffect(() => {
     document.documentElement.style.scrollBehavior = "smooth";
 
-    // Initialize theme on app load
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
-    document.documentElement.setAttribute('data-theme', shouldBeDark ? 'dark' : 'light');
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const shouldBeDark = savedTheme === "dark" || (!savedTheme && prefersDark);
+    document.documentElement.setAttribute("data-theme", shouldBeDark ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", shouldBeDark);
 
     const handleRouteChange = () => {
+      if (window.location.hash.includes("access_token")) {
+        const baseHash = window.location.hash.split("#")[1] || "";
+        const target = baseHash ? `#${baseHash}` : "#";
+        try {
+          window.history.replaceState({}, "", `${window.location.pathname}${target}`);
+        } catch {
+          // noop
+        }
+      }
       setCurrentView(getViewFromURL());
     };
 
@@ -73,14 +76,52 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+    const goToDashboard = () => {
+      try {
+        window.history.pushState({}, "", "/");
+      } catch {
+        // noop
+      }
+      window.location.hash = "#dashboard";
+      setCurrentView("dashboard");
+    };
+
+    const checkSession = async () => {
+      if (currentView !== "home" && currentView !== "login") return;
+      const { data } = await supabase.auth.getSession();
+      if (!isMounted) return;
+      if (data.session) {
+        goToDashboard();
+      }
+    };
+
+    checkSession();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") return;
+      if (session && (currentView === "home" || currentView === "login")) {
+        goToDashboard();
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, [currentView]);
+
+  useEffect(() => {
+    if (currentView === "privacy" || currentView === "terms") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentView]);
+
   return (
     <ErrorBoundary>
-      <div className="min-h-screen" style={{ background: 'var(--theme-bg)' }}>
-        {currentView === "admin" ? (
-          <Suspense fallback={<FullPageLoader />}>
-            <Admin />
-          </Suspense>
-        ) : currentView === "login" ? (
+      <div className="min-h-screen" style={{ background: "var(--theme-bg)" }}>
+        {currentView === "login" ? (
           <Suspense fallback={<FullPageLoader />}>
             <Login
               onCancel={() => {
@@ -117,6 +158,16 @@ export default function App() {
               }}
             />
           </Suspense>
+        ) : currentView === "privacy" || currentView === "terms" ? (
+          <>
+            <Header />
+            <main className="relative">
+              <Suspense fallback={<FullPageLoader />}>
+                {currentView === "privacy" ? <PrivacyPolicy /> : <TermsOfService />}
+              </Suspense>
+            </main>
+            <Footer />
+          </>
         ) : (
           <>
             <Header />
@@ -124,15 +175,11 @@ export default function App() {
               <Hero />
               <About />
               <Projects />
-              <Team />
-              <Updates />
+              <Creator />
             </main>
             <Footer />
-            <AIAssistant />
           </>
         )}
-
-        <Toaster theme="system" richColors />
       </div>
     </ErrorBoundary>
   );

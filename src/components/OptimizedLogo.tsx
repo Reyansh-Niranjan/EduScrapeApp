@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface OptimizedLogoProps {
   src: string;
@@ -9,20 +9,19 @@ interface OptimizedLogoProps {
   height?: number;
 }
 
-export default function OptimizedLogo({ 
-  src, 
-  alt, 
+export default function OptimizedLogo({
+  src,
+  alt,
   className = "w-full h-full object-cover",
   fallbackText = "CC",
   width = 128,
-  height = 128
+  height = 128,
 }: OptimizedLogoProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [imageSrc, setImageSrc] = useState(src);
+  const imageSrc = src;
 
   useEffect(() => {
-    // Preload the image
     const img = new Image();
     img.onload = () => setIsLoaded(true);
     img.onerror = () => setHasError(true);
@@ -49,8 +48,8 @@ export default function OptimizedLogo({
       decoding="async"
       style={{
         opacity: isLoaded ? 1 : 0.7,
-        transition: 'opacity 0.3s ease-in-out',
-        background: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)'
+        transition: "opacity 0.3s ease-in-out",
+        background: "linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)",
       }}
       onLoad={() => setIsLoaded(true)}
       onError={() => setHasError(true)}

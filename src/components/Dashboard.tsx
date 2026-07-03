@@ -1,694 +1,701 @@
-import { Suspense, lazy, useMemo, useState, memo } from "react";
-import AIAssistant from "./AIAssistant";
-import ProfileCompletionBanner from "./ProfileCompletionBanner";
-import ThemeToggle from "./ThemeToggle";
-import { ErrorBoundary } from "./ErrorBoundary";
-import {
-  BookOpen,
-  LayoutDashboard,
-  UserCircle,
-  Trophy,
-  Zap,
-  Users,
-  Shield,
-  BarChart3,
-  FolderKanban,
-  LogOut,
-  Edit,
-  X,
-  User,
-  Mail,
-  GraduationCap,
-  FileText,
-  BookPlus,
-  CalendarClock,
-} from "lucide-react";
-import { useConvexAuth, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { toast } from "sonner";
+import {
+  BarChart3,
+  BookMarked,
+  BookOpen,
+  CalendarDays,
+  ChevronRight,
+  FileText,
+  Flame,
+  LayoutDashboard,
+  LogOut,
+  RefreshCw,
+  UserCircle2,
+} from "lucide-react";
+import { supabase } from "../lib/supabaseClient";
+import ThemeToggle from "./ThemeToggle";
 
-const Library = lazy(() => import("./Library"));
-const ProfileEdit = lazy(() => import("./ProfileEdit"));
-const Notes = lazy(() => import("./Notes"));
-const YourBooks = lazy(() => import("./YourBooks"));
-const DailyTimeTable = lazy(() => import("./DailyTimeTable"));
+interface DashboardProps {
+  onLogout?: () => void;
+}
+
+type DashboardTab = "overview" | "library" | "notes" | "books";
+
+interface UserProfile {
+  name: string;
+  email: string;
+  classLabel: string;
+  avatarUrl: string | null;
+}
+
+interface StorageItem {
+  name: string;
+  fullPath: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+  size: number | null;
+  mimeType: string | null;
+}
+
+const sidebarNav: { id: DashboardTab; label: string; icon: typeof LayoutDashboard }[] = [
+  { id: "overview", label: "Dashboard", icon: LayoutDashboard },
+  { id: "library", label: "Library", icon: BookOpen },
+  { id: "notes", label: "Notes", icon: FileText },
+  { id: "books", label: "Your Books", icon: BookMarked },
+];
+
+const weekLabels = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"];
 
 function SectionLoader({ label }: { label: string }) {
   return (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex min-h-[400px] items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto" />
-        <p className="mt-4 text-[var(--theme-text-secondary)]">Loading {label}…</p>
+        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-teal-400" />
+        <p className="mt-4 text-sm text-[var(--theme-text-secondary)]">Loading {label}...</p>
       </div>
     </div>
   );
 }
 
-interface DashboardProps {
-  onLogout: () => void;
+function formatTitle(name: string) {
+  return name.replace(/\.[^.]+$/, "").replace(/[._-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
-// Memoized Overview component to prevent unnecessary re-renders
-const DashboardOverview = memo(
-  ({
-    userName,
-    userRole,
-    grade,
-    userProgress,
-  }: {
-    userName?: string;
-    userRole?: string;
-    grade?: string;
-    userProgress?: {
-      totalXP: number;
-      booksCompleted: number;
-      chaptersCompleted: number;
-      quizzesPassed: number;
-      currentStreak: number;
-      longestStreak: number;
-      lastActivity: number;
-      completionPercentage: number;
-    };
-  }) => {
-    const role = (userRole || "student").toLowerCase();
-    const isAdmin = role.includes("admin");
-    const isTeacher = role.includes("teacher");
-    const isStudent = !isAdmin && !isTeacher;
+function formatBytes(size: number | null) {
+  if (size === null) return "Unknown size";
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
 
-    const chaptersPerMonth = useQuery(
-      api.progress.getChaptersPerMonth,
-      isStudent ? { months: 6 } : "skip"
-    );
+function toDate(value: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
 
-    const chart = useMemo(() => {
-      const pts = chaptersPerMonth?.points ?? [];
-      if (pts.length === 0) return null;
+function toDateKey(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
 
-      const values = pts.map((p) => p.count);
-      const max = Math.max(1, ...values);
+function getWeekCounts(items: StorageItem[]) {
+  const counts = [0, 0, 0, 0, 0];
+  const now = new Date();
 
-      const width = 100;
-      const height = 44;
-      const padX = 4;
-      const padY = 6;
-      const innerW = width - padX * 2;
-      const innerH = height - padY * 2;
-
-      const points = pts.map((p, i) => {
-        const x = padX + (innerW * (pts.length === 1 ? 0 : i / (pts.length - 1)));
-        const y = padY + innerH * (1 - p.count / max);
-        return { x, y, count: p.count, month: p.month };
-      });
-
-      const polyline = points.map((p) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-      const latest = points[points.length - 1]?.count ?? 0;
-
-      const monthLabel = (ym: string) => {
-        const [y, m] = ym.split("-");
-        const dt = new Date(Number(y), Math.max(0, Number(m) - 1), 1);
-        return dt.toLocaleString(undefined, { month: "short" });
-      };
-
-      return {
-        polyline,
-        dots: points,
-        latest,
-        labels: pts.map((p) => monthLabel(p.month)),
-      };
-    }, [chaptersPerMonth]);
-
-
-    return (
-      <motion.div
-        className="px-6 py-12"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-          <motion.header
-            className="card flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-            whileHover={{ y: -2 }}
-            transition={{ duration: 0.2 }}
-          >
-            <div>
-              <motion.h1
-                className="text-3xl font-bold text-[var(--theme-text)]"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                {isAdmin
-                  ? "Admin Dashboard"
-                  : isTeacher
-                    ? "Teacher Dashboard"
-                    : "Student Dashboard"}
-              </motion.h1>
-              <motion.p
-                className="mt-2 text-sm text-[var(--theme-text-secondary)]"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                {isAdmin
-                  ? "Monitor the platform, manage users, and review analytics."
-                  : isTeacher
-                    ? "Manage resources, track class insights, and collaborate with educators."
-                    : "Track progress, earn achievements, and access resources."}
-              </motion.p>
-            </div>
-            <motion.div
-              className="flex items-center gap-2"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              <span className="text-sm font-medium text-[var(--theme-text-secondary)]">
-                {userName ? `${userName} • ` : ""}
-                {isAdmin ? "Admin" : isTeacher ? "Teacher" : `Grade ${grade || "—"}`}
-              </span>
-            </motion.div>
-          </motion.header>
-
-          {/* Role-Based Highlights */}
-          <motion.section
-            className="grid gap-6 lg:grid-cols-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            {isStudent && (
-              <motion.div
-                className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <motion.div
-                  className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3"
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <BarChart3 className="w-6 h-6 text-white" />
-                </motion.div>
-                <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Chapters per month</h3>
-                {chart ? (
-                  <div className="w-full">
-                    <svg viewBox="0 0 100 44" className="w-full h-16">
-                      <polyline
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        className="text-purple-500"
-                        points={chart.polyline}
-                      />
-                      {chart.dots.map((d, idx) => (
-                        <circle
-                          key={idx}
-                          cx={d.x}
-                          cy={d.y}
-                          r={1.8}
-                          className="fill-purple-500"
-                        />
-                      ))}
-                    </svg>
-                    <div className="flex items-center justify-between text-xs text-[var(--theme-text-secondary)]">
-                      <span>{chart.labels[0]}</span>
-                      <span>{chart.labels[Math.floor(chart.labels.length / 2)]}</span>
-                      <span>{chart.labels[chart.labels.length - 1]}</span>
-                    </div>
-                    <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">
-                      This month: <span className="font-medium text-[var(--theme-text)]">{chart.latest}</span>
-                    </p>
-                  </div>
-                ) : (
-                  <p className="text-xs text-[var(--theme-text-secondary)]">
-                    No monthly data yet.
-                  </p>
-                )}
-              </motion.div>
-            )}
-
-            {isStudent && (
-              <motion.div
-                className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <motion.div
-                  className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center mx-auto mb-3"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <Zap className="w-6 h-6 text-white" />
-                </motion.div>
-                <h3 className="font-semibold mb-2 text-[var(--theme-text)]">XP Points</h3>
-                <motion.div
-                  className="text-2xl font-bold text-teal-500"
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 1, type: "spring", stiffness: 200 }}
-                >
-                  {typeof userProgress?.totalXP === "number" ? userProgress.totalXP.toLocaleString() : "—"}
-                </motion.div>
-                <p className="text-xs text-[var(--theme-text-secondary)]">Total</p>
-              </motion.div>
-            )}
-
-            {isStudent && (
-              <motion.div
-                className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <motion.div
-                  className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3"
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                >
-                  <BookOpen className="w-6 h-6 text-white" />
-                </motion.div>
-                <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Books Completed</h3>
-                <motion.div
-                  className="text-2xl font-bold text-green-500"
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 1.4 }}
-                >
-                  {typeof userProgress?.booksCompleted === "number" ? userProgress.booksCompleted : "—"}
-                </motion.div>
-                <p className="text-xs text-[var(--theme-text-secondary)]">All time</p>
-              </motion.div>
-            )}
-
-            {isTeacher && (
-              <>
-                <motion.div
-                  className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <FolderKanban className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Resource Hub</h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">Organize and share materials</p>
-                </motion.div>
-
-                <motion.div
-                  className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Class Insights</h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">Track engagement trends</p>
-                </motion.div>
-
-                <motion.div
-                  className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Zap className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Automation</h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">Keep curricula up to date</p>
-                </motion.div>
-
-                <motion.div
-                  className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <BookOpen className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Library</h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">Find and assign content</p>
-                </motion.div>
-              </>
-            )}
-
-            {isAdmin && (
-              <>
-                <motion.div
-                  className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Shield className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2 text-[var(--theme-text)]">System</h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">Platform health & access</p>
-                </motion.div>
-
-                <motion.div
-                  className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Users</h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">Manage accounts & roles</p>
-                </motion.div>
-
-                <motion.div
-                  className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <BarChart3 className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Analytics</h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">Usage & performance</p>
-                </motion.div>
-
-                <motion.div
-                  className="card text-center p-6 bg-[var(--theme-card-bg)] border border-[var(--theme-border)]"
-                  whileHover={{ y: -5, scale: 1.02 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <FolderKanban className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-semibold mb-2 text-[var(--theme-text)]">Content</h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">Projects & updates</p>
-                </motion.div>
-              </>
-            )}
-          </motion.section>
-
-        </div>
-      </motion.div>
-    );
-  });
-
-DashboardOverview.displayName = "DashboardOverview";
-
-const Quiz = lazy(() => import("./Quiz"));
-
-export default function Dashboard({ onLogout }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState<"overview" | "library" | "profile" | "quiz" | "notes" | "books" | "timetable">("overview");
-  const [bookToNavigate, setBookToNavigate] = useState<{ path: string; name: string } | null>(null);
-  const [currentQuiz, setCurrentQuiz] = useState<{ quizId: Id<"quizzes"> } | null>(null);
-  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
-  const userProfile = useQuery(api.userProfiles.getMyProfile, isAuthenticated ? {} : "skip");
-  const userProgress = useQuery(api.progress.getUserProgress, isAuthenticated ? {} : "skip");
-
-  const handleBookOpen = (book: { path: string; name: string }) => {
-    toast(`Opening: ${book.name}`);
-    setBookToNavigate(book);
-    setActiveTab("library");
-  };
-
-  const handleStartQuiz = (quizId: Id<"quizzes">) => {
-    setCurrentQuiz({ quizId });
-    setActiveTab("quiz");
-  };
-
-  const userContext = useMemo(() => ({
-    grade: userProfile?.grade,
-    currentPage: activeTab === "library"
-      ? "library"
-      : activeTab === "profile"
-        ? "profile"
-        : activeTab === "books"
-          ? "your-books"
-          : activeTab === "timetable"
-            ? "daily-timetable"
-            : "dashboard",
-  }), [userProfile?.grade, activeTab]);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-[var(--theme-bg)] flex items-center justify-center p-6">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto" />
-          <p className="mt-4 text-[var(--theme-text-secondary)]">Signing you in…</p>
-        </div>
-      </div>
-    );
+  for (const item of items) {
+    const date = toDate(item.createdAt ?? item.updatedAt);
+    if (!date) continue;
+    if (date.getFullYear() !== now.getFullYear() || date.getMonth() !== now.getMonth()) continue;
+    const weekIndex = Math.min(4, Math.floor((date.getDate() - 1) / 7));
+    counts[weekIndex] += 1;
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-[var(--theme-bg)] flex items-center justify-center p-6">
-        <div className="max-w-md w-full rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 text-center">
-          <h1 className="text-xl font-semibold text-[var(--theme-text)]">Please sign in</h1>
-          <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">
-            Your session isn’t active, so the dashboard can’t load yet.
-          </p>
-          <div className="mt-5 flex items-center justify-center gap-3">
-            <button
-              onClick={() => {
-                try {
-                  window.history.pushState({}, "", "/");
-                } catch {
-                  // noop
-                }
-                window.location.hash = "#login";
-              }}
-              className="rounded-lg bg-gradient-to-r from-purple-600 to-teal-500 px-4 py-2 text-sm font-semibold text-white"
-            >
-              Go to Login
-            </button>
-            <button
-              onClick={onLogout}
-              className="rounded-lg border border-[var(--theme-border)] px-4 py-2 text-sm font-semibold text-[var(--theme-text-secondary)]"
-            >
-              Back to Home
-            </button>
-          </div>
+  return counts;
+}
+
+function getDailyStreak(items: StorageItem[]) {
+  const activityDays = new Set(
+    items
+      .map((item) => toDate(item.createdAt ?? item.updatedAt))
+      .filter((date): date is Date => Boolean(date))
+      .map((date) => toDateKey(date))
+  );
+
+  let streak = 0;
+  const cursor = new Date();
+
+  for (let i = 0; i < 365; i += 1) {
+    if (!activityDays.has(toDateKey(cursor))) break;
+    streak += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  return streak;
+}
+
+function getLatestItem(items: StorageItem[]) {
+  return (
+    [...items].sort((a, b) => {
+      const aTime = toDate(a.updatedAt ?? a.createdAt)?.getTime() ?? 0;
+      const bTime = toDate(b.updatedAt ?? b.createdAt)?.getTime() ?? 0;
+      return bTime - aTime;
+    })[0] ?? null
+  );
+}
+
+function Card({
+  icon: Icon,
+  title,
+  value,
+  subtitle,
+  tone,
+  children,
+}: {
+  icon: typeof BarChart3;
+  title: string;
+  value: string;
+  subtitle?: string;
+  tone: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <motion.article
+      className="flex flex-col justify-between rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md transition-transform duration-300 hover:-translate-y-1"
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-full ${tone}`}>
+          <Icon className="h-6 w-6" />
+        </div>
+        <div className="text-right">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--theme-text-secondary)]">{title}</p>
+          <p className="mt-1 text-2xl font-bold text-[var(--theme-text)]">{value}</p>
         </div>
       </div>
-    );
+      {children}
+      {subtitle ? <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">{subtitle}</p> : null}
+    </motion.article>
+  );
+}
+
+function FileCard({
+  title,
+  subtitle,
+  size,
+  href,
+  accent,
+}: {
+  title: string;
+  subtitle: string;
+  size: string;
+  href?: string;
+  accent: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)]">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold text-[var(--theme-text)]">{title}</p>
+          <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">{subtitle}</p>
+        </div>
+        <div className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${accent}`}>File</div>
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-4 text-xs text-[var(--theme-text-secondary)]">
+        <span>{size}</span>
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-teal-300 transition-colors hover:text-teal-200"
+          >
+            Open <ChevronRight className="h-4 w-4" />
+          </a>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ title, message }: { title: string; message: string }) {
+  return (
+    <div className="rounded-2xl border border-dashed border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-8 text-center">
+      <p className="text-lg font-semibold text-[var(--theme-text)]">{title}</p>
+      <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--theme-text-secondary)]">{message}</p>
+    </div>
+  );
+}
+
+function DashboardOverview({
+  profile,
+  userBooks,
+  libraryBooks,
+  onTabChange,
+}: {
+  profile: UserProfile;
+  userBooks: StorageItem[];
+  libraryBooks: StorageItem[];
+  onTabChange: (tab: DashboardTab) => void;
+}) {
+  const weeklyCounts = getWeekCounts(userBooks);
+  const streak = getDailyStreak(userBooks);
+  const latestItem = getLatestItem(userBooks) ?? getLatestItem(libraryBooks);
+  const classLabel = profile.classLabel || "Class";
+
+  return (
+    <motion.div
+      className="px-8 py-8"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
+        <motion.header
+          className="relative overflow-hidden rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md"
+          whileHover={{ y: -2 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.14),transparent_42%),radial-gradient(circle_at_left,rgba(139,92,246,0.14),transparent_38%)]" />
+          <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-[var(--theme-text)] md:text-4xl">Dashboard</h1>
+              <p className="mt-2 max-w-2xl text-sm text-[var(--theme-text-secondary)]">
+                Track your books, browse the NCERT library, and continue from the last chapter you opened.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] px-4 py-3 backdrop-blur-sm">
+              <div className="relative flex-shrink-0">
+                {profile.avatarUrl ? (
+                  <img
+                    src={profile.avatarUrl}
+                    alt={profile.name}
+                    className="h-12 w-12 rounded-full border border-[var(--theme-border)] object-cover"
+                  />
+                ) : (
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--theme-border)] bg-[linear-gradient(135deg,rgba(20,184,166,0.14),rgba(139,92,246,0.14))] text-teal-300">
+                    <UserCircle2 className="h-7 w-7" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[var(--theme-text)]">{profile.name}</p>
+                <div className="mt-1 flex items-center gap-2 text-xs text-[var(--theme-text-secondary)]">
+                  <span>{classLabel}</span>
+                  <span className="h-1 w-1 rounded-full bg-[var(--theme-text-secondary)]/60" />
+                  <span>{profile.email}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.header>
+
+        <motion.section
+          className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+        >
+          <Card
+            icon={BarChart3}
+            title="Chapters/mo"
+            value={String(weeklyCounts.reduce((sum, value) => sum + value, 0))}
+            subtitle="Week based for the current month"
+            tone="bg-purple-500/10 text-purple-300"
+          >
+            <div className="mt-2 flex items-end gap-3">
+              {weeklyCounts.map((count, index) => {
+                const height = Math.max(16, count * 18 + 16);
+                return (
+                  <div key={weekLabels[index]} className="flex flex-1 flex-col items-center gap-2">
+                    <div className="flex h-28 w-full items-end rounded-xl bg-[var(--theme-bg-secondary)] px-2 py-2">
+                      <div
+                        className="w-full rounded-lg bg-gradient-to-t from-teal-500 to-cyan-400 transition-all"
+                        style={{ height: `${height}px` }}
+                      />
+                    </div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">{weekLabels[index]}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Card
+            icon={Flame}
+            title="BPD streak"
+            value={String(streak)}
+            subtitle="Books per Day streak"
+            tone="bg-amber-500/10 text-amber-300"
+          />
+
+          <Card
+            icon={BookOpen}
+            title="Your Books"
+            value={String(userBooks.length)}
+            subtitle="Uploaded to your private bucket"
+            tone="bg-emerald-500/10 text-emerald-300"
+          />
+
+          <Card
+            icon={BookMarked}
+            title="Last Chapter"
+            value={latestItem ? formatTitle(latestItem.name) : "None"}
+            subtitle={latestItem ? `Updated ${toDate(latestItem.updatedAt ?? latestItem.createdAt)?.toLocaleDateString() ?? "recently"}` : "Open a book to populate this card"}
+            tone="bg-sky-500/10 text-sky-300"
+          />
+        </motion.section>
+
+        <div className="grid gap-6 xl:grid-cols-12">
+          <motion.section
+            className="xl:col-span-8 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.16 }}
+          >
+            <div className="flex items-center justify-between border-b border-[#1F2A3D]/70 px-6 py-5">
+              <div>
+                <h2 className="text-lg font-bold text-[var(--theme-text)]">Last Chapter</h2>
+                <p className="mt-1 text-sm text-[var(--theme-text-secondary)]">The most recent book file you opened or uploaded.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onTabChange("books")}
+                className="inline-flex items-center gap-2 rounded-xl bg-teal-400 px-4 py-2 text-sm font-semibold text-[#051424] transition-colors hover:bg-teal-300"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Refresh
+              </button>
+            </div>
+
+            <div className="p-6">
+              {latestItem ? (
+                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-6">
+                  <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.22em] text-teal-300">Last Chapter</p>
+                      <h3 className="mt-2 text-2xl font-bold text-[var(--theme-text)]">{formatTitle(latestItem.name)}</h3>
+                      <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">
+                        {latestItem.mimeType || "File"} · {formatBytes(latestItem.size)}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => onTabChange("books")}
+                      className="inline-flex items-center gap-2 self-start rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] px-4 py-2 text-sm font-semibold text-[var(--theme-text)] transition-colors hover:border-teal-400/50 hover:text-teal-200"
+                    >
+                      Open Your Books
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <EmptyState
+                  title="No book activity yet"
+                  message="Upload a file to your private bucket or open a file from the library to make this section live."
+                />
+              )}
+            </div>
+          </motion.section>
+
+          <motion.aside
+            className="space-y-6 xl:col-span-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Library summary</h2>
+                <BookOpen className="h-5 w-5 text-teal-300" />
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">NCERT files</p>
+                  <p className="mt-2 text-2xl font-bold text-[var(--theme-text)]">{libraryBooks.length}</p>
+                </div>
+                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Private files</p>
+                  <p className="mt-2 text-2xl font-bold text-[var(--theme-text)]">{userBooks.length}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Class</h2>
+                <CalendarDays className="h-5 w-5 text-sky-300" />
+              </div>
+              <div className="mt-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
+                <p className="text-3xl font-bold text-[var(--theme-text)]">{classLabel}</p>
+                <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">Pulled from your account metadata.</p>
+              </div>
+            </div>
+          </motion.aside>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+function NotesSection() {
+  return (
+    <div className="px-8 py-8">
+      <div className="mx-auto max-w-6xl">
+        <EmptyState
+          title="Notes"
+          message="No Supabase notes source was provided yet, so this tab is ready for a table or storage binding when you want to add it."
+        />
+      </div>
+    </div>
+  );
+}
+
+function LibrarySection({ items }: { items: StorageItem[] }) {
+  return (
+    <motion.div className="px-8 py-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <div>
+          <h2 className="text-2xl font-bold text-[var(--theme-text)]">Library</h2>
+          <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">Public NCERT files from the Supabase bucket.</p>
+        </div>
+
+        {items.length ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {items.map((item) => (
+              <FileCard
+                key={item.fullPath}
+                title={formatTitle(item.name)}
+                subtitle={item.mimeType || item.fullPath}
+                size={formatBytes(item.size)}
+                href={supabase.storage.from("ncert").getPublicUrl(item.fullPath).data.publicUrl}
+                accent="bg-sky-500/10 text-sky-200"
+              />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="No NCERT files found" message="The public ncert bucket is empty or not readable yet." />
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+function BooksSection({ items }: { items: StorageItem[] }) {
+  return (
+    <motion.div className="px-8 py-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <div>
+          <h2 className="text-2xl font-bold text-[var(--theme-text)]">Your Books</h2>
+          <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">Your private bucket files from Supabase.</p>
+        </div>
+
+        {items.length ? (
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {items.map((item) => (
+              <div key={item.fullPath} className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--theme-text)]">{formatTitle(item.name)}</p>
+                    <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">{item.mimeType || item.fullPath}</p>
+                  </div>
+                  <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200">
+                    Private
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center justify-between gap-4 text-xs text-[var(--theme-text-secondary)]">
+                  <span>{formatBytes(item.size)}</span>
+                  <a
+                    href="#"
+                    onClick={async (event) => {
+                      event.preventDefault();
+                      const { data } = await supabase.storage.from("user-books").createSignedUrl(item.fullPath, 60 * 60);
+                      if (data?.signedUrl) {
+                        window.open(data.signedUrl, "_blank", "noreferrer");
+                      }
+                    }}
+                    className="inline-flex items-center gap-1 text-teal-300 transition-colors hover:text-teal-200"
+                  >
+                    Open <ChevronRight className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="No private books yet" message="Upload files into the user-books bucket to see them here." />
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+async function listStorageItems(bucket: string) {
+  const collected: StorageItem[] = [];
+
+  const walk = async (path = "", depth = 0) => {
+    const { data, error } = await supabase.storage.from(bucket).list(path, {
+      limit: 100,
+      sortBy: { column: "created_at", order: "desc" },
+    });
+
+    if (error) throw error;
+
+    for (const item of data ?? []) {
+      const fullPath = path ? `${path}/${item.name}` : item.name;
+      const metadata = item.metadata && typeof item.metadata === "object" ? item.metadata : null;
+      const isFolder = metadata === null && !/\.[a-z0-9]+$/i.test(item.name) && depth < 3;
+
+      if (isFolder) {
+        await walk(fullPath, depth + 1);
+        continue;
+      }
+
+      collected.push({
+        name: item.name,
+        fullPath,
+        createdAt: item.created_at ?? null,
+        updatedAt: item.updated_at ?? null,
+        size: typeof metadata?.size === "number" ? metadata.size : null,
+        mimeType: typeof metadata?.mimetype === "string" ? metadata.mimetype : null,
+      });
+    }
+  };
+
+  await walk();
+
+  return collected.sort((a, b) => {
+    const aTime = toDate(a.updatedAt ?? a.createdAt)?.getTime() ?? 0;
+    const bTime = toDate(b.updatedAt ?? b.createdAt)?.getTime() ?? 0;
+    return bTime - aTime;
+  });
+}
+
+export default function Dashboard({ onLogout }: DashboardProps) {
+  const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userBooks, setUserBooks] = useState<StorageItem[]>([]);
+  const [libraryBooks, setLibraryBooks] = useState<StorageItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchData = async () => {
+      try {
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError) throw userError;
+
+        const user = userData.user;
+        if (!isMounted) return;
+
+        if (user) {
+          const meta = user.user_metadata ?? {};
+          setUserProfile({
+            name: meta.full_name || meta.name || user.email?.split("@")[0] || "Student",
+            email: user.email || "",
+            classLabel: meta.grade ? `Class ${meta.grade}` : "Class",
+            avatarUrl: meta.avatar_url || meta.picture || null,
+          });
+        }
+
+        const [privateBooks, publicBooks] = await Promise.all([listStorageItems("user-books"), listStorageItems("ncert")]);
+
+        if (!isMounted) return;
+
+        setUserBooks(privateBooks);
+        setLibraryBooks(publicBooks);
+      } catch {
+        if (isMounted) {
+          setUserBooks([]);
+          setLibraryBooks([]);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    onLogout?.();
+  };
+
+  if (loading || !userProfile) {
+    return <SectionLoader label="dashboard" />;
   }
 
   return (
-    <div className="min-h-screen bg-[var(--theme-bg)] flex">
-      {/* Sidebar Navigation */}
-      <aside className="fixed left-0 top-0 bottom-0 w-64 bg-[var(--theme-card-bg)] border-r border-[var(--theme-border)] flex flex-col z-40">
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-8">
-            <img src="/logo-icon.svg" alt="EduScrapeApp" className="w-10 h-10 rounded-xl shadow-lg" />
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-teal-500">
-              EduScrapeApp
-            </span>
+    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)]">
+      <aside className="fixed left-0 top-0 bottom-0 z-50 flex w-64 flex-col border-r border-[var(--theme-border)] bg-[var(--theme-bg)] px-6 py-8">
+        <div className="mb-10 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#571bc1] to-teal-400 shadow-lg shadow-purple-500/10">
+            <BookOpen className="h-5 w-5 text-white" />
           </div>
-
-          <nav className="space-y-2">
-            <button
-              onClick={() => setActiveTab("overview")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === "overview"
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                : "text-[var(--theme-text-secondary)] hover:bg-[var(--theme-bg-secondary)] hover:text-[var(--theme-text)]"
-                }`}
-            >
-              <LayoutDashboard className="h-5 w-5" />
-              <span className="font-medium">Dashboard</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("library")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === "library"
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                : "text-[var(--theme-text-secondary)] hover:bg-[var(--theme-bg-secondary)] hover:text-[var(--theme-text)]"
-                }`}
-            >
-              <BookOpen className="h-5 w-5" />
-              <span className="font-medium">Library</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("notes")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === "notes"
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                : "text-[var(--theme-text-secondary)] hover:bg-[var(--theme-bg-secondary)] hover:text-[var(--theme-text)]"
-                }`}
-            >
-              <FileText className="h-5 w-5" />
-              <span className="font-medium">Notes</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("books")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === "books"
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                : "text-[var(--theme-text-secondary)] hover:bg-[var(--theme-bg-secondary)] hover:text-[var(--theme-text)]"
-                }`}
-            >
-              <BookPlus className="h-5 w-5" />
-              <span className="font-medium">Your Books</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("timetable")}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${activeTab === "timetable"
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-500/20"
-                : "text-[var(--theme-text-secondary)] hover:bg-[var(--theme-bg-secondary)] hover:text-[var(--theme-text)]"
-                }`}
-            >
-              <CalendarClock className="h-5 w-5" />
-              <span className="font-medium">Your Daily TimeTable</span>
-            </button>
-          </nav>
+          <span className="bg-gradient-to-r from-purple-300 to-teal-300 bg-clip-text text-xl font-bold tracking-wide text-transparent">EduScrape</span>
         </div>
 
-        <div className="mt-auto p-4 border-t border-[var(--theme-border)]">
-          <div className="flex items-center justify-between mb-4 px-2">
+        <nav className="flex-1 space-y-2">
+          {sidebarNav.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id;
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => setActiveTab(item.id)}
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors duration-300 ${
+                  isActive
+                    ? "bg-[var(--color-purple)] text-white shadow-lg shadow-[#571bc1]/35"
+                    : "text-[var(--theme-text-secondary)] hover:bg-[#122131] hover:text-[var(--theme-text)]"
+                }`}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="mt-auto space-y-6 border-t border-[var(--theme-border)] pt-4">
+          <div className="flex items-center justify-between px-2">
             <ThemeToggle />
-            <button
-              onClick={onLogout}
-              className="p-2 text-[var(--theme-text-secondary)] hover:text-red-500 transition-colors"
-              title="Logout"
-            >
+            <button type="button" onClick={handleLogout} className="p-2 text-[var(--theme-text-secondary)] transition-colors hover:text-red-400" title="Logout">
               <LogOut className="h-5 w-5" />
             </button>
           </div>
 
-          <button
-            onClick={() => setActiveTab("profile")}
-            className="w-full flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-[var(--theme-border)] hover:bg-[var(--theme-bg-secondary)] transition-all group"
-          >
-            <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-purple-500 to-teal-400 flex items-center justify-center text-white font-bold text-lg shadow-inner">
-                {userProfile?.name?.charAt(0) || <User className="w-6 h-6" />}
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-[var(--theme-card-bg)] rounded-full"></div>
+          <div className="flex items-center gap-3 rounded-xl border border-transparent p-2 transition-all hover:border-[#1F2A3D] hover:bg-[#122131]">
+            <div className="relative flex-shrink-0">
+              {userProfile.avatarUrl ? (
+                <img src={userProfile.avatarUrl} alt={userProfile.name} className="h-10 w-10 rounded-full border-2 border-[#1F2A3D] object-cover" />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-purple-400 to-teal-400 text-[#051424] shadow-inner">
+                  <UserCircle2 className="h-6 w-6" />
+                </div>
+              )}
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#051424] bg-green-500" />
             </div>
-            <div className="text-left overflow-hidden">
-              <p className="text-sm font-semibold text-[var(--theme-text)] truncate">
-                {userProfile?.name || "Loading..."}
-              </p>
-              <p className="text-xs text-[var(--theme-text-secondary)] truncate">
-                {userProfile?.role || "Student"}
-              </p>
+            <div className="overflow-hidden text-left">
+              <p className="truncate text-sm font-semibold text-[var(--theme-text)]">{userProfile.name}</p>
+              <p className="text-[10px] uppercase tracking-wider text-[var(--theme-text-secondary)]">{userProfile.classLabel}</p>
             </div>
-          </button>
+          </div>
         </div>
       </aside>
 
-      <div className="flex-1 pl-64 min-h-screen flex flex-col">
-        {/* Content Area */}
-        <div className="flex-1">
-          {activeTab === "quiz" && currentQuiz ? (
-            <ErrorBoundary fallback={
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                  <p className="text-red-600 font-semibold">Failed to load quiz</p>
-                  <button onClick={() => setActiveTab("library")} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg">Back to Library</button>
-                </div>
-              </div>
-            }>
-              <Suspense fallback={<SectionLoader label="quiz" />}>
-                <Quiz
-                  quizId={currentQuiz.quizId}
-                  onComplete={() => {
-                    setCurrentQuiz(null);
-                    setActiveTab("library");
-                  }}
-                  onClose={() => {
-                    setCurrentQuiz(null);
-                    setActiveTab("library");
-                  }}
-                />
-              </Suspense>
-            </ErrorBoundary>
-          ) : activeTab === "library" ? (
-            <ErrorBoundary fallback={
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                  <p className="text-red-600 font-semibold">Failed to load library</p>
-                  <button onClick={() => window.location.reload()} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg">Reload</button>
-                </div>
-              </div>
-            }>
-              <Suspense fallback={<SectionLoader label="library" />}>
-                <Library bookToOpen={bookToNavigate} onStartQuiz={handleStartQuiz} />
-              </Suspense>
-            </ErrorBoundary>
-          ) : activeTab === "notes" ? (
-            <ErrorBoundary fallback={
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                  <p className="text-red-600 font-semibold">Failed to load notes</p>
-                  <button onClick={() => setActiveTab("overview")} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg">Back to Home</button>
-                </div>
-              </div>
-            }>
-              <Suspense fallback={<SectionLoader label="notes" />}>
-                <Notes />
-              </Suspense>
-            </ErrorBoundary>
-          ) : activeTab === "books" ? (
-            <ErrorBoundary fallback={
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                  <p className="text-red-600 font-semibold">Failed to load Your Books</p>
-                  <button onClick={() => setActiveTab("overview")} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg">Back to Home</button>
-                </div>
-              </div>
-            }>
-              <Suspense fallback={<SectionLoader label="your books" />}>
-                <YourBooks />
-              </Suspense>
-            </ErrorBoundary>
-          ) : activeTab === "timetable" ? (
-            <ErrorBoundary fallback={
-              <div className="flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                  <p className="text-red-600 font-semibold">Failed to load timetable</p>
-                  <button onClick={() => setActiveTab("overview")} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg">Back to Home</button>
-                </div>
-              </div>
-            }>
-              <Suspense fallback={<SectionLoader label="timetable" />}>
-                <DailyTimeTable />
-              </Suspense>
-            </ErrorBoundary>
-          ) : activeTab === "profile" ? (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                className="w-full max-w-lg bg-[var(--theme-card-bg)] border border-[var(--theme-border)] rounded-3xl shadow-2xl overflow-hidden"
-              >
-                <ErrorBoundary fallback={
-                  <div className="p-8 text-center">
-                    <p className="text-red-600 font-semibold">Failed to load profile</p>
-                    <button onClick={() => setActiveTab("overview")} className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg">Close</button>
-                  </div>
-                }>
-                  <Suspense fallback={<SectionLoader label="profile" />}>
-                    <div className="relative">
-                      <ProfileEdit onCancel={() => setActiveTab("overview")} />
-                    </div>
-                  </Suspense>
-                </ErrorBoundary>
-              </motion.div>
-            </div>
-          ) : (
-            <>
-              <ProfileCompletionBanner />
-              <DashboardOverview
-                userName={userProfile?.name}
-                userRole={userProfile?.role}
-                grade={userProfile?.grade}
-                userProgress={userProgress}
-              />
-            </>
-          )}
-        </div>
+      <div className="flex min-h-screen flex-1 flex-col pl-64">
+        <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-[var(--theme-border)]/40 bg-[var(--theme-bg)]/80 px-8 backdrop-blur-xl">
+          <h2 className="text-lg font-bold capitalize text-[var(--theme-text)]">{activeTab}</h2>
+          <div className="text-sm text-[var(--theme-text-secondary)]">Everything is free</div>
+        </header>
 
-        {/* AI Assistant */}
-        <ErrorBoundary>
-          <AIAssistant userContext={userContext} onBookOpen={handleBookOpen} />
-        </ErrorBoundary>
+        <div className="flex-1 overflow-y-auto">
+          {activeTab === "overview" ? (
+            <DashboardOverview profile={userProfile} userBooks={userBooks} libraryBooks={libraryBooks} onTabChange={setActiveTab} />
+          ) : activeTab === "library" ? (
+            <LibrarySection items={libraryBooks} />
+          ) : activeTab === "notes" ? (
+            <NotesSection />
+          ) : activeTab === "books" ? (
+            <BooksSection items={userBooks} />
+          ) : null}
+        </div>
       </div>
     </div>
   );
 }
+

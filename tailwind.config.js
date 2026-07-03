@@ -19,7 +19,6 @@ export default {
           200: '#16213e',
           300: '#0f3460',
         },
-        // Solid theme colors
         theme: {
           bg: 'var(--theme-bg)',
           'bg-secondary': 'var(--theme-bg-secondary)',
@@ -33,7 +32,6 @@ export default {
           'hero-bg': 'var(--theme-hero-bg)',
           'footer-bg': 'var(--theme-footer-bg)',
         },
-        // Brand solid colors
         purple: {
           DEFAULT: 'var(--color-purple)',
           dark: 'var(--color-purple-dark)',
@@ -52,21 +50,19 @@ export default {
         },
       },
       spacing: {
-        'section': '2rem',
-        'container': '1rem',
+        section: '2rem',
+        container: '1rem',
       },
       borderRadius: {
-        'container': '0.75rem',
+        container: '0.75rem',
       },
       animation: {
-        'float': 'float 6s ease-in-out infinite',
+        float: 'float 6s ease-in-out infinite',
         'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
       },
-      // Removed gradients as per solid color requirement
     },
   },
   plugins: [
-    // Custom utilities for solid colors
     function ({ addUtilities }) {
       addUtilities({
         '.solid-card': {
@@ -93,4 +89,4 @@ export default {
       });
     },
   ],
-}
+};

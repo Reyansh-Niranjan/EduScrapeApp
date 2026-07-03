@@ -8,7 +8,7 @@
   --color-purple-dark: #7C3AED;
   --color-teal: #14B8A6;
   --color-teal-dark: #0D9488;
-  
+
   /* Base Colors */
   --color-white: #FFFFFF;
   --color-black: #0F172A;
@@ -18,14 +18,14 @@
   --color-gray-300: #CBD5E1;
   --color-gray-600: #475569;
   --color-gray-800: #1E293B;
-  
+
   /* Spacing */
   --spacing-xs: 0.5rem;
   --spacing-sm: 1rem;
   --spacing-md: 1.5rem;
   --spacing-lg: 2rem;
   --spacing-xl: 3rem;
-  
+
   /* Border Radius */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
@@ -48,7 +48,8 @@
   --theme-footer-bg: #FFFFFF;
 }
 
-/* Dark Mode Theme */
+/* Dark Mode Theme (Tailwind dark class + data attribute) */
+.dark,
 [data-theme="dark"] {
   --theme-bg: #0F172A;
   --theme-bg-secondary: #1E293B;
@@ -227,6 +228,29 @@ img {
   transform: translateY(-2px);
 }
 
+/* Auth form focus animation (matches Copy) */
+.auth-input-field {
+  @apply w-full px-4 py-3 rounded-lg border outline-none transition-all shadow-sm hover:shadow;
+  background: var(--theme-input-bg);
+  border-color: var(--theme-border);
+  color: var(--theme-text);
+}
+
+.auth-input-field::placeholder {
+  color: var(--theme-text-secondary);
+}
+
+.auth-input-field:focus {
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .auth-input-field:focus,
+.dark .auth-input-field:focus {
+  border-color: var(--color-teal);
+  box-shadow: 0 0 0 2px rgba(20, 184, 166, 0.25);
+}
+
 /* Modern button styles */
 .btn-primary {
   background: var(--color-purple);
@@ -294,8 +318,8 @@ img {
 
 /* Auth form styles */
 .auth-input-field {
-  @apply w-full px-4 py-3 rounded-lg bg-white border border-gray-200 
-         focus:border-purple-500 focus:ring-2 focus:ring-purple-100 
+  @apply w-full px-4 py-3 rounded-lg bg-white border border-gray-200
+         focus:border-purple-500 focus:ring-2 focus:ring-purple-100
          outline-none transition-all shadow-sm hover:shadow;
   color: var(--color-black);
 }
@@ -305,8 +329,8 @@ img {
 }
 
 .auth-button {
-  @apply w-full px-4 py-3 rounded-lg font-semibold 
-         transition-all shadow-sm hover:shadow-md disabled:opacity-50 
+  @apply w-full px-4 py-3 rounded-lg font-semibold
+         transition-all shadow-sm hover:shadow-md disabled:opacity-50
          disabled:cursor-not-allowed;
   background: var(--color-purple);
   color: var(--color-white);
@@ -326,4 +350,3 @@ section {
 .page-transition {
   animation: fadeIn 0.4s ease-out;
 }
-

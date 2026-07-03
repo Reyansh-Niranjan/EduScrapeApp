@@ -39,10 +39,7 @@ export default function OptimizedImage({
   if (hasError) {
     const fallbackClassName = `${className} flex items-center justify-center bg-gradient-to-br from-purple-600/20 to-teal-600/20 text-teal-200 text-xs`.trim();
     return (
-      <div
-        className={fallbackClassName}
-        style={{ minHeight: height }}
-      >
+      <div className={fallbackClassName} style={{ minHeight: height }}>
         image unavailable
       </div>
     );
