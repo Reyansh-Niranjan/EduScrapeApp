@@ -1,0 +1,77 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Twice a week ("weekly twice"): Monday and Thursday at 12:00 UTC
+    - cron: "0 12 * * 1,4"
+  workflow_dispatch: # Allow manual runs from the Actions tab
+
+jobs:
+  ping-and-count-users:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ping Supabase and report current user count
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL:-}" ] || [ -z "${SUPABASE_SERVICE_ROLE_KEY:-}" ]; then
+            echo "❌ Missing required secrets."
+            echo "Please add these repository secrets (Settings → Secrets and variables → Actions):"
+            echo "  • SUPABASE_URL              (e.g. https://xxxx.supabase.co)"
+            echo "  • SUPABASE_SERVICE_ROLE_KEY (from Supabase Dashboard → Project Settings → API)"
+            exit 1
+          fi
+
+          # Normalize URL (remove trailing slash)
+          BASE_URL="${SUPABASE_URL%/}"
+
+          echo "🔄 Pinging Supabase Auth Admin API to keep the project active..."
+          echo "   URL: ${BASE_URL}"
+
+          # Request 1 user just to get the total count via the X-Total-Count header
+          # (GoTrue / Supabase Auth Admin API provides this header)
+          HTTP_RESPONSE=$(curl -sS -D /tmp/headers.txt -o /tmp/body.json \
+            -w "%{http_code}" \
+            "${BASE_URL}/auth/v1/admin/users?page=1&per_page=1" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json")
+
+          if [ "$HTTP_RESPONSE" != "200" ]; then
+            echo "❌ Request failed with HTTP ${HTTP_RESPONSE}"
+            echo "Response body:"
+            cat /tmp/body.json || true
+            exit 1
+          fi
+
+          # Extract total user count from header (preferred) or fall back
+          TOTAL_USERS=$(grep -i '^x-total-count:' /tmp/headers.txt | awk '{print $2}' | tr -d '\r' || true)
+
+          if [ -z "$TOTAL_USERS" ]; then
+            # Fallback: some setups return total inside the JSON body
+            TOTAL_USERS=$(python3 -c "
+import json, sys
+try:
+    data = json.load(open('/tmp/body.json'))
+    if isinstance(data, dict) and 'total' in data:
+        print(data['total'])
+    elif isinstance(data, list):
+        print(len(data))  # incomplete, but better than nothing
+    else:
+        print('unknown')
+except Exception:
+    print('unknown')
+" 2>/dev/null || echo "unknown")
+          fi
+
+          echo ""
+          echo "✅ Supabase is awake!"
+          echo "👥 Current number of users: ${TOTAL_USERS}"
+          echo "🕒 Checked at: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+          echo ""
+          echo "This lightweight ping (twice weekly) prevents the free-tier project from pausing due to inactivity."
