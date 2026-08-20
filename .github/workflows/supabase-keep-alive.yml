@@ -36,6 +36,7 @@ jobs:
           # Request 1 user just to get the total count via the X-Total-Count header
           # (GoTrue / Supabase Auth Admin API provides this header)
           HTTP_RESPONSE=$(curl -sS -D /tmp/headers.txt -o /tmp/body.json \
+            --retry 3 --retry-delay 2 --retry-all-errors \
             -w "%{http_code}" \
             "${BASE_URL}/auth/v1/admin/users?page=1&per_page=1" \
             -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
