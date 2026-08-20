@@ -6,6 +6,8 @@ on:
     - cron: "0 12 * * 1,4"
   workflow_dispatch: # Allow manual runs from the Actions tab
 
+permissions: {}
+
 jobs:
   ping-and-count-users:
     runs-on: ubuntu-latest
