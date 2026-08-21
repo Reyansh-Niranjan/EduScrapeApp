@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   BarChart3,
   BookMarked,
@@ -12,6 +12,20 @@ import {
   LogOut,
   RefreshCw,
   UserCircle2,
+  Search,
+  Plus,
+  ExternalLink,
+  Sparkles,
+  Menu,
+  X,
+  Clock,
+  HardDrive,
+  Trash2,
+  Upload,
+  UploadCloud,
+  Loader2,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import ThemeToggle from "./ThemeToggle";
@@ -40,9 +54,9 @@ interface StorageItem {
 
 const sidebarNav: { id: DashboardTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
-  { id: "library", label: "Library", icon: BookOpen },
-  { id: "notes", label: "Notes", icon: FileText },
-  { id: "books", label: "Your Books", icon: BookMarked },
+  { id: "library", label: "NCERT Library", icon: BookOpen },
+  { id: "notes", label: "Study Notes", icon: FileText },
+  { id: "books", label: "Your Bookshelf", icon: BookMarked },
 ];
 
 const weekLabels = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"];
@@ -51,8 +65,8 @@ function SectionLoader({ label }: { label: string }) {
   return (
     <div className="flex min-h-[400px] items-center justify-center">
       <div className="text-center">
-        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-teal-400" />
-        <p className="mt-4 text-sm text-[var(--theme-text-secondary)]">Loading {label}...</p>
+        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-purple-500" />
+        <p className="mt-4 text-sm font-medium text-[var(--theme-text-secondary)]">Loading {label}...</p>
       </div>
     </div>
   );
@@ -63,7 +77,7 @@ function formatTitle(name: string) {
 }
 
 function formatBytes(size: number | null) {
-  if (size === null) return "Unknown size";
+  if (size === null || size === undefined) return "Unknown size";
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
@@ -109,12 +123,23 @@ function getDailyStreak(items: StorageItem[]) {
   const cursor = new Date();
 
   for (let i = 0; i < 365; i += 1) {
-    if (!activityDays.has(toDateKey(cursor))) break;
+    if (!activityDays.has(toDateKey(cursor))) {
+      // Allow today to not break streak if yesterday was active
+      if (i === 0) {
+        cursor.setDate(cursor.getDate() - 1);
+        if (activityDays.has(toDateKey(cursor))) {
+          streak += 1;
+          cursor.setDate(cursor.getDate() - 1);
+          continue;
+        }
+      }
+      break;
+    }
     streak += 1;
     cursor.setDate(cursor.getDate() - 1);
   }
 
-  return streak;
+  return Math.max(1, streak); // Default minimum 1-day starter streak
 }
 
 function getLatestItem(items: StorageItem[]) {
@@ -127,395 +152,1041 @@ function getLatestItem(items: StorageItem[]) {
   );
 }
 
-function Card({
-  icon: Icon,
-  title,
-  value,
-  subtitle,
-  tone,
-  children,
-}: {
-  icon: typeof BarChart3;
-  title: string;
-  value: string;
-  subtitle?: string;
-  tone: string;
-  children?: React.ReactNode;
-}) {
-  return (
-    <motion.article
-      className="flex flex-col justify-between rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md transition-transform duration-300 hover:-translate-y-1"
-      whileHover={{ y: -2 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-full ${tone}`}>
-          <Icon className="h-6 w-6" />
-        </div>
-        <div className="text-right">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--theme-text-secondary)]">{title}</p>
-          <p className="mt-1 text-2xl font-bold text-[var(--theme-text)]">{value}</p>
-        </div>
-      </div>
-      {children}
-      {subtitle ? <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">{subtitle}</p> : null}
-    </motion.article>
-  );
+function getTimeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
 }
 
-function FileCard({
-  title,
-  subtitle,
-  size,
-  href,
-  accent,
-}: {
-  title: string;
-  subtitle: string;
-  size: string;
-  href?: string;
-  accent: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.04)]">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold text-[var(--theme-text)]">{title}</p>
-          <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">{subtitle}</p>
-        </div>
-        <div className={`rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] ${accent}`}>File</div>
-      </div>
-      <div className="mt-4 flex items-center justify-between gap-4 text-xs text-[var(--theme-text-secondary)]">
-        <span>{size}</span>
-        {href ? (
-          <a
-            href={href}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1 text-teal-300 transition-colors hover:text-teal-200"
-          >
-            Open <ChevronRight className="h-4 w-4" />
-          </a>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function EmptyState({ title, message }: { title: string; message: string }) {
-  return (
-    <div className="rounded-2xl border border-dashed border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-8 text-center">
-      <p className="text-lg font-semibold text-[var(--theme-text)]">{title}</p>
-      <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--theme-text-secondary)]">{message}</p>
-    </div>
-  );
-}
-
+/* =========================================================================
+   OVERVIEW SUB-COMPONENT (BENTO-GRID)
+   ========================================================================= */
 function DashboardOverview({
   profile,
   userBooks,
   libraryBooks,
   onTabChange,
+  onRefresh,
 }: {
   profile: UserProfile;
   userBooks: StorageItem[];
   libraryBooks: StorageItem[];
   onTabChange: (tab: DashboardTab) => void;
+  onRefresh: () => void;
 }) {
   const weeklyCounts = getWeekCounts(userBooks);
   const streak = getDailyStreak(userBooks);
   const latestItem = getLatestItem(userBooks) ?? getLatestItem(libraryBooks);
   const classLabel = profile.classLabel || "Class";
+  const greeting = getTimeGreeting();
+
+  const totalBytes = userBooks.reduce((sum, item) => sum + (item.size || 0), 0);
 
   return (
     <motion.div
-      className="px-8 py-8"
-      initial={{ opacity: 0, y: 20 }}
+      className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto"
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.4 }}
     >
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8">
-        <motion.header
-          className="relative overflow-hidden rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-8 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md"
-          whileHover={{ y: -2 }}
-          transition={{ duration: 0.2 }}
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(20,184,166,0.14),transparent_42%),radial-gradient(circle_at_left,rgba(139,92,246,0.14),transparent_38%)]" />
-          <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-[var(--theme-text)] md:text-4xl">Dashboard</h1>
-              <p className="mt-2 max-w-2xl text-sm text-[var(--theme-text-secondary)]">
-                Track your books, browse the NCERT library, and continue from the last chapter you opened.
-              </p>
-            </div>
+      {/* Hero Welcome Banner */}
+      <div
+        className="relative overflow-hidden rounded-3xl border p-6 sm:p-8 shadow-xl"
+        style={{
+          background:
+            "linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(20, 184, 166, 0.12) 100%), var(--theme-card-bg)",
+          borderColor: "var(--theme-border)",
+        }}
+      >
+        {/* Glow circles in banner */}
+        <div className="pointer-events-none absolute top-0 right-0 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl" />
 
-            <div className="flex items-center gap-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] px-4 py-3 backdrop-blur-sm">
-              <div className="relative flex-shrink-0">
-                {profile.avatarUrl ? (
-                  <img
-                    src={profile.avatarUrl}
-                    alt={profile.name}
-                    className="h-12 w-12 rounded-full border border-[var(--theme-border)] object-cover"
-                  />
-                ) : (
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--theme-border)] bg-[linear-gradient(135deg,rgba(20,184,166,0.14),rgba(139,92,246,0.14))] text-teal-300">
-                    <UserCircle2 className="h-7 w-7" />
-                  </div>
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[var(--theme-text)]">{profile.name}</p>
-                <div className="mt-1 flex items-center gap-2 text-xs text-[var(--theme-text-secondary)]">
-                  <span>{classLabel}</span>
-                  <span className="h-1 w-1 rounded-full bg-[var(--theme-text-secondary)]/60" />
-                  <span>{profile.email}</span>
-                </div>
-              </div>
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+          <div className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/20">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>{classLabel} Student Hub</span>
             </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--theme-text)] tracking-tight">
+              {greeting}, {profile.name}! 👋
+            </h1>
+            <p className="text-sm sm:text-base text-[var(--theme-text-secondary)] leading-relaxed">
+              You are currently on a <strong className="text-[var(--theme-text)]">{streak}-day learning streak</strong>. Explore NCERT curriculum books or manage your personal study materials.
+            </p>
           </div>
-        </motion.header>
 
-        <motion.section
-          className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
+          {/* Action buttons inside Hero */}
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={() => onTabChange("library")}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-purple-600 to-teal-500 hover:from-purple-700 hover:to-teal-600 shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>Explore Library</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onTabChange("books")}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm border transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{
+                background: "var(--theme-bg)",
+                borderColor: "var(--theme-border)",
+                color: "var(--theme-text)",
+              }}
+            >
+              <BookMarked className="h-4 w-4 text-teal-400" />
+              <span>Your Bookshelf</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 4 Bento Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* 1. Activity / Weekly Progress */}
+        <div
+          className="rounded-3xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5"
+          style={{
+            background: "var(--theme-card-bg)",
+            borderColor: "var(--theme-border)",
+          }}
         >
-          <Card
-            icon={BarChart3}
-            title="Chapters/mo"
-            value={String(weeklyCounts.reduce((sum, value) => sum + value, 0))}
-            subtitle="Week based for the current month"
-            tone="bg-purple-500/10 text-purple-300"
-          >
-            <div className="mt-2 flex items-end gap-3">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
+              Activity / Mo
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold text-[var(--theme-text)]">
+                {weeklyCounts.reduce((sum, v) => sum + v, 0)}
+              </span>
+              <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">files this month</span>
+            </div>
+
+            {/* Micro bar chart */}
+            <div className="mt-4 flex items-end gap-2 pt-2 border-t border-[var(--theme-border)]">
               {weeklyCounts.map((count, index) => {
-                const height = Math.max(16, count * 18 + 16);
+                const height = Math.max(12, count * 16 + 12);
                 return (
-                  <div key={weekLabels[index]} className="flex flex-1 flex-col items-center gap-2">
-                    <div className="flex h-28 w-full items-end rounded-xl bg-[var(--theme-bg-secondary)] px-2 py-2">
+                  <div key={weekLabels[index]} className="flex flex-1 flex-col items-center gap-1.5">
+                    <div className="h-16 w-full flex items-end justify-center rounded-lg bg-[var(--theme-bg-secondary)] p-1">
                       <div
-                        className="w-full rounded-lg bg-gradient-to-t from-teal-500 to-cyan-400 transition-all"
+                        className="w-full rounded-md bg-gradient-to-t from-purple-600 to-teal-400 transition-all duration-500"
                         style={{ height: `${height}px` }}
+                        title={`${weekLabels[index]}: ${count} files`}
                       />
                     </div>
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">{weekLabels[index]}</span>
+                    <span className="text-[9px] font-medium text-[var(--theme-text-secondary)]">
+                      W{index + 1}
+                    </span>
                   </div>
                 );
               })}
             </div>
-          </Card>
+          </div>
+        </div>
 
-          <Card
-            icon={Flame}
-            title="BPD streak"
-            value={String(streak)}
-            subtitle="Books per Day streak"
-            tone="bg-amber-500/10 text-amber-300"
-          />
+        {/* 2. Streak */}
+        <div
+          className="rounded-3xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5"
+          style={{
+            background: "var(--theme-card-bg)",
+            borderColor: "var(--theme-border)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
+              <Flame className="h-5 w-5" />
+            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">
+              Active Streak
+            </span>
+          </div>
 
-          <Card
-            icon={BookOpen}
-            title="Your Books"
-            value={String(userBooks.length)}
-            subtitle="Uploaded to your private bucket"
-            tone="bg-emerald-500/10 text-emerald-300"
-          />
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold text-[var(--theme-text)]">{streak}</span>
+              <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">Days in a row</span>
+            </div>
+            <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">
+              Great momentum! Read a chapter today to extend your streak.
+            </p>
+          </div>
 
-          <Card
-            icon={BookMarked}
-            title="Last Chapter"
-            value={latestItem ? formatTitle(latestItem.name) : "None"}
-            subtitle={latestItem ? `Updated ${toDate(latestItem.updatedAt ?? latestItem.createdAt)?.toLocaleDateString() ?? "recently"}` : "Open a book to populate this card"}
-            tone="bg-sky-500/10 text-sky-300"
-          />
-        </motion.section>
+          <div className="mt-4 pt-3 border-t border-[var(--theme-border)] flex items-center justify-between text-xs text-amber-500 font-semibold">
+            <span>🔥 On Fire</span>
+            <span>Level 1 Scholar</span>
+          </div>
+        </div>
 
-        <div className="grid gap-6 xl:grid-cols-12">
-          <motion.section
-            className="xl:col-span-8 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.16 }}
-          >
-            <div className="flex items-center justify-between border-b border-[#1F2A3D]/70 px-6 py-5">
-              <div>
-                <h2 className="text-lg font-bold text-[var(--theme-text)]">Last Chapter</h2>
-                <p className="mt-1 text-sm text-[var(--theme-text-secondary)]">The most recent book file you opened or uploaded.</p>
+        {/* 3. Your Bookshelf */}
+        <div
+          className="rounded-3xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5"
+          style={{
+            background: "var(--theme-card-bg)",
+            borderColor: "var(--theme-border)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400">
+              <HardDrive className="h-5 w-5" />
+            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
+              Private Storage
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold text-[var(--theme-text)]">{userBooks.length}</span>
+              <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">Books uploaded</span>
+            </div>
+            <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">
+              {formatBytes(totalBytes)} stored securely in your private cloud.
+            </p>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[var(--theme-border)]">
+            <button
+              type="button"
+              onClick={() => onTabChange("books")}
+              className="text-xs font-semibold text-teal-500 hover:text-teal-400 inline-flex items-center gap-1"
+            >
+              <span>Manage Bookshelf</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* 4. NCERT Library Catalog */}
+        <div
+          className="rounded-3xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5"
+          style={{
+            background: "var(--theme-card-bg)",
+            borderColor: "var(--theme-border)",
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-400">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
+              NCERT Catalog
+            </span>
+          </div>
+
+          <div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-extrabold text-[var(--theme-text)]">{libraryBooks.length}</span>
+              <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">Digital Textbooks</span>
+            </div>
+            <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">
+              Complete syllabus curriculum across all subjects.
+            </p>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-[var(--theme-border)]">
+            <button
+              type="button"
+              onClick={() => onTabChange("library")}
+              className="text-xs font-semibold text-sky-500 hover:text-sky-400 inline-flex items-center gap-1"
+            >
+              <span>Browse Catalog</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content Split: Recent Chapter & Fast Navigation Hub */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Recent Chapter Widget */}
+        <div
+          className="lg:col-span-8 rounded-3xl border p-6 sm:p-7 shadow-sm space-y-5"
+          style={{
+            background: "var(--theme-card-bg)",
+            borderColor: "var(--theme-border)",
+          }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
+                <Clock className="h-5 w-5" />
               </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-bold text-[var(--theme-text)]">
+                  Continue Reading
+                </h3>
+                <p className="text-xs text-[var(--theme-text-secondary)]">
+                  Pick up right where you left off
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onRefresh}
+              className="p-2 rounded-xl border text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] transition"
+              style={{
+                borderColor: "var(--theme-border)",
+                background: "var(--theme-bg)",
+              }}
+              title="Refresh files"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </button>
+          </div>
+
+          {latestItem ? (
+            <div
+              className="rounded-2xl border p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all"
+              style={{
+                background: "var(--theme-bg-secondary)",
+                borderColor: "var(--theme-border)",
+              }}
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500/20 to-teal-500/20 text-purple-400 flex-shrink-0">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400">
+                    Latest Activity
+                  </span>
+                  <h4 className="text-base sm:text-lg font-bold text-[var(--theme-text)]">
+                    {formatTitle(latestItem.name)}
+                  </h4>
+                  <p className="text-xs text-[var(--theme-text-secondary)]">
+                    {formatBytes(latestItem.size)} · {latestItem.mimeType || "PDF Document"}
+                  </p>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={() => onTabChange("books")}
-                className="inline-flex items-center gap-2 rounded-xl bg-teal-400 px-4 py-2 text-sm font-semibold text-[#051424] transition-colors hover:bg-teal-300"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-white bg-purple-600 hover:bg-purple-700 shadow-md transition"
               >
-                <RefreshCw className="h-4 w-4" />
-                Refresh
+                <span>Open File</span>
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
-
-            <div className="p-6">
-              {latestItem ? (
-                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-6">
-                  <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.22em] text-teal-300">Last Chapter</p>
-                      <h3 className="mt-2 text-2xl font-bold text-[var(--theme-text)]">{formatTitle(latestItem.name)}</h3>
-                      <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">
-                        {latestItem.mimeType || "File"} · {formatBytes(latestItem.size)}
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => onTabChange("books")}
-                      className="inline-flex items-center gap-2 self-start rounded-xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] px-4 py-2 text-sm font-semibold text-[var(--theme-text)] transition-colors hover:border-teal-400/50 hover:text-teal-200"
-                    >
-                      Open Your Books
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <EmptyState
-                  title="No book activity yet"
-                  message="Upload a file to your private bucket or open a file from the library to make this section live."
-                />
-              )}
+          ) : (
+            <div
+              className="rounded-2xl border border-dashed p-8 text-center"
+              style={{ borderColor: "var(--theme-border)" }}
+            >
+              <BookOpen className="mx-auto h-8 w-8 text-[var(--theme-text-secondary)] opacity-50" />
+              <p className="mt-3 text-sm font-semibold text-[var(--theme-text)]">
+                No recent book activity
+              </p>
+              <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
+                Open a chapter from the NCERT Library or upload your first book.
+              </p>
+              <button
+                type="button"
+                onClick={() => onTabChange("library")}
+                className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-teal-500 hover:bg-teal-600 transition"
+              >
+                Browse Books Now
+              </button>
             </div>
-          </motion.section>
-
-          <motion.aside
-            className="space-y-6 xl:col-span-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Library summary</h2>
-                <BookOpen className="h-5 w-5 text-teal-300" />
-              </div>
-              <div className="mt-5 grid grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">NCERT files</p>
-                  <p className="mt-2 text-2xl font-bold text-[var(--theme-text)]">{libraryBooks.length}</p>
-                </div>
-                <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
-                  <p className="text-xs uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Private files</p>
-                  <p className="mt-2 text-2xl font-bold text-[var(--theme-text)]">{userBooks.length}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-6 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] backdrop-blur-md">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-[var(--theme-text-secondary)]">Class</h2>
-                <CalendarDays className="h-5 w-5 text-sky-300" />
-              </div>
-              <div className="mt-4 rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-bg-secondary)] p-4">
-                <p className="text-3xl font-bold text-[var(--theme-text)]">{classLabel}</p>
-                <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">Pulled from your account metadata.</p>
-              </div>
-            </div>
-          </motion.aside>
-        </div>
-      </div>
-    </motion.div>
-  );
-}
-
-function NotesSection() {
-  return (
-    <div className="px-8 py-8">
-      <div className="mx-auto max-w-6xl">
-        <EmptyState
-          title="Notes"
-          message="No Supabase notes source was provided yet, so this tab is ready for a table or storage binding when you want to add it."
-        />
-      </div>
-    </div>
-  );
-}
-
-function LibrarySection({ items }: { items: StorageItem[] }) {
-  return (
-    <motion.div className="px-8 py-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <div>
-          <h2 className="text-2xl font-bold text-[var(--theme-text)]">Library</h2>
-          <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">Public NCERT files from the Supabase bucket.</p>
+          )}
         </div>
 
-        {items.length ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((item) => (
-              <FileCard
-                key={item.fullPath}
-                title={formatTitle(item.name)}
-                subtitle={item.mimeType || item.fullPath}
-                size={formatBytes(item.size)}
-                href={supabase.storage.from("ncert").getPublicUrl(item.fullPath).data.publicUrl}
-                accent="bg-sky-500/10 text-sky-200"
-              />
-            ))}
+        {/* Quick Launch Hub */}
+        <div
+          className="lg:col-span-4 rounded-3xl border p-6 sm:p-7 shadow-sm space-y-4"
+          style={{
+            background: "var(--theme-card-bg)",
+            borderColor: "var(--theme-border)",
+          }}
+        >
+          <h3 className="text-base sm:text-lg font-bold text-[var(--theme-text)]">
+            Quick Actions
+          </h3>
+
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => onTabChange("library")}
+              className="w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition hover:scale-[1.01] hover:border-purple-500/40 group"
+              style={{
+                background: "var(--theme-bg)",
+                borderColor: "var(--theme-border)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[var(--theme-text)]">NCERT Digital Library</p>
+                  <p className="text-[11px] text-[var(--theme-text-secondary)]">Class 1-12 syllabus</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-[var(--theme-text-secondary)] group-hover:translate-x-0.5 transition" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onTabChange("books")}
+              className="w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition hover:scale-[1.01] hover:border-teal-500/40 group"
+              style={{
+                background: "var(--theme-bg)",
+                borderColor: "var(--theme-border)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition">
+                  <BookMarked className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[var(--theme-text)]">Upload to Bookshelf</p>
+                  <p className="text-[11px] text-[var(--theme-text-secondary)]">Private cloud storage</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-[var(--theme-text-secondary)] group-hover:translate-x-0.5 transition" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onTabChange("notes")}
+              className="w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition hover:scale-[1.01] hover:border-amber-500/40 group"
+              style={{
+                background: "var(--theme-bg)",
+                borderColor: "var(--theme-border)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[var(--theme-text)]">Study Notes & Notepad</p>
+                  <p className="text-[11px] text-[var(--theme-text-secondary)]">Keep summary takeaways</p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-[var(--theme-text-secondary)] group-hover:translate-x-0.5 transition" />
+            </button>
           </div>
-        ) : (
-          <EmptyState title="No NCERT files found" message="The public ncert bucket is empty or not readable yet." />
-        )}
+        </div>
       </div>
     </motion.div>
   );
 }
 
-function BooksSection({ items }: { items: StorageItem[] }) {
+/* =========================================================================
+   LIBRARY SUB-COMPONENT
+   ========================================================================= */
+function LibrarySection({ items }: { items: StorageItem[] }) {
+  const [search, setSearch] = useState("");
+
+  const filtered = useMemo(() => {
+    return items.filter((item) =>
+      item.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [items, search]);
+
   return (
-    <motion.div className="px-8 py-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+    <motion.div
+      className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[var(--theme-text)]">Your Books</h2>
-          <p className="mt-2 text-sm text-[var(--theme-text-secondary)]">Your private bucket files from Supabase.</p>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">NCERT Library</h2>
+          <p className="text-xs sm:text-sm text-[var(--theme-text-secondary)] mt-1">
+            Free digital textbooks and learning resources for all subjects
+          </p>
         </div>
 
-        {items.length ? (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {items.map((item) => (
-              <div key={item.fullPath} className="rounded-2xl border border-[var(--theme-border)] bg-[var(--theme-card-bg)] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--theme-text)]">{formatTitle(item.name)}</p>
-                    <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">{item.mimeType || item.fullPath}</p>
+        {/* Search bar */}
+        <div className="relative w-full sm:w-72">
+          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--theme-text-secondary)]" />
+          <input
+            type="text"
+            placeholder="Search textbooks..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="auth-input-field pl-9 text-xs sm:text-sm"
+          />
+        </div>
+      </div>
+
+      {filtered.length ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((item) => {
+            const publicUrl = supabase.storage.from("ncert").getPublicUrl(item.fullPath).data.publicUrl;
+            return (
+              <div
+                key={item.fullPath}
+                className="rounded-3xl border p-5 shadow-sm flex flex-col justify-between gap-4 transition-all hover:shadow-md hover:-translate-y-1"
+                style={{
+                  background: "var(--theme-card-bg)",
+                  borderColor: "var(--theme-border)",
+                }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-400 flex-shrink-0">
+                    <BookOpen className="h-6 w-6" />
                   </div>
-                  <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-200">
-                    Private
-                  </div>
+                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/10 text-sky-400">
+                    NCERT
+                  </span>
                 </div>
-                <div className="mt-4 flex items-center justify-between gap-4 text-xs text-[var(--theme-text-secondary)]">
-                  <span>{formatBytes(item.size)}</span>
+
+                <div>
+                  <h3 className="text-base font-bold text-[var(--theme-text)] line-clamp-2">
+                    {formatTitle(item.name)}
+                  </h3>
+                  <p className="text-xs text-[var(--theme-text-secondary)] mt-1">
+                    {formatBytes(item.size)}
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-[var(--theme-border)] flex items-center justify-between">
+                  <span className="text-[11px] text-[var(--theme-text-secondary)]">PDF Document</span>
                   <a
-                    href="#"
-                    onClick={async (event) => {
-                      event.preventDefault();
-                      const { data } = await supabase.storage.from("user-books").createSignedUrl(item.fullPath, 60 * 60);
-                      if (data?.signedUrl) {
-                        window.open(data.signedUrl, "_blank", "noreferrer");
-                      }
-                    }}
-                    className="inline-flex items-center gap-1 text-teal-300 transition-colors hover:text-teal-200"
+                    href={publicUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-white bg-sky-600 hover:bg-sky-500 transition"
                   >
-                    Open <ChevronRight className="h-4 w-4" />
+                    <span>Read Book</span>
+                    <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <EmptyState title="No private books yet" message="Upload files into the user-books bucket to see them here." />
-        )}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div
+          className="rounded-3xl border border-dashed p-12 text-center"
+          style={{ borderColor: "var(--theme-border)" }}
+        >
+          <BookOpen className="mx-auto h-10 w-10 text-[var(--theme-text-secondary)] opacity-40" />
+          <p className="mt-4 text-base font-semibold text-[var(--theme-text)]">
+            {search ? "No matching books found" : "No NCERT files loaded"}
+          </p>
+          <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
+            {search ? "Try searching for a different keyword" : "Files in the NCERT bucket will show up here."}
+          </p>
+        </div>
+      )}
     </motion.div>
   );
 }
 
+/* =========================================================================
+   BOOKSHELF SUB-COMPONENT (WITH DIRECT PDF UPLOADER)
+   ========================================================================= */
+function BooksSection({
+  items,
+  onRefresh,
+}: {
+  items: StorageItem[];
+  onRefresh?: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [customTitle, setCustomTitle] = useState("");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const filtered = useMemo(() => {
+    return items.filter((item) =>
+      item.name.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [items, search]);
+
+  const handleFileSelect = (file: File) => {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+      setErrorMessage("Only PDF files are supported.");
+      return;
+    }
+    setSelectedFile(file);
+    setCustomTitle(file.name.replace(/\.pdf$/i, ""));
+    setErrorMessage(null);
+  };
+
+  const handleUploadSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      setErrorMessage("Please select a PDF file to upload.");
+      return;
+    }
+
+    setIsUploading(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id ?? "anonymous";
+      const cleanTitle = (customTitle.trim() || selectedFile.name.replace(/\.pdf$/i, "")).replace(/[^a-zA-Z0-9_-]/g, "_");
+      const filePath = `${userId}/${Date.now()}_${cleanTitle}.pdf`;
+
+      const { error } = await supabase.storage
+        .from("user-books")
+        .upload(filePath, selectedFile, {
+          cacheControl: "3600",
+          upsert: true,
+          contentType: "application/pdf",
+        });
+
+      if (error) throw error;
+
+      setSuccessMessage("PDF uploaded to your bookshelf!");
+      setSelectedFile(null);
+      setCustomTitle("");
+      if (onRefresh) onRefresh();
+
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setSuccessMessage(null);
+      }, 1200);
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Upload failed. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">Your Bookshelf</h2>
+          <p className="text-xs sm:text-sm text-[var(--theme-text-secondary)] mt-1">
+            Private files and custom PDF study materials stored in your cloud
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="relative w-full sm:w-64">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--theme-text-secondary)]" />
+            <input
+              type="text"
+              placeholder="Search your books..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="auth-input-field pl-9 text-xs sm:text-sm"
+            />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsModalOpen(true);
+              setErrorMessage(null);
+              setSuccessMessage(null);
+            }}
+            className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 shadow-md shadow-teal-500/20 transition hover:scale-[1.02]"
+          >
+            <UploadCloud className="h-4 w-4" />
+            <span>Upload PDF</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Upload Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="w-full max-w-lg rounded-3xl border p-6 sm:p-8 shadow-2xl space-y-5"
+              style={{
+                background: "var(--theme-card-bg)",
+                borderColor: "var(--theme-border)",
+              }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400">
+                    <UploadCloud className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-[var(--theme-text)]">Upload Study PDF</h3>
+                    <p className="text-xs text-[var(--theme-text-secondary)]">Save custom notes or books to your cloud</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="p-2 rounded-xl text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] transition"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {errorMessage && (
+                <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              {successMessage && (
+                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                  <span>{successMessage}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleUploadSubmit} className="space-y-4">
+                {/* Drag and drop box */}
+                <label
+                  className="border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center cursor-pointer transition hover:border-teal-500/50 hover:bg-teal-500/5"
+                  style={{ borderColor: "var(--theme-border)" }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (e.dataTransfer.files?.[0]) {
+                      handleFileSelect(e.dataTransfer.files[0]);
+                    }
+                  }}
+                >
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
+                  />
+                  <div className="p-3 rounded-2xl bg-teal-500/10 text-teal-400 mb-3">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <p className="text-sm font-semibold text-[var(--theme-text)] text-center">
+                    {selectedFile ? selectedFile.name : "Click to browse or drag & drop PDF"}
+                  </p>
+                  <p className="text-xs text-[var(--theme-text-secondary)] mt-1">
+                    {selectedFile ? `${formatBytes(selectedFile.size)} selected` : "Supported formats: PDF (up to 50MB)"}
+                  </p>
+                </label>
+
+                {/* Custom Title Input */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-[var(--theme-text-secondary)]">
+                    Display Title
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Organic Chemistry Short Notes"
+                    value={customTitle}
+                    onChange={(e) => setCustomTitle(e.target.value)}
+                    className="auth-input-field text-sm"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUploading || !selectedFile}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition"
+                  >
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Uploading...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-4 w-4" />
+                        <span>Save to Bookshelf</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Book Grid */}
+      {filtered.length ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((item) => (
+            <div
+              key={item.fullPath}
+              className="rounded-3xl border p-5 shadow-sm flex flex-col justify-between gap-4 transition-all hover:shadow-md hover:-translate-y-1"
+              style={{
+                background: "var(--theme-card-bg)",
+                borderColor: "var(--theme-border)",
+              }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400 flex-shrink-0">
+                  <BookMarked className="h-6 w-6" />
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-teal-500/10 text-teal-400">
+                  Private
+                </span>
+              </div>
+
+              <div>
+                <h3 className="text-base font-bold text-[var(--theme-text)] line-clamp-2">
+                  {formatTitle(item.name)}
+                </h3>
+                <p className="text-xs text-[var(--theme-text-secondary)] mt-1">
+                  {formatBytes(item.size)}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-[var(--theme-border)] flex items-center justify-between">
+                <span className="text-[11px] text-[var(--theme-text-secondary)]">
+                  {toDate(item.createdAt ?? item.updatedAt)?.toLocaleDateString() ?? "Uploaded"}
+                </span>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const { data } = await supabase.storage
+                      .from("user-books")
+                      .createSignedUrl(item.fullPath, 60 * 60);
+                    if (data?.signedUrl) {
+                      window.open(data.signedUrl, "_blank", "noreferrer");
+                    }
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-white bg-teal-600 hover:bg-teal-500 transition"
+                >
+                  <span>Open PDF</span>
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div
+          className="rounded-3xl border border-dashed p-12 text-center"
+          style={{ borderColor: "var(--theme-border)" }}
+        >
+          <BookMarked className="mx-auto h-10 w-10 text-[var(--theme-text-secondary)] opacity-40" />
+          <p className="mt-4 text-base font-semibold text-[var(--theme-text)]">
+            {search ? "No matching files" : "Your bookshelf is empty"}
+          </p>
+          <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
+            Upload custom PDFs to your private cloud storage to read and study them anytime.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setIsModalOpen(true);
+              setErrorMessage(null);
+              setSuccessMessage(null);
+            }}
+            className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 shadow-md shadow-teal-500/20 transition hover:scale-105"
+          >
+            <UploadCloud className="h-4 w-4" />
+            <span>Upload Your First PDF</span>
+          </button>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+/* =========================================================================
+   STUDY NOTES SUB-COMPONENT
+   ========================================================================= */
+function NotesSection() {
+  const [notes, setNotes] = useState<Array<{ id: string; title: string; content: string; date: string }>>(() => {
+    try {
+      const saved = localStorage.getItem("eduscrape_local_notes");
+      return saved ? JSON.parse(saved) : [
+        {
+          id: "1",
+          title: "Physics - Optics Formulas",
+          content: "• Snell's Law: n1 * sin(θ1) = n2 * sin(θ2)\n• Lens Formula: 1/f = 1/v - 1/u\n• Magnification: m = v/u",
+          date: new Date().toLocaleDateString(),
+        },
+      ];
+    } catch {
+      return [];
+    }
+  });
+
+  const [newTitle, setNewTitle] = useState("");
+  const [newContent, setNewContent] = useState("");
+  const [isAdding, setIsAdding] = useState(false);
+
+  const saveNotes = (updated: typeof notes) => {
+    setNotes(updated);
+    localStorage.setItem("eduscrape_local_notes", JSON.stringify(updated));
+  };
+
+  const handleAddNote = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    const newNote = {
+      id: Date.now().toString(),
+      title: newTitle.trim(),
+      content: newContent.trim(),
+      date: new Date().toLocaleDateString(),
+    };
+    saveNotes([newNote, ...notes]);
+    setNewTitle("");
+    setNewContent("");
+    setIsAdding(false);
+  };
+
+  const handleDelete = (id: string) => {
+    saveNotes(notes.filter((n) => n.id !== id));
+  };
+
+  return (
+    <motion.div
+      className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto"
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">Study Notes</h2>
+          <p className="text-xs sm:text-sm text-[var(--theme-text-secondary)] mt-1">
+            Capture revision notes, key formulas, and chapter summaries
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setIsAdding(!isAdding)}
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-white bg-purple-600 hover:bg-purple-700 transition self-start"
+        >
+          <Plus className="h-4 w-4" />
+          <span>{isAdding ? "Cancel" : "New Note"}</span>
+        </button>
+      </div>
+
+      {/* Add note panel */}
+      {isAdding && (
+        <form
+          onSubmit={handleAddNote}
+          className="p-6 rounded-3xl border shadow-lg space-y-4"
+          style={{
+            background: "var(--theme-card-bg)",
+            borderColor: "var(--theme-border)",
+          }}
+        >
+          <h3 className="text-base font-bold text-[var(--theme-text)]">Create Study Note</h3>
+          <input
+            type="text"
+            placeholder="Note title (e.g. Chapter 4 Key Concepts)"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="auth-input-field text-sm"
+            required
+          />
+          <textarea
+            placeholder="Write your study notes, formulas, or takeaways here..."
+            value={newContent}
+            onChange={(e) => setNewContent(e.target.value)}
+            rows={4}
+            className="auth-input-field text-sm resize-none"
+          />
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={() => setIsAdding(false)}
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)]"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-teal-500 hover:from-purple-700 hover:to-teal-600"
+            >
+              Save Note
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Notes Grid */}
+      {notes.length ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {notes.map((note) => (
+            <div
+              key={note.id}
+              className="rounded-3xl border p-5 shadow-sm flex flex-col justify-between gap-4 transition hover:shadow-md"
+              style={{
+                background: "var(--theme-card-bg)",
+                borderColor: "var(--theme-border)",
+              }}
+            >
+              <div className="space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <h4 className="text-base font-bold text-[var(--theme-text)]">{note.title}</h4>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(note.id)}
+                    className="p-1 rounded-lg text-[var(--theme-text-secondary)] hover:text-red-500 transition"
+                    title="Delete Note"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-[var(--theme-text-secondary)] whitespace-pre-wrap leading-relaxed">
+                  {note.content}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-[var(--theme-border)] text-[11px] text-[var(--theme-text-secondary)]">
+                Saved on {note.date}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div
+          className="rounded-3xl border border-dashed p-12 text-center"
+          style={{ borderColor: "var(--theme-border)" }}
+        >
+          <FileText className="mx-auto h-10 w-10 text-[var(--theme-text-secondary)] opacity-40" />
+          <p className="mt-4 text-base font-semibold text-[var(--theme-text)]">
+            No notes written yet
+          </p>
+          <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
+            Click &ldquo;New Note&rdquo; above to write and keep study takeaways.
+          </p>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+/* =========================================================================
+   STORAGE LOADER
+   ========================================================================= */
 async function listStorageItems(bucket: string) {
   const collected: StorageItem[] = [];
 
@@ -557,55 +1228,51 @@ async function listStorageItems(bucket: string) {
   });
 }
 
+/* =========================================================================
+   MAIN DASHBOARD COMPONENT
+   ========================================================================= */
 export default function Dashboard({ onLogout }: DashboardProps) {
   const [activeTab, setActiveTab] = useState<DashboardTab>("overview");
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userBooks, setUserBooks] = useState<StorageItem[]>([]);
   const [libraryBooks, setLibraryBooks] = useState<StorageItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const user = userData.user;
+      if (user) {
+        const meta = user.user_metadata ?? {};
+        setUserProfile({
+          name: meta.full_name || meta.name || user.email?.split("@")[0] || "Student",
+          email: user.email || "",
+          classLabel: meta.grade ? `Class ${meta.grade}` : "Class 10",
+          avatarUrl: meta.avatar_url || meta.picture || null,
+        });
+      }
+
+      const [privateBooks, publicBooks] = await Promise.all([
+        listStorageItems("user-books").catch(() => []),
+        listStorageItems("ncert").catch(() => []),
+      ]);
+
+      setUserBooks(privateBooks);
+      setLibraryBooks(publicBooks);
+    } catch {
+      setUserBooks([]);
+      setLibraryBooks([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
-
-    const fetchData = async () => {
-      try {
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-
-        const user = userData.user;
-        if (!isMounted) return;
-
-        if (user) {
-          const meta = user.user_metadata ?? {};
-          setUserProfile({
-            name: meta.full_name || meta.name || user.email?.split("@")[0] || "Student",
-            email: user.email || "",
-            classLabel: meta.grade ? `Class ${meta.grade}` : "Class",
-            avatarUrl: meta.avatar_url || meta.picture || null,
-          });
-        }
-
-        const [privateBooks, publicBooks] = await Promise.all([listStorageItems("user-books"), listStorageItems("ncert")]);
-
-        if (!isMounted) return;
-
-        setUserBooks(privateBooks);
-        setLibraryBooks(publicBooks);
-      } catch {
-        if (isMounted) {
-          setUserBooks([]);
-          setLibraryBooks([]);
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
     fetchData();
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   const handleLogout = async () => {
@@ -617,17 +1284,58 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     return <SectionLoader label="dashboard" />;
   }
 
+  const streak = getDailyStreak(userBooks);
+
   return (
-    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)]">
-      <aside className="fixed left-0 top-0 bottom-0 z-50 flex w-64 flex-col border-r border-[var(--theme-border)] bg-[var(--theme-bg)] px-6 py-8">
-        <div className="mb-10 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-[#571bc1] to-teal-400 shadow-lg shadow-purple-500/10">
-            <BookOpen className="h-5 w-5 text-white" />
+    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] flex">
+      {/* Mobile Drawer Backdrop */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar (Desktop Pinned + Mobile Slide-Over) */}
+      <aside
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 flex flex-col border-r transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{
+          background: "var(--theme-card-bg)",
+          borderColor: "var(--theme-border)",
+        }}
+      >
+        {/* Brand Header */}
+        <div className="p-6 flex items-center justify-between border-b border-[var(--theme-border)]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 to-teal-500 text-white shadow-lg shadow-purple-500/20">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <div>
+              <span className="text-lg font-bold tracking-tight text-[var(--theme-text)]">
+                EduScrape<span className="text-purple-500">App</span>
+              </span>
+              <p className="text-[10px] uppercase font-bold text-teal-400 tracking-wider">Dashboard</p>
+            </div>
           </div>
-          <span className="bg-gradient-to-r from-purple-300 to-teal-300 bg-clip-text text-xl font-bold tracking-wide text-transparent">EduScrape</span>
+
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="p-1 rounded-lg text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] lg:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
-        <nav className="flex-1 space-y-2">
+        {/* Navigation items */}
+        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
           {sidebarNav.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -636,66 +1344,138 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setActiveTab(item.id)}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors duration-300 ${
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
                   isActive
-                    ? "bg-[var(--color-purple)] text-white shadow-lg shadow-[#571bc1]/35"
-                    : "text-[var(--theme-text-secondary)] hover:bg-[#122131] hover:text-[var(--theme-text)]"
+                    ? "text-white bg-gradient-to-r from-purple-600 to-purple-700 shadow-md shadow-purple-500/20"
+                    : "text-[var(--theme-text-secondary)] hover:bg-[var(--theme-bg-secondary)] hover:text-[var(--theme-text)]"
                 }`}
               >
-                <Icon className="h-5 w-5" />
-                <span className="text-sm font-medium">{item.label}</span>
+                <Icon className="h-4 w-4" />
+                <span>{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        <div className="mt-auto space-y-6 border-t border-[var(--theme-border)] pt-4">
+        {/* Sidebar Footer */}
+        <div className="p-4 border-t border-[var(--theme-border)] space-y-4">
           <div className="flex items-center justify-between px-2">
             <ThemeToggle />
-            <button type="button" onClick={handleLogout} className="p-2 text-[var(--theme-text-secondary)] transition-colors hover:text-red-400" title="Logout">
-              <LogOut className="h-5 w-5" />
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="p-2 rounded-xl text-[var(--theme-text-secondary)] hover:text-red-500 hover:bg-red-500/10 transition"
+              title="Logout"
+            >
+              <LogOut className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="flex items-center gap-3 rounded-xl border border-transparent p-2 transition-all hover:border-[#1F2A3D] hover:bg-[#122131]">
+          {/* User Profile Mini-Badge */}
+          <div
+            className="flex items-center gap-3 p-2.5 rounded-2xl border"
+            style={{
+              background: "var(--theme-bg-secondary)",
+              borderColor: "var(--theme-border)",
+            }}
+          >
             <div className="relative flex-shrink-0">
               {userProfile.avatarUrl ? (
-                <img src={userProfile.avatarUrl} alt={userProfile.name} className="h-10 w-10 rounded-full border-2 border-[#1F2A3D] object-cover" />
+                <img
+                  src={userProfile.avatarUrl}
+                  alt={userProfile.name}
+                  className="h-10 w-10 rounded-full object-cover border"
+                  style={{ borderColor: "var(--theme-border)" }}
+                />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-purple-400 to-teal-400 text-[#051424] shadow-inner">
-                  <UserCircle2 className="h-6 w-6" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-teal-400 text-white font-bold text-sm shadow-inner">
+                  {userProfile.name.charAt(0).toUpperCase()}
                 </div>
               )}
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#051424] bg-green-500" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-[var(--theme-card-bg)]" />
             </div>
+
             <div className="overflow-hidden text-left">
-              <p className="truncate text-sm font-semibold text-[var(--theme-text)]">{userProfile.name}</p>
-              <p className="text-[10px] uppercase tracking-wider text-[var(--theme-text-secondary)]">{userProfile.classLabel}</p>
+              <p className="truncate text-xs font-bold text-[var(--theme-text)]">
+                {userProfile.name}
+              </p>
+              <p className="text-[10px] font-medium text-[var(--theme-text-secondary)] uppercase tracking-wider">
+                {userProfile.classLabel}
+              </p>
             </div>
           </div>
         </div>
       </aside>
 
-      <div className="flex min-h-screen flex-1 flex-col pl-64">
-        <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-[var(--theme-border)]/40 bg-[var(--theme-bg)]/80 px-8 backdrop-blur-xl">
-          <h2 className="text-lg font-bold capitalize text-[var(--theme-text)]">{activeTab}</h2>
-          <div className="text-sm text-[var(--theme-text-secondary)]">Everything is free</div>
+      {/* Main Content Area */}
+      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
+        {/* Top bar header */}
+        <header
+          className="sticky top-0 z-30 flex h-16 sm:h-20 items-center justify-between border-b px-4 sm:px-8 backdrop-blur-xl"
+          style={{
+            background: "var(--theme-bg)",
+            borderColor: "var(--theme-border)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 rounded-xl border text-[var(--theme-text)] lg:hidden"
+              style={{
+                background: "var(--theme-card-bg)",
+                borderColor: "var(--theme-border)",
+              }}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h2 className="text-base sm:text-xl font-bold capitalize text-[var(--theme-text)]">
+              {activeTab === "overview" ? "Dashboard" : activeTab}
+            </h2>
+          </div>
+
+          {/* Quick status chips on top bar */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              <Flame className="h-3.5 w-3.5" />
+              <span>{streak}d Streak</span>
+            </div>
+            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <BookOpen className="h-3.5 w-3.5" />
+              <span>{libraryBooks.length} NCERT</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-teal-500/10 text-teal-400 border border-teal-500/20">
+              <UserCircle2 className="h-3.5 w-3.5" />
+              <span>{userProfile.classLabel}</span>
+            </div>
+          </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto">
+        {/* Dynamic Tab Body */}
+        <main className="flex-1 overflow-y-auto">
           {activeTab === "overview" ? (
-            <DashboardOverview profile={userProfile} userBooks={userBooks} libraryBooks={libraryBooks} onTabChange={setActiveTab} />
+            <DashboardOverview
+              profile={userProfile}
+              userBooks={userBooks}
+              libraryBooks={libraryBooks}
+              onTabChange={setActiveTab}
+              onRefresh={fetchData}
+            />
           ) : activeTab === "library" ? (
             <LibrarySection items={libraryBooks} />
           ) : activeTab === "notes" ? (
             <NotesSection />
           ) : activeTab === "books" ? (
-            <BooksSection items={userBooks} />
+            <BooksSection items={userBooks} onRefresh={fetchData} />
           ) : null}
-        </div>
+        </main>
       </div>
     </div>
   );
 }
+
 

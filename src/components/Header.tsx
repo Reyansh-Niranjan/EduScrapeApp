@@ -121,9 +121,11 @@ export default function Header() {
           </button>
         </div>
 
+        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <motion.div
-            className="md:hidden mt-4 pb-4 border-t border-gray-200"
+            className="md:hidden mt-4 pb-4 border-t"
+            style={{ borderColor: "var(--theme-border)" }}
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -132,7 +134,8 @@ export default function Header() {
             <div className="flex flex-col space-y-3 pt-4">
               <motion.button
                 onClick={() => scrollToSection("home")}
-                className="text-gray-600 hover:text-purple-600 transition-colors duration-200 text-left font-medium"
+                className="text-left font-medium transition-colors duration-200 hover:text-purple-500"
+                style={{ color: "var(--theme-text-secondary)" }}
                 whileHover={{ x: 5 }}
                 transition={{ duration: 0.2 }}
               >
@@ -140,7 +143,8 @@ export default function Header() {
               </motion.button>
               <motion.button
                 onClick={() => scrollToSection("about")}
-                className="text-gray-600 hover:text-purple-600 transition-colors duration-200 text-left font-medium"
+                className="text-left font-medium transition-colors duration-200 hover:text-purple-500"
+                style={{ color: "var(--theme-text-secondary)" }}
                 whileHover={{ x: 5 }}
                 transition={{ duration: 0.2 }}
               >
@@ -148,7 +152,8 @@ export default function Header() {
               </motion.button>
               <motion.button
                 onClick={() => scrollToSection("projects")}
-                className="text-gray-600 hover:text-purple-600 transition-colors duration-200 text-left font-medium"
+                className="text-left font-medium transition-colors duration-200 hover:text-purple-500"
+                style={{ color: "var(--theme-text-secondary)" }}
                 whileHover={{ x: 5 }}
                 transition={{ duration: 0.2 }}
               >
@@ -156,23 +161,25 @@ export default function Header() {
               </motion.button>
               <motion.button
                 onClick={() => scrollToSection("creator")}
-                className="text-gray-600 hover:text-purple-600 transition-colors duration-200 text-left font-medium"
+                className="text-left font-medium transition-colors duration-200 hover:text-purple-500"
+                style={{ color: "var(--theme-text-secondary)" }}
                 whileHover={{ x: 5 }}
                 transition={{ duration: 0.2 }}
               >
                 Team
               </motion.button>
-              <div className="pt-2">
+              <div className="pt-2 flex items-center justify-between">
+                <span className="text-xs text-[var(--theme-text-secondary)]">Appearance</span>
                 <ThemeToggle />
               </div>
               <motion.button
                 onClick={() => navigateToHash("#login")}
-                className="btn-primary text-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="btn-primary text-center mt-2"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 transition={{ duration: 0.2 }}
               >
-                Login
+                Login / Sign Up
               </motion.button>
             </div>
           </motion.div>

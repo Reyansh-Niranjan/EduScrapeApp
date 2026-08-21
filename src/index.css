@@ -318,27 +318,79 @@ img {
 
 /* Auth form styles */
 .auth-input-field {
-  @apply w-full px-4 py-3 rounded-lg bg-white border border-gray-200
-         focus:border-purple-500 focus:ring-2 focus:ring-purple-100
-         outline-none transition-all shadow-sm hover:shadow;
-  color: var(--color-black);
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: var(--theme-input-bg);
+  border: 1px solid var(--theme-border);
+  color: var(--theme-text);
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.auth-input-field:focus {
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
 }
 
 .auth-input-field::placeholder {
-  color: var(--color-gray-600);
+  color: var(--theme-text-light);
 }
 
 .auth-button {
-  @apply w-full px-4 py-3 rounded-lg font-semibold
-         transition-all shadow-sm hover:shadow-md disabled:opacity-50
-         disabled:cursor-not-allowed;
-  background: var(--color-purple);
-  color: var(--color-white);
+  width: 100%;
+  padding: 0.8rem 1.25rem;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.25);
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+  color: #FFFFFF;
+  border: none;
+  cursor: pointer;
 }
 
 .auth-button:hover:not(:disabled) {
-  background: var(--color-purple-dark);
+  background: linear-gradient(135deg, #9333EA 0%, #6D28D9 100%);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
   transform: translateY(-1px);
+}
+
+.auth-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.auth-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Glassmorphism & SaaS Utilities */
+.glass-panel {
+  background: var(--theme-card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--theme-border);
+}
+
+.gradient-brand {
+  background: linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%);
+}
+
+.gradient-brand-text {
+  background: linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.glow-purple {
+  box-shadow: 0 0 30px -5px rgba(139, 92, 246, 0.3);
+}
+
+.glow-teal {
+  box-shadow: 0 0 30px -5px rgba(20, 184, 166, 0.3);
 }
 
 /* Section spacing */
@@ -350,3 +402,4 @@ section {
 .page-transition {
   animation: fadeIn 0.4s ease-out;
 }
+
