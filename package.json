@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.112.3",
-    "framer-motion": "^12.40.0",
+    "framer-motion": "^12.43.0",
     "lucide-react": "^0.556.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
