@@ -2,7 +2,8 @@
 """Supabase Storage Replenisher.
 
 Manages direct uploading, synchronization, and deduplication of NCERT textbook PDFs
-into the Supabase `ncert` storage bucket.
+into the Supabase `ncert` storage bucket using industrial-strength REST sessions,
+connection pooling, and automatic exponential retries.
 """
 
 from __future__ import annotations
@@ -11,8 +12,13 @@ import json
 import logging
 import os
 import tempfile
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Set
+
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 try:
     from supabase import Client, create_client
@@ -51,52 +57,72 @@ class SupabaseReplenisher:
         self.client: Optional[Client] = None
         self._remote_files: Optional[Dict[str, int]] = None
 
-        if not HAS_SUPABASE:
-            logger.warning("The 'supabase' Python package is not installed. To upload to Supabase, install it via: pip install supabase")
-            return
+        # Build resilient HTTP session with high-capacity connection pooling
+        self.session = requests.Session()
+        retries = Retry(
+            total=4,
+            backoff_factor=1.5,
+            status_forcelist=[500, 502, 503, 504, 408, 429],
+            raise_on_status=False,
+        )
+        adapter = HTTPAdapter(max_retries=retries, pool_connections=64, pool_maxsize=64)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
 
         if self.url and self.key:
-            try:
-                self.client = create_client(self.url, self.key)
-                logger.info(f"Connected to Supabase ({self.url})")
-            except Exception as e:
-                logger.error(f"Failed to initialize Supabase client: {e}")
+            if HAS_SUPABASE:
+                try:
+                    self.client = create_client(self.url, self.key)
+                except Exception:
+                    pass
+            logger.info(f"Connected to Supabase ({self.url})")
         else:
             logger.warning("Supabase URL or Key not found in environment.")
 
     def is_configured(self) -> bool:
-        return self.client is not None
+        return bool(self.url and self.key)
 
     def fetch_existing_files(self, refresh: bool = False) -> Dict[str, int]:
-        """Recursively list all existing files in the bucket.
-
-        Returns:
-            Dictionary mapping remote_path -> file_size_bytes
-        """
+        """Recursively list all existing files in the bucket."""
         if self._remote_files is not None and not refresh:
             return self._remote_files
 
-        if not self.client:
+        if not self.is_configured():
             return {}
 
         collected: Dict[str, int] = {}
+        api_list_url = f"{self.url.rstrip('/')}/storage/v1/object/list/{self.bucket_name}"
+        headers = {
+            "Authorization": f"Bearer {self.key}",
+            "apikey": self.key,
+            "Content-Type": "application/json",
+        }
 
         def walk(prefix: str = "", depth: int = 0):
-            if depth > 4:
+            if depth > 5:
                 return
             try:
-                items = self.client.storage.from_(self.bucket_name).list(prefix, {"limit": 1000})
-                for item in items:
-                    name = item.get("name", "")
-                    full_path = f"{prefix}/{name}".strip("/") if prefix else name
-                    metadata = item.get("metadata")
+                payload = {
+                    "prefix": prefix,
+                    "limit": 1000,
+                    "sortBy": {"column": "name", "order": "asc"},
+                }
+                resp = self.session.post(api_list_url, headers=headers, json=payload, timeout=30)
+                if resp.status_code == 200:
+                    items = resp.json()
+                    for item in items:
+                        name = item.get("name", "")
+                        if not name:
+                            continue
+                        full_path = f"{prefix}/{name}".strip("/") if prefix else name
+                        metadata = item.get("metadata")
 
-                    # If it has no file extension and metadata is null, it is likely a folder
-                    if metadata is None and "." not in name:
-                        walk(full_path, depth + 1)
-                    else:
-                        size = metadata.get("size", 0) if isinstance(metadata, dict) else 0
-                        collected[full_path] = size
+                        # If metadata is null and no file extension, walk as folder
+                        if metadata is None and "." not in name:
+                            walk(full_path, depth + 1)
+                        else:
+                            size = metadata.get("size", 0) if isinstance(metadata, dict) else 0
+                            collected[full_path] = size
             except Exception as e:
                 logger.warning(f"Error listing bucket directory '{prefix}': {e}")
 
@@ -107,7 +133,7 @@ class SupabaseReplenisher:
         return collected
 
     def exists(self, remote_path: str, local_size: Optional[int] = None) -> bool:
-        """Check if file already exists in bucket, optionally validating non-zero size."""
+        """Check if file already exists in bucket, validating non-zero size."""
         remote_files = self.fetch_existing_files()
         clean_path = remote_path.replace("\\", "/").strip("/")
 
@@ -123,10 +149,11 @@ class SupabaseReplenisher:
         remote_path: str,
         content_type: str = "application/pdf",
         upsert: bool = True,
+        max_retries: int = 4,
     ) -> bool:
-        """Upload a file to Supabase storage bucket."""
-        if not self.client:
-            logger.error("Cannot upload: Supabase client is not configured.")
+        """Upload a file to Supabase storage bucket with automatic retries and backoff."""
+        if not self.is_configured():
+            logger.error("Cannot upload: Supabase credentials missing.")
             return False
 
         if not local_path.exists():
@@ -134,43 +161,57 @@ class SupabaseReplenisher:
             return False
 
         clean_remote_path = remote_path.replace("\\", "/").strip("/")
+        # URL encode path segments for safe HTTP transmission
+        from urllib.parse import quote
+        safe_encoded_path = "/".join(quote(seg) for seg in clean_remote_path.split("/"))
+        api_url = f"{self.url.rstrip('/')}/storage/v1/object/{self.bucket_name}/{safe_encoded_path}"
 
-        try:
-            with open(local_path, "rb") as f:
-                file_bytes = f.read()
+        headers = {
+            "Authorization": f"Bearer {self.key}",
+            "apikey": self.key,
+            "x-upsert": "true" if upsert else "false",
+            "Content-Type": content_type,
+        }
 
-            file_options = {
-                "content-type": content_type,
-                "upsert": "true" if upsert else "false",
-            }
+        file_size = local_path.stat().st_size
 
-            response = self.client.storage.from_(self.bucket_name).upload(
-                path=clean_remote_path,
-                file=file_bytes,
-                file_options=file_options,
-            )
+        for attempt in range(1, max_retries + 1):
+            try:
+                with open(local_path, "rb") as f:
+                    resp = self.session.post(
+                        api_url,
+                        headers=headers,
+                        data=f,
+                        timeout=180,
+                    )
 
-            # Update cache
-            if self._remote_files is not None:
-                self._remote_files[clean_remote_path] = len(file_bytes)
+                if resp.status_code in (200, 201):
+                    if self._remote_files is not None:
+                        self._remote_files[clean_remote_path] = file_size
+                    logger.info(f"Uploaded to Supabase: {clean_remote_path} ({file_size} bytes)")
+                    return True
 
-            logger.info(f"Uploaded to Supabase: {clean_remote_path} ({len(file_bytes)} bytes)")
-            return True
+                err_text = resp.text
+                if resp.status_code == 403 or "row-level security" in err_text.lower():
+                    logger.warning(
+                        f"Supabase RLS Policy: Write permission denied for '{clean_remote_path}'. "
+                        f"Set SUPABASE_SERVICE_ROLE_KEY in .env or GitHub Secrets, or enable INSERT policy on bucket '{self.bucket_name}' for anon role."
+                    )
+                    return False
 
-        except Exception as e:
-            err_msg = str(e)
-            if "row-level security" in err_msg.lower() or "403" in err_msg:
-                logger.warning(
-                    f"Supabase RLS Policy: Write permission denied for '{clean_remote_path}'. "
-                    f"Set SUPABASE_SERVICE_ROLE_KEY in .env or GitHub Secrets, or enable INSERT policy on bucket '{self.bucket_name}' for anon role."
-                )
-            else:
-                logger.error(f"Failed to upload {clean_remote_path}: {e}")
-            return False
+                logger.warning(f"Upload attempt {attempt} for '{clean_remote_path}' returned HTTP {resp.status_code}: {err_text[:120]}")
+                time.sleep(2 * attempt)
+
+            except Exception as e:
+                logger.warning(f"Upload attempt {attempt} for '{clean_remote_path}' failed: {e}")
+                time.sleep(2 * attempt)
+
+        logger.error(f"Failed to upload '{clean_remote_path}' after {max_retries} attempts.")
+        return False
 
     def upload_catalog_json(self, catalog_data: dict, remote_name: str = "catalog.json") -> bool:
         """Upload master catalog JSON directly to bucket root."""
-        if not self.client:
+        if not self.is_configured():
             return False
 
         with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tmp:
