@@ -163,7 +163,7 @@ class SupabaseReplenisher:
         clean_remote_path = remote_path.replace("\\", "/").strip("/")
         # URL encode path segments for safe HTTP transmission
         from urllib.parse import quote
-        safe_encoded_path = "/".join(quote(seg) for seg in clean_remote_path.split("/"))
+        safe_encoded_path = "/".join(quote(seg, safe="()-_.!~*'()") for seg in clean_remote_path.split("/"))
         api_url = f"{self.url.rstrip('/')}/storage/v1/object/{self.bucket_name}/{safe_encoded_path}"
 
         headers = {
@@ -192,7 +192,16 @@ class SupabaseReplenisher:
                     return True
 
                 err_text = resp.text
-                if resp.status_code == 403 or "row-level security" in err_text.lower():
+                err_lower = err_text.lower()
+
+                # If Supabase reports object already exists / duplicate, treat as verified presence
+                if resp.status_code in (400, 409) and any(k in err_lower for k in ("already exists", "duplicate", "keyalreadyexists")):
+                    if self._remote_files is not None:
+                        self._remote_files[clean_remote_path] = file_size
+                    logger.info(f"Verified already in Supabase: {clean_remote_path}")
+                    return True
+
+                if resp.status_code == 403 or "row-level security" in err_lower:
                     logger.warning(
                         f"Supabase RLS Policy: Write permission denied for '{clean_remote_path}'. "
                         f"Set SUPABASE_SERVICE_ROLE_KEY in .env or GitHub Secrets, or enable INSERT policy on bucket '{self.bucket_name}' for anon role."
