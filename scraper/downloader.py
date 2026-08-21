@@ -210,13 +210,16 @@ def merge_zip_to_pdf(
         if not keep_zip:
             zip_path.unlink(missing_ok=True)
 
-        # Remove repeated NCERT watermark images if requested
+        # Remove repeated NCERT watermark images and auto-compress oversized books
         if remove_watermarks:
             try:
-                from watermark_remover import remove_watermarks_from_pdf
+                try:
+                    from watermark_remover import remove_watermarks_from_pdf
+                except ImportError:
+                    from scraper.watermark_remover import remove_watermarks_from_pdf
                 remove_watermarks_from_pdf(out_pdf_path)
             except Exception as w_err:
-                logger.debug(f"Watermark cleaning skipped: {w_err}")
+                logger.warning(f"Watermark cleaning failed on {out_pdf_path.name}: {w_err}")
 
         return out_pdf_path
 

@@ -201,6 +201,13 @@ class SupabaseReplenisher:
                     logger.info(f"Verified already in Supabase: {clean_remote_path}")
                     return True
 
+                if resp.status_code in (413, 400) and any(k in err_lower for k in ("payload too large", "entitytoolarge", "exceeded the maximum allowed size")):
+                    logger.warning(
+                        f"Supabase Storage Quota: '{clean_remote_path}' ({file_size / (1024*1024):.1f}MB) exceeds Supabase single-file limit. "
+                        f"Skipped to prevent retry loop."
+                    )
+                    return False
+
                 if resp.status_code == 403 or "row-level security" in err_lower:
                     logger.warning(
                         f"Supabase RLS Policy: Write permission denied for '{clean_remote_path}'. "

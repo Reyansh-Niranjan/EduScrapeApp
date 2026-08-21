@@ -172,6 +172,11 @@ def remove_watermarks_from_pdf(
         tmp_output.rename(out_path)
 
         logger.info(f"Cleaned {removed_occurrences} watermark instances from {input_pdf.name}")
+
+        # If merged PDF exceeds 48MB (Supabase 50MB hard limit), compress it
+        if out_path.exists() and out_path.stat().st_size > 48 * 1024 * 1024:
+            compress_oversized_pdf(out_path, max_size_bytes=48 * 1024 * 1024)
+
         return len(xrefs_to_remove), removed_occurrences
 
     except Exception as e:
@@ -181,6 +186,50 @@ def remove_watermarks_from_pdf(
         except Exception:
             pass
         return 0, 0
+
+
+def compress_oversized_pdf(
+    pdf_path: Path,
+    max_size_bytes: int = 48 * 1024 * 1024,
+    target_dpi: int = 150,
+) -> bool:
+    """If PDF exceeds max_size_bytes, re-encode pages to guarantee it fits under storage quotas."""
+    if not HAS_PYMUPDF or not pdf_path.exists():
+        return False
+
+    current_size = pdf_path.stat().st_size
+    if current_size <= max_size_bytes:
+        return False
+
+    logger.info(f"Optimizing oversized PDF {pdf_path.name} ({current_size / (1024*1024):.1f}MB > {max_size_bytes / (1024*1024):.0f}MB limit)...")
+
+    try:
+        src_doc = fitz.open(pdf_path)
+        out_doc = fitz.open()
+
+        for page in src_doc:
+            pix = page.get_pixmap(dpi=target_dpi)
+            jpg_bytes = pix.tobytes("jpeg", jpg_quality=78)
+            new_page = out_doc.new_page(width=page.rect.width, height=page.rect.height)
+            new_page.insert_image(new_page.rect, stream=jpg_bytes)
+
+        src_doc.close()
+
+        tmp_out = pdf_path.with_name(f"{pdf_path.name}.opt.tmp")
+        out_doc.save(tmp_out, garbage=4, clean=True, deflate=True)
+        out_doc.close()
+
+        new_size = tmp_out.stat().st_size
+        logger.info(f"Optimized {pdf_path.name}: {current_size / (1024*1024):.1f}MB -> {new_size / (1024*1024):.1f}MB")
+
+        if pdf_path.exists():
+            pdf_path.unlink()
+        tmp_out.rename(pdf_path)
+        return True
+
+    except Exception as e:
+        logger.warning(f"Failed to optimize oversized PDF {pdf_path.name}: {e}")
+        return False
 
 
 if __name__ == "__main__":
