@@ -5,10 +5,10 @@ Extracts and normalizes the full catalog of Class 1-12 NCERT textbooks.
 Supports both live fetching and offline seed fallback.
 """
 
-from __future__ import annotations
-
+import asyncio
 import json
 import logging
+import os
 import re
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional, Tuple
@@ -16,6 +16,12 @@ from typing import Any, Dict, Iterator, List, Optional, Tuple
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
+
+try:
+    from playwright.async_api import async_playwright, Page
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
 
 logger = logging.getLogger("ncert_scraper.catalog")
 
@@ -215,9 +221,155 @@ def fetch_catalog(cache_path: Optional[Path] = None, refresh: bool = False) -> D
         except Exception as e:
             logger.warning(f"Failed to read seed catalog {DEFAULT_SEED_FILE}: {e}")
 
-    # 3. Live fetch from NCERT with fallback to seed
+async def build_catalog_playwright_async(
+    headless: bool = True,
+    timeout_ms: int = 45_000,
+) -> Dict[str, Dict[str, List[Dict[str, str]]]]:
+    """Crawl NCERT dropdowns directly using Playwright with NO hardcoding."""
+    if not HAS_PLAYWRIGHT:
+        raise ImportError("Playwright is not installed. Install with `pip install playwright && playwright install chromium`.")
+
+    logger.info("[Playwright] Launching browser to scrape NCERT textbook dropdowns...")
+    catalog: Dict[str, Dict[str, List[Dict[str, str]]]] = {}
+
+    async with async_playwright() as pw:
+        browser = await pw.chromium.launch(headless=headless)
+        context = await browser.new_context(user_agent=USER_AGENT)
+        page = await context.new_page()
+        page.set_default_timeout(timeout_ms)
+
+        await page.goto(NCERT_URL, wait_until="domcontentloaded")
+        await page.wait_for_selector('select[name="tclass"]')
+
+        classes = await page.evaluate(
+            """() => {
+                const s = document.querySelector('select[name="tclass"]');
+                if (!s) return [];
+                return Array.from(s.options)
+                    .map(o => ({value: o.value, text: (o.textContent || '').trim()}))
+                    .filter(o => o.value && o.value !== '-1' && !o.text.toLowerCase().includes('select'));
+            }"""
+        )
+
+        for cls_opt in classes:
+            cls_key = normalize_class_key(cls_opt["text"])
+            if not cls_key:
+                continue
+            catalog.setdefault(cls_key, {})
+
+            await page.select_option('select[name="tclass"]', value=cls_opt["value"])
+            await page.wait_for_timeout(250)
+
+            subjects = await page.evaluate(
+                """() => {
+                    const s = document.querySelector('select[name="tsubject"]');
+                    if (!s) return [];
+                    return Array.from(s.options)
+                        .map(o => ({value: o.value, text: (o.textContent || '').trim()}))
+                        .filter(o => o.value && o.value !== '-1' && !o.text.toLowerCase().includes('select'));
+                }"""
+            )
+
+            for subj_opt in subjects:
+                subj_name = subj_opt["text"]
+                if not subj_name:
+                    continue
+                catalog[cls_key].setdefault(subj_name, [])
+
+                await page.select_option('select[name="tsubject"]', value=subj_opt["value"])
+                await page.wait_for_timeout(250)
+
+                books = await page.evaluate(
+                    """() => {
+                        const s = document.querySelector('select[name="tbook"]');
+                        if (!s) return [];
+                        return Array.from(s.options)
+                            .map(o => ({value: o.value, text: (o.textContent || '').trim()}))
+                            .filter(o => o.value && o.value !== '-1' && !o.text.toLowerCase().includes('select'));
+                    }"""
+                )
+
+                for b_opt in books:
+                    raw_val = b_opt["value"]
+                    m = re.search(r"(?:=|\?|^)([a-z0-9]{4,8})(?:=|$)", raw_val, re.I)
+                    code = m.group(1) if m else raw_val.split("=")[0]
+                    title = b_opt["text"]
+                    if code and title:
+                        catalog[cls_key][subj_name].append({
+                            "title": title,
+                            "code": code,
+                            "chapters": "",
+                        })
+
+        await browser.close()
+
+    return catalog
+
+
+def build_catalog_playwright(
+    output_path: Optional[Path] = None,
+    headless: bool = True,
+) -> Dict[str, Dict[str, List[Dict[str, str]]]]:
+    """Synchronous entrypoint for Playwright-based catalog building."""
+    cat = asyncio.run(build_catalog_playwright_async(headless=headless))
+    target_path = output_path or DEFAULT_CATALOG_FILE
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(target_path, "w", encoding="utf-8") as f:
+        json.dump(cat, f, indent=2, ensure_ascii=False)
+    logger.info(f"[Playwright] Successfully wrote {len(cat)} classes to {target_path}")
+    return cat
+
+
+def fetch_catalog(
+    catalog_path: Optional[Path] = None,
+    refresh: bool = False,
+    use_playwright: bool = False,
+) -> Dict[str, Dict[str, List[Dict[str, str]]]]:
+    """Fetch or load the textbook catalog with automatic caching."""
+    cache = catalog_path or DEFAULT_CATALOG_FILE
+
+    # 1. Check Playwright if explicitly requested or refreshing
+    if use_playwright and HAS_PLAYWRIGHT:
+        try:
+            return build_catalog_playwright(output_path=cache)
+        except Exception as e:
+            logger.warning(f"Playwright crawler failed: {e}. Trying standard fallback...")
+
+    # 2. Check local catalog.json cache
+    if cache.exists() and not refresh:
+        try:
+            with open(cache, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                norm = normalize_catalog(data)
+                if norm:
+                    logger.info(f"Loaded {len(norm)} classes from cached catalog ({cache.name})")
+                    return norm
+        except Exception as e:
+            logger.warning(f"Failed to read cache {cache}: {e}")
+
+    # 3. Try offline seed data
+    if DEFAULT_SEED_FILE.exists() and not refresh:
+        try:
+            with open(DEFAULT_SEED_FILE, "r", encoding="utf-8") as f:
+                seed_data = json.load(f)
+                norm = normalize_catalog(seed_data)
+                if norm:
+                    logger.info(f"Loaded {len(norm)} classes from seed catalog ({DEFAULT_SEED_FILE.name})")
+                    with open(cache, "w", encoding="utf-8") as out:
+                        json.dump(norm, out, indent=2, ensure_ascii=False)
+                    return norm
+        except Exception as e:
+            logger.warning(f"Failed to read seed catalog {DEFAULT_SEED_FILE}: {e}")
+
+    # 4. Live fetch from NCERT (regex parser or Playwright)
+    if HAS_PLAYWRIGHT:
+        try:
+            return build_catalog_playwright(output_path=cache)
+        except Exception as e:
+            logger.warning(f"Playwright extraction failed ({e}), falling back to direct JS parse...")
+
     try:
-        logger.info("Attempting live catalog extraction from NCERT...")
+        logger.info("Attempting direct JS catalog extraction from NCERT...")
         script = fetch_live_script()
         live_catalog = parse_live_script(script)
         if live_catalog:

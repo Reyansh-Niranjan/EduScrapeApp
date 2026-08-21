@@ -3,6 +3,8 @@
 # dependencies = [
 #   "requests>=2.31.0",
 #   "pypdf>=4.0.0",
+#   "pymupdf>=1.24.0",
+#   "playwright>=1.40.0",
 #   "rich>=13.0.0",
 #   "python-dotenv>=1.0.0",
 #   "supabase>=2.0.0",
@@ -11,7 +13,7 @@
 """NCERT Textbook Scraper & Supabase Replenisher (CLI).
 
 Automates textbook discovery, multi-threaded downloading, PDF merging,
-and cloud synchronization to Supabase Storage.
+watermark cleaning, and cloud synchronization to Supabase Storage.
 """
 
 from __future__ import annotations
@@ -73,9 +75,10 @@ def process_book_task(
     upload_enabled: bool,
     clean_local: bool,
     keep_zips: bool,
+    remove_watermarks: bool,
     force: bool,
 ) -> Dict[str, str]:
-    """Worker task: probes, downloads, merges, and optionally uploads a single textbook."""
+    """Worker task: probes, downloads, merges, cleans watermarks, and optionally uploads a textbook."""
     code = book["code"]
     title = book["title"]
     safe_title = sanitize_filename(title)
@@ -95,7 +98,7 @@ def process_book_task(
     if local_pdf_path.exists() and local_pdf_path.stat().st_size > 0 and not force:
         if upload_enabled and uploader:
             ok = uploader.upload_file(local_pdf_path, remote_path)
-            if clean_local:
+            if clean_local and ok:
                 local_pdf_path.unlink(missing_ok=True)
             return {"status": "uploaded" if ok else "upload_error", "title": title, "path": remote_path}
         return {"status": "skipped_local", "title": title, "path": str(local_pdf_path)}
@@ -110,15 +113,20 @@ def process_book_task(
     if not download_ok or not local_zip_path.exists():
         return {"status": "download_failed", "title": title, "code": code}
 
-    # Step 5: Extract and merge chapter PDFs into unified textbook PDF
-    merged_path = merge_zip_to_pdf(local_zip_path, local_pdf_path, keep_zip=keep_zips)
+    # Step 5: Extract and merge chapter PDFs into unified textbook PDF (with watermark cleaning)
+    merged_path = merge_zip_to_pdf(
+        local_zip_path,
+        local_pdf_path,
+        keep_zip=keep_zips,
+        remove_watermarks=remove_watermarks,
+    )
     if not merged_path or not merged_path.exists() or merged_path.stat().st_size == 0:
         return {"status": "merge_failed", "title": title, "code": code}
 
     # Step 6: Upload to Supabase
     if upload_enabled and uploader:
         upload_ok = uploader.upload_file(merged_path, remote_path)
-        if clean_local:
+        if clean_local and upload_ok:
             merged_path.unlink(missing_ok=True)
         if upload_ok:
             return {"status": "uploaded", "title": title, "path": remote_path}
@@ -132,11 +140,13 @@ def main():
     parser.add_argument("--class", dest="cls", default="all", help="Target class (1-12 or 'all')")
     parser.add_argument("--subject", default=None, help="Target subject (or all if omitted)")
     parser.add_argument("--out", default="downloads", help="Output directory for downloaded books")
-    parser.add_argument("--concurrency", "-c", type=int, default=4, help="Parallel worker threads")
-    parser.add_argument("--upload-to-supabase", action="store_true", help="Sync merged PDFs to Supabase bucket")
+    parser.add_argument("--concurrency", "-c", type=int, default=16, help="Parallel worker threads (default: 16)")
+    parser.add_argument("--playwright", action="store_true", help="Build catalog.json dynamically using Playwright browser")
+    parser.add_argument("--upload-to-supabase", action="store_true", help="Sync merged PDFs to Supabase bucket (used by GitHub Actions)")
     parser.add_argument("--clean-local", action="store_true", help="Delete local files after uploading (saves CI disk)")
     parser.add_argument("--force", action="store_true", help="Force re-download and re-upload existing files")
     parser.add_argument("--keep-zips", action="store_true", help="Keep source chapter ZIP files")
+    parser.add_argument("--keep-watermarks", action="store_true", help="Do not remove background NCERT watermarks")
     parser.add_argument("--refresh-catalog", action="store_true", help="Re-fetch catalog from NCERT website")
     parser.add_argument("--dry-run", action="store_true", help="Inspect and list matching books without downloading")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose debug logging")
@@ -151,8 +161,8 @@ def main():
     console.print("[bold cyan]  EduScrapeApp -- NCERT Scraper & Supabase Pipeline           [/bold cyan]")
     console.print("[bold cyan]==============================================================[/bold cyan]\n")
 
-    # Step 1: Catalog Extraction
-    catalog = fetch_catalog(refresh=args.refresh_catalog)
+    # Step 1: Catalog Extraction (Playwright / Direct NCERT parser / Cache)
+    catalog = fetch_catalog(refresh=args.refresh_catalog, use_playwright=args.playwright)
     target_books = list(iter_books(catalog, class_filter=args.cls, subject_filter=args.subject))
 
     if not target_books:
@@ -223,6 +233,7 @@ def main():
                     args.upload_to_supabase,
                     args.clean_local,
                     args.keep_zips,
+                    not args.keep_watermarks,
                     args.force,
                 ): (c, s, b)
                 for c, s, b in target_books

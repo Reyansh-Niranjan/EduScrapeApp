@@ -158,7 +158,14 @@ class SupabaseReplenisher:
             return True
 
         except Exception as e:
-            logger.error(f"Failed to upload {clean_remote_path}: {e}")
+            err_msg = str(e)
+            if "row-level security" in err_msg.lower() or "403" in err_msg:
+                logger.warning(
+                    f"Supabase RLS Policy: Write permission denied for '{clean_remote_path}'. "
+                    f"Set SUPABASE_SERVICE_ROLE_KEY in .env or GitHub Secrets, or enable INSERT policy on bucket '{self.bucket_name}' for anon role."
+                )
+            else:
+                logger.error(f"Failed to upload {clean_remote_path}: {e}")
             return False
 
     def upload_catalog_json(self, catalog_data: dict, remote_name: str = "catalog.json") -> bool:

@@ -11,6 +11,19 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*.local
+
+# Scraper Downloads & Temporary Caches
+downloads/
+*.tmp
+*.zip
+*.pdf
+__pycache__/
+*.py[cod]
+*$py.class
+failures.json
+.playwright/
 
 # Editor directories and files
 .vscode/*

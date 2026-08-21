@@ -4,7 +4,6 @@ import {
   BarChart3,
   BookMarked,
   BookOpen,
-  CalendarDays,
   ChevronRight,
   FileText,
   Flame,

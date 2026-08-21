@@ -7,8 +7,9 @@ A high-performance, resilient NCERT textbook extraction and cloud synchronizatio
 ## ⚡ Key Highlights
 
 - **Direct JS Parser (Zero Headless Overhead)**: Extracts the full Class 1–12 textbook catalog directly from NCERT's `change1()` script without slow, flaky browser automation.
-- **Resilient Downloader**: Concurrent multi-threaded downloading with HTTP `Range` resume support, exponential backoff, and rapid `HEAD` size probing.
-- **Smart PDF Assembly**: Unpacks official NCERT chapter ZIPs, orders prelims/cover pages first, and merges chapters into clean, searchable, single-book PDFs using `pypdf`.
+- **Resilient Downloader**: Concurrent multi-threaded downloading with HTTP `Range` resume support, exponential backoff, CRC verification, and rapid `HEAD` size probing.
+- **Automated Watermark Removal & Compression**: Uses PyMuPDF stream fingerprinting (`watermark_remover.py`) to detect and strip recurring NCERT watermark image objects across every page, reducing PDF file sizes by 40–80% without degrading text quality.
+- **Smart PDF Assembly**: Unpacks official NCERT chapter ZIPs, orders prelims/cover pages first, and merges chapters into clean, searchable, single-book PDFs.
 - **Supabase Storage Sync**: Automatically uploads PDFs into the `ncert` bucket formatted cleanly as `Class <N>/<Subject>/<Book Title>.pdf` with duplicate detection and catalog syncing.
 - **Automated GitHub Actions**: Scheduled monthly workflow (`.github/workflows/scrape_and_replenish.yml`) and manual `workflow_dispatch` trigger.
 

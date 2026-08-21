@@ -63,26 +63,31 @@ def download_zip(
     code: str,
     dest_path: Path,
     max_retries: int = 3,
-    chunk_size: int = 65536,
+    chunk_size: int = 131072,
 ) -> bool:
     """Download book ZIP archive with resume and retry capability."""
     url = get_book_zip_url(code)
     dest_path.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = dest_path.with_suffix(".zip.tmp")
+    tmp_path = dest_path.parent / f"{dest_path.name}.tmp"
 
-    headers = {"User-Agent": USER_AGENT}
+    headers = {
+        "User-Agent": USER_AGENT,
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+    }
 
     for attempt in range(1, max_retries + 1):
         try:
-            resume_at = tmp_path.stat().st_size if tmp_path.exists() else 0
+            resume_at = tmp_path.stat().st_size if (tmp_path.exists() and tmp_path.stat().st_size > 0) else 0
             req_headers = dict(headers)
             if resume_at > 0:
                 req_headers["Range"] = f"bytes={resume_at}-"
 
-            response = requests.get(url, headers=req_headers, stream=True, timeout=40)
+            response = requests.get(url, headers=req_headers, stream=True, timeout=60)
 
-            # If server ignored range header, reset resume offset
-            if response.status_code == 200 and resume_at > 0:
+            # If server ignored range header, restart clean
+            is_partial = response.status_code == 206
+            if response.status_code == 200:
                 resume_at = 0
 
             if response.status_code not in (200, 206):
@@ -92,15 +97,29 @@ def download_zip(
                 time.sleep(2 * attempt)
                 continue
 
-            mode = "ab" if resume_at > 0 else "wb"
+            mode = "ab" if (is_partial and resume_at > 0) else "wb"
             with open(tmp_path, mode) as f:
                 for chunk in response.iter_content(chunk_size=chunk_size):
                     if chunk:
                         f.write(chunk)
 
-            # Validate ZIP integrity
+            # Validate ZIP integrity and CRC checksums
             if not zipfile.is_zipfile(tmp_path):
-                logger.warning(f"[{code}] Corrupted ZIP downloaded, retrying...")
+                logger.warning(f"[{code}] Corrupted or incomplete ZIP downloaded, retrying attempt {attempt}...")
+                tmp_path.unlink(missing_ok=True)
+                time.sleep(1)
+                continue
+
+            try:
+                with zipfile.ZipFile(tmp_path, "r") as test_zf:
+                    corrupted = test_zf.testzip()
+                    if corrupted:
+                        logger.warning(f"[{code}] Corrupted CRC in chapter '{corrupted}', retrying...")
+                        tmp_path.unlink(missing_ok=True)
+                        time.sleep(1)
+                        continue
+            except Exception as e:
+                logger.warning(f"[{code}] Unreadable ZIP archive ({e}), retrying...")
                 tmp_path.unlink(missing_ok=True)
                 time.sleep(1)
                 continue
@@ -149,8 +168,9 @@ def merge_zip_to_pdf(
     zip_path: Path,
     out_pdf_path: Path,
     keep_zip: bool = False,
+    remove_watermarks: bool = True,
 ) -> Optional[Path]:
-    """Extract chapter PDFs from ZIP archive and merge them into a single PDF."""
+    """Extract chapter PDFs from ZIP archive, merge them into a single PDF, and remove watermarks."""
     if not zip_path.exists():
         return None
 
@@ -159,7 +179,12 @@ def merge_zip_to_pdf(
 
     try:
         with zipfile.ZipFile(zip_path, "r") as zf:
-            zf.extractall(tmp_extract_dir)
+            for member in zf.namelist():
+                if member.lower().endswith(".pdf"):
+                    try:
+                        zf.extract(member, tmp_extract_dir)
+                    except Exception as err:
+                        logger.warning(f"Skipping damaged entry {member} in {zip_path.name}: {err}")
 
         pdf_files = list(tmp_extract_dir.rglob("*.pdf"))
         if not pdf_files:
@@ -184,6 +209,14 @@ def merge_zip_to_pdf(
 
         if not keep_zip:
             zip_path.unlink(missing_ok=True)
+
+        # Remove repeated NCERT watermark images if requested
+        if remove_watermarks:
+            try:
+                from watermark_remover import remove_watermarks_from_pdf
+                remove_watermarks_from_pdf(out_pdf_path)
+            except Exception as w_err:
+                logger.debug(f"Watermark cleaning skipped: {w_err}")
 
         return out_pdf_path
 
