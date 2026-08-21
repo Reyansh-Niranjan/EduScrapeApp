@@ -29,6 +29,11 @@ on:
         description: 'Parallel worker threads'
         required: false
         default: '16'
+      clean_bucket:
+        description: 'Purge/empty all existing files from Supabase bucket before uploading'
+        required: false
+        default: false
+        type: boolean
       force:
         description: 'Force re-download and overwrite existing Supabase files'
         required: false
@@ -67,6 +72,11 @@ jobs:
             FORCE_FLAG="--force"
           fi
 
+          CLEAN_BUCKET_FLAG=""
+          if [ "${{ github.event.inputs.clean_bucket }}" = "true" ]; then
+            CLEAN_BUCKET_FLAG="--clean-bucket"
+          fi
+
           TARGET_CLASS="${{ github.event.inputs.class || 'all' }}"
           CONCURRENCY="${{ github.event.inputs.concurrency || '16' }}"
 
@@ -78,6 +88,7 @@ jobs:
             --clean-local \
             --class "$TARGET_CLASS" \
             --concurrency "$CONCURRENCY" \
+            $CLEAN_BUCKET_FLAG \
             $FORCE_FLAG
 
       - name: Upload Logs as Artifact (if failed)

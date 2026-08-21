@@ -144,6 +144,7 @@ def main():
     parser.add_argument("--playwright", action="store_true", help="Build catalog.json dynamically using Playwright browser")
     parser.add_argument("--upload-to-supabase", action="store_true", help="Sync merged PDFs to Supabase bucket (used by GitHub Actions)")
     parser.add_argument("--clean-local", action="store_true", help="Delete local files after uploading (saves CI disk)")
+    parser.add_argument("--clean-bucket", action="store_true", help="Purge/empty all existing files from Supabase bucket before starting")
     parser.add_argument("--force", action="store_true", help="Force re-download and re-upload existing files")
     parser.add_argument("--keep-zips", action="store_true", help="Keep source chapter ZIP files")
     parser.add_argument("--keep-watermarks", action="store_true", help="Do not remove background NCERT watermarks")
@@ -194,7 +195,12 @@ def main():
             console.print("[bold red][!] Error: Supabase credentials missing. Check SUPABASE_URL and SUPABASE_KEY / SUPABASE_SERVICE_ROLE_KEY.[/bold red]")
             sys.exit(1)
         console.print("[green][+] Connected to Supabase Storage bucket 'ncert'[/green]")
-        # Sync catalog.json to bucket root
+        
+        if args.clean_bucket:
+            console.print("[bold yellow][!] Purging existing files from Supabase bucket for clean start...[/bold yellow]")
+            uploader.empty_bucket()
+            
+        # Step 3: Sync catalog.json to bucket root
         uploader.upload_catalog_json(catalog)
 
     # Step 3: Run Concurrent Pipeline
