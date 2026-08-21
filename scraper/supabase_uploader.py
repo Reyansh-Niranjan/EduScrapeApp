@@ -132,44 +132,6 @@ class SupabaseReplenisher:
         self._remote_files = collected
         return collected
 
-    def empty_bucket(self) -> int:
-        """Purge all existing files from the bucket for a completely clean run."""
-        if not self.is_configured():
-            logger.error("Cannot empty bucket: Supabase credentials missing.")
-            return 0
-
-        files = self.fetch_existing_files(refresh=True)
-        if not files:
-            logger.info(f"Bucket '{self.bucket_name}' is already completely empty.")
-            return 0
-
-        file_list = list(files.keys())
-        logger.info(f"Purging {len(file_list)} files from bucket '{self.bucket_name}'...")
-
-        delete_url = f"{self.url.rstrip('/')}/storage/v1/object/{self.bucket_name}"
-        headers = {
-            "Authorization": f"Bearer {self.key}",
-            "apikey": self.key,
-            "Content-Type": "application/json",
-        }
-
-        deleted_count = 0
-        batch_size = 100
-        for i in range(0, len(file_list), batch_size):
-            batch = file_list[i : i + batch_size]
-            try:
-                resp = self.session.delete(delete_url, headers=headers, json={"prefixes": batch}, timeout=45)
-                if resp.status_code in (200, 204):
-                    deleted_count += len(batch)
-                else:
-                    logger.warning(f"Batch delete returned HTTP {resp.status_code}: {resp.text[:120]}")
-            except Exception as e:
-                logger.warning(f"Batch delete failed: {e}")
-
-        self._remote_files = {}
-        logger.info(f"Purge complete: removed {deleted_count} files from '{self.bucket_name}'.")
-        return deleted_count
-
     def exists(self, remote_path: str, local_size: Optional[int] = None) -> bool:
         """Check if file already exists in bucket, validating non-zero size."""
         remote_files = self.fetch_existing_files()
