@@ -157,6 +157,11 @@ def main():
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    # Always remove stale completion marker at the start of every run
+    marker_file = Path("all_completed.marker")
+    if marker_file.exists():
+        marker_file.unlink(missing_ok=True)
+
     console.print("[bold cyan]==============================================================[/bold cyan]")
     console.print("[bold cyan]  EduScrapeApp -- NCERT Scraper & Supabase Pipeline           [/bold cyan]")
     console.print("[bold cyan]==============================================================[/bold cyan]\n")

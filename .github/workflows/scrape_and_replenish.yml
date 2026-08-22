@@ -80,6 +80,9 @@ jobs:
 
           echo "Starting NCERT Scraper Pipeline for Class: $TARGET_CLASS (Concurrency: $CONCURRENCY)"
           
+          # Remove any stale marker file from prior runs
+          rm -f all_completed.marker
+
           MAX_RETRIES=5
           RETRY_COUNT=0
 
