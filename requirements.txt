@@ -1,0 +1,2 @@
+# Root dependency entrypoint for tooling that only scans repository root.
+-r scraper/requirements.txt
