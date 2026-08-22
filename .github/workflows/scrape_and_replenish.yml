@@ -40,6 +40,9 @@ jobs:
     name: Scrape NCERT & Sync to Supabase
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    permissions:
+      actions: write
+      contents: read
 
     steps:
       - name: Free Disk Space on Runner
@@ -105,3 +108,23 @@ jobs:
           name: scraper-failure-logs
           path: scraper/catalog.json
           retention-days: 7
+
+      - name: Auto-Trigger Subsequent Run if Incomplete
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -f "all_completed.marker" ]; then
+            echo "🎉 100% of NCERT textbooks have been scraped, verified, and uploaded to Supabase Storage! No further workflow runs needed."
+          else
+            echo "======================================================================="
+            echo "🔄 Workflow stopped or ended with remaining books."
+            echo "🚀 Automatically dispatching next run to continue seamlessly from where it left off..."
+            echo "======================================================================="
+            sleep 15
+            gh workflow run "scrape_and_replenish.yml" \
+              --ref "${{ github.ref_name }}" \
+              -f class="${{ github.event.inputs.class || 'all' }}" \
+              -f concurrency="${{ github.event.inputs.concurrency || '16' }}" \
+              -f force="false"
+          fi

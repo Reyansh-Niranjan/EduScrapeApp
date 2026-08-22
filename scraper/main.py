@@ -284,6 +284,17 @@ def main():
         uploader.upload_catalog_json(catalog)
         console.print("[bold green][+] Final Master Catalog synced to Supabase Storage root successfully![/bold green]")
 
+    # Step 6: Create Completion Marker if all books are finished
+    total_target = len(target_books)
+    if args.upload_to_supabase:
+        completed_target = stats.get("uploaded", 0) + stats.get("skipped_remote", 0) + stats.get("not_published", 0)
+    else:
+        completed_target = stats.get("downloaded_local", 0) + stats.get("skipped_local", 0) + stats.get("not_published", 0)
+
+    if completed_target >= total_target and stats.get("failed", 0) == 0:
+        Path("all_completed.marker").write_text("COMPLETE", encoding="utf-8")
+        console.print("[bold green][✓] 100% of target textbooks completed and synced to Supabase![/bold green]")
+
     console.print("\n[bold green][+] NCERT Pipeline Completed Successfully![/bold green]\n")
 
 
