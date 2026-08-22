@@ -226,15 +226,93 @@ class SupabaseReplenisher:
         return False
 
     def upload_catalog_json(self, catalog_data: dict, remote_name: str = "catalog.json") -> bool:
-        """Upload master catalog JSON directly to bucket root."""
+        """Build and upload dynamic master catalog JSONs with direct Supabase public URLs and metadata."""
         if not self.is_configured():
             return False
 
-        with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tmp:
-            json.dump(catalog_data, tmp, indent=2, ensure_ascii=False)
-            tmp_path = Path(tmp.name)
+        from datetime import datetime, timezone
+        from urllib.parse import quote
 
-        try:
-            return self.upload_file(tmp_path, remote_name, content_type="application/json", upsert=True)
-        finally:
-            tmp_path.unlink(missing_ok=True)
+        remote_files = self.fetch_existing_files()
+        
+        # Build enriched dynamic catalog
+        enriched_classes = []
+        total_books = 0
+        total_uploaded = 0
+        total_storage_bytes = 0
+
+        for cls_obj in catalog_data.get("classes", []):
+            cls_name = str(cls_obj.get("class", ""))
+            enriched_subjects = []
+
+            for subj_obj in cls_obj.get("subjects", []):
+                subj_name = subj_obj.get("name", "")
+                enriched_books = []
+
+                for book in subj_obj.get("books", []):
+                    title = book.get("title", "")
+                    code = book.get("code", "")
+                    total_books += 1
+
+                    # Expected remote storage path
+                    rel_path = f"Class {cls_name}/{subj_name}/{title}.pdf"
+                    safe_rel_path = "/".join(quote(seg, safe="()-_.!~*'()") for seg in rel_path.split("/"))
+                    public_url = f"{self.url.rstrip('/')}/storage/v1/object/public/{self.bucket_name}/{safe_rel_path}"
+
+                    file_size = remote_files.get(rel_path, 0)
+                    is_uploaded = rel_path in remote_files and file_size > 0
+
+                    if is_uploaded:
+                        total_uploaded += 1
+                        total_storage_bytes += file_size
+
+                    enriched_books.append({
+                        **book,
+                        "class": cls_name,
+                        "subject": subj_name,
+                        "storage_path": rel_path,
+                        "url": public_url,
+                        "is_available": is_uploaded,
+                        "size_bytes": file_size,
+                    })
+
+                enriched_subjects.append({
+                    "name": subj_name,
+                    "books": enriched_books,
+                })
+
+            enriched_classes.append({
+                "class": cls_name,
+                "subjects": enriched_subjects,
+            })
+
+        unified_manifest = {
+            "meta": {
+                "version": "2.0.0",
+                "app": "EduScrapeApp",
+                "source": "NCERT Official",
+                "last_updated": datetime.now(timezone.utc).isoformat(),
+                "total_classes": len(enriched_classes),
+                "total_books": total_books,
+                "total_uploaded_books": total_uploaded,
+                "total_storage_bytes": total_storage_bytes,
+                "supabase_bucket": self.bucket_name,
+            },
+            "classes": enriched_classes,
+        }
+
+        # Upload catalog.json and supabase_catalog.json
+        success = True
+        for fname in (remote_name, "supabase_catalog.json"):
+            with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False, encoding="utf-8") as tmp:
+                json.dump(unified_manifest, tmp, indent=2, ensure_ascii=False)
+                tmp_path = Path(tmp.name)
+
+            try:
+                ok = self.upload_file(tmp_path, fname, content_type="application/json", upsert=True)
+                if not ok:
+                    success = False
+            finally:
+                tmp_path.unlink(missing_ok=True)
+
+        return success

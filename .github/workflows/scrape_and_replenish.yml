@@ -77,13 +77,26 @@ jobs:
 
           echo "Starting NCERT Scraper Pipeline for Class: $TARGET_CLASS (Concurrency: $CONCURRENCY)"
           
-          python scraper/main.py \
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+
+          until python scraper/main.py \
             --playwright \
             --upload-to-supabase \
             --clean-local \
             --class "$TARGET_CLASS" \
             --concurrency "$CONCURRENCY" \
-            $FORCE_FLAG
+            $FORCE_FLAG; do
+              RETRY_COUNT=$((RETRY_COUNT + 1))
+              if [ "$RETRY_COUNT" -ge "$MAX_RETRIES" ]; then
+                echo "Pipeline reached max retry attempts ($MAX_RETRIES). Exiting."
+                exit 1
+              fi
+              echo "======================================================================="
+              echo "[!] Pipeline encountered an interruption. Resuming from where it left off in 10s (Attempt $RETRY_COUNT of $MAX_RETRIES)..."
+              echo "======================================================================="
+              sleep 10
+          done
 
       - name: Upload Logs as Artifact (if failed)
         if: failure()

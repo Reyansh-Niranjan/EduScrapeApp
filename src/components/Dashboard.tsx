@@ -13,7 +13,6 @@ import {
   UserCircle2,
   Search,
   Plus,
-  ExternalLink,
   Sparkles,
   Menu,
   X,
@@ -28,6 +27,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import ThemeToggle from "./ThemeToggle";
+import { PdfReader } from "./PdfReader";
 
 interface DashboardProps {
   onLogout?: () => void;
@@ -167,12 +167,14 @@ function DashboardOverview({
   libraryBooks,
   onTabChange,
   onRefresh,
+  onOpenPdf,
 }: {
   profile: UserProfile;
   userBooks: StorageItem[];
   libraryBooks: StorageItem[];
   onTabChange: (tab: DashboardTab) => void;
   onRefresh: () => void;
+  onOpenPdf?: (url: string, title: string, className?: string, subject?: string) => void;
 }) {
   const weeklyCounts = getWeekCounts(userBooks);
   const streak = getDailyStreak(userBooks);
@@ -471,11 +473,21 @@ function DashboardOverview({
 
               <button
                 type="button"
-                onClick={() => onTabChange("books")}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-white bg-purple-600 hover:bg-purple-700 shadow-md transition"
+                onClick={async () => {
+                  if (libraryBooks.some((b) => b.fullPath === latestItem.fullPath)) {
+                    const pubUrl = supabase.storage.from("ncert").getPublicUrl(latestItem.fullPath).data.publicUrl;
+                    onOpenPdf?.(pubUrl, formatTitle(latestItem.name), "NCERT", "Textbook");
+                  } else {
+                    const { data } = await supabase.storage.from("user-books").createSignedUrl(latestItem.fullPath, 3600);
+                    if (data?.signedUrl) {
+                      onOpenPdf?.(data.signedUrl, formatTitle(latestItem.name), "Custom Upload", "My Bookshelf");
+                    }
+                  }
+                }}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-white bg-purple-600 hover:bg-purple-700 shadow-md transition hover:scale-105"
               >
-                <span>Open File</span>
-                <ChevronRight className="h-4 w-4" />
+                <span>Open in Reader</span>
+                <BookOpen className="h-4 w-4" />
               </button>
             </div>
           ) : (
@@ -586,7 +598,13 @@ function DashboardOverview({
 /* =========================================================================
    LIBRARY SUB-COMPONENT
    ========================================================================= */
-function LibrarySection({ items }: { items: StorageItem[] }) {
+function LibrarySection({
+  items,
+  onOpenPdf,
+}: {
+  items: StorageItem[];
+  onOpenPdf: (url: string, title: string, className?: string, subject?: string) => void;
+}) {
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -656,15 +674,14 @@ function LibrarySection({ items }: { items: StorageItem[] }) {
 
                 <div className="pt-3 border-t border-[var(--theme-border)] flex items-center justify-between">
                   <span className="text-[11px] text-[var(--theme-text-secondary)]">PDF Document</span>
-                  <a
-                    href={publicUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-white bg-sky-600 hover:bg-sky-500 transition"
+                  <button
+                    type="button"
+                    onClick={() => onOpenPdf(publicUrl, formatTitle(item.name), "NCERT", "Textbook")}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-white bg-sky-600 hover:bg-sky-500 transition shadow-sm hover:scale-105"
                   >
                     <span>Read Book</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                    <BookOpen className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </div>
             );
@@ -694,9 +711,11 @@ function LibrarySection({ items }: { items: StorageItem[] }) {
 function BooksSection({
   items,
   onRefresh,
+  onOpenPdf,
 }: {
   items: StorageItem[];
   onRefresh?: () => void;
+  onOpenPdf: (url: string, title: string, className?: string, subject?: string) => void;
 }) {
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -971,13 +990,13 @@ function BooksSection({
                       .from("user-books")
                       .createSignedUrl(item.fullPath, 60 * 60);
                     if (data?.signedUrl) {
-                      window.open(data.signedUrl, "_blank", "noreferrer");
+                      onOpenPdf(data.signedUrl, formatTitle(item.name), "Custom Upload", "My Bookshelf");
                     }
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-white bg-teal-600 hover:bg-teal-500 transition"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-white bg-teal-600 hover:bg-teal-500 transition shadow-sm hover:scale-105"
                 >
                   <span>Open PDF</span>
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <BookOpen className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
@@ -1237,6 +1256,16 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [libraryBooks, setLibraryBooks] = useState<StorageItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activePdf, setActivePdf] = useState<{
+    url: string;
+    title: string;
+    className?: string;
+    subject?: string;
+  } | null>(null);
+
+  const handleOpenPdf = (url: string, title: string, className?: string, subject?: string) => {
+    setActivePdf({ url, title, className, subject });
+  };
 
   const fetchData = async () => {
     try {
@@ -1463,18 +1492,27 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               libraryBooks={libraryBooks}
               onTabChange={setActiveTab}
               onRefresh={fetchData}
+              onOpenPdf={handleOpenPdf}
             />
           ) : activeTab === "library" ? (
-            <LibrarySection items={libraryBooks} />
+            <LibrarySection items={libraryBooks} onOpenPdf={handleOpenPdf} />
           ) : activeTab === "notes" ? (
             <NotesSection />
           ) : activeTab === "books" ? (
-            <BooksSection items={userBooks} onRefresh={fetchData} />
+            <BooksSection items={userBooks} onRefresh={fetchData} onOpenPdf={handleOpenPdf} />
           ) : null}
         </main>
       </div>
+
+      {/* Fullscreen In-App PDF.js Reader Modal */}
+      <PdfReader
+        isOpen={Boolean(activePdf)}
+        onClose={() => setActivePdf(null)}
+        pdfUrl={activePdf?.url || ""}
+        title={activePdf?.title || ""}
+        className={activePdf?.className}
+        subject={activePdf?.subject}
+      />
     </div>
   );
 }
-
-

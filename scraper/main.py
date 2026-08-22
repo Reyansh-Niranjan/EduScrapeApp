@@ -276,6 +276,14 @@ def main():
     summary_table.add_row("Time Elapsed", f"{elapsed:.1f}s")
 
     console.print("\n", summary_table)
+
+    # Step 5: Final Dynamic Catalog Sync
+    if args.upload_to_supabase and uploader:
+        console.print("[bold cyan][*] Refreshing and syncing master catalog.json & supabase_catalog.json...[/bold cyan]")
+        uploader.fetch_existing_files(refresh=True)
+        uploader.upload_catalog_json(catalog)
+        console.print("[bold green][+] Final Master Catalog synced to Supabase Storage root successfully![/bold green]")
+
     console.print("\n[bold green][+] NCERT Pipeline Completed Successfully![/bold green]\n")
 
 
