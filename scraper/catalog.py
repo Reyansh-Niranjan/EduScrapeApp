@@ -139,7 +139,11 @@ def fetch_live_script(url: str = NCERT_URL, timeout: int = 15) -> str:
     response = session.get(url, timeout=timeout)
     response.raise_for_status()
 
-    blocks = re.findall(r"<script[^>]*>(.*?)</script>", response.text, re.DOTALL | re.IGNORECASE)
+    blocks = re.findall(
+        r"<script\b[^>]*>(.*?)</script(?:\s[^>]*)?>",
+        response.text,
+        re.DOTALL | re.IGNORECASE,
+    )
     for block in blocks:
         if "tclass.value" in block and "tsubject" in block:
             return block
