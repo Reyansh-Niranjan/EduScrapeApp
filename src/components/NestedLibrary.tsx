@@ -65,23 +65,24 @@ const thumbnailCache = new Map<string, string>();
 
 /**
  * Dynamic First-Page PDF Cover Thumbnail
- * Renders page 1 of any NCERT PDF dynamically via PDF.js without hardcoding
+ * Renders page 1 of any NCERT PDF dynamically via PDF.js with signed Supabase URLs
  */
 const PdfCoverThumbnail: React.FC<{
-  url: string;
+  fullPath: string;
   title: string;
+  bucket?: string;
   className?: string;
   aspect?: "portrait" | "thumb";
-}> = ({ url, title, className = "", aspect = "portrait" }) => {
-  const [thumbSrc, setThumbSrc] = useState<string | null>(thumbnailCache.get(url) || null);
-  const [loading, setLoading] = useState<boolean>(!thumbnailCache.has(url));
+}> = ({ fullPath, title, bucket = "ncert", className = "", aspect = "portrait" }) => {
+  const [thumbSrc, setThumbSrc] = useState<string | null>(thumbnailCache.get(fullPath) || null);
+  const [loading, setLoading] = useState<boolean>(!thumbnailCache.has(fullPath));
   const [hasError, setHasError] = useState<boolean>(false);
   const isMountedRef = useRef<boolean>(true);
 
   useEffect(() => {
     isMountedRef.current = true;
-    if (thumbnailCache.has(url)) {
-      setThumbSrc(thumbnailCache.get(url)!);
+    if (thumbnailCache.has(fullPath)) {
+      setThumbSrc(thumbnailCache.get(fullPath)!);
       setLoading(false);
       return;
     }
@@ -91,8 +92,15 @@ const PdfCoverThumbnail: React.FC<{
     const renderCover = async () => {
       try {
         setLoading(true);
+        // Create signed URL to support both Private and Public Supabase buckets
+        const { data: signedData } = await supabase.storage
+          .from(bucket)
+          .createSignedUrl(fullPath, 60 * 60);
+
+        const targetUrl = signedData?.signedUrl || supabase.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
+
         loadingTask = pdfjsLib.getDocument({
-          url,
+          url: targetUrl,
           cMapUrl: "https://cdn.jsdelivr.net/npm/pdfjs-dist@legacy/cmaps/",
           cMapPacked: true,
         });
@@ -118,7 +126,7 @@ const PdfCoverThumbnail: React.FC<{
         await page.render(renderContext).promise;
 
         const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-        thumbnailCache.set(url, dataUrl);
+        thumbnailCache.set(fullPath, dataUrl);
 
         if (isMountedRef.current) {
           setThumbSrc(dataUrl);
@@ -140,7 +148,7 @@ const PdfCoverThumbnail: React.FC<{
         loadingTask.destroy();
       }
     };
-  }, [url]);
+  }, [fullPath, bucket]);
 
   if (loading) {
     return (
@@ -309,6 +317,21 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
     );
   }, [allBooks, searchQuery]);
 
+  // Open book with signed URL to support both public and private Supabase buckets
+  const handleOpenBook = async (book: ParsedBook) => {
+    try {
+      const { data } = await supabase.storage.from("ncert").createSignedUrl(book.fullPath, 60 * 60);
+      if (data?.signedUrl) {
+        onOpenPdf(data.signedUrl, book.title, book.className, book.subjectName);
+        return;
+      }
+    } catch (e) {
+      console.warn("Signed URL creation failed:", e);
+    }
+    const pubUrl = supabase.storage.from("ncert").getPublicUrl(book.fullPath).data.publicUrl;
+    onOpenPdf(pubUrl, book.title, book.className, book.subjectName);
+  };
+
   // Navigation handlers
   const handleSelectClass = (clsName: string | null) => {
     setSelectedClass(clsName);
@@ -441,7 +464,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                     }}
                   >
                     {/* First Page Dynamic Cover Preview */}
-                    <PdfCoverThumbnail url={book.publicUrl} title={book.title} />
+                    <PdfCoverThumbnail fullPath={book.fullPath} title={book.title} />
 
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between gap-1 text-[10px] font-bold">
@@ -464,7 +487,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
 
                     <button
                       type="button"
-                      onClick={() => onOpenPdf(book.publicUrl, book.title, book.className, book.subjectName)}
+                      onClick={() => handleOpenBook(book)}
                       className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 transition shadow-md shadow-purple-500/20 hover:scale-[1.02]"
                     >
                       <BookOpen className="h-3.5 w-3.5" />
@@ -488,7 +511,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                     className="p-4 flex items-center justify-between gap-4 transition hover:bg-purple-500/5 group"
                   >
                     <div className="flex items-center gap-3.5 overflow-hidden">
-                      <PdfCoverThumbnail url={book.publicUrl} title={book.title} aspect="thumb" />
+                      <PdfCoverThumbnail fullPath={book.fullPath} title={book.title} aspect="thumb" />
                       <div className="truncate">
                         <h4 className="text-sm font-bold text-[var(--theme-text)] truncate">{book.title}</h4>
                         <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--theme-text-secondary)]">
@@ -505,7 +528,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
 
                     <button
                       type="button"
-                      onClick={() => onOpenPdf(book.publicUrl, book.title, book.className, book.subjectName)}
+                      onClick={() => handleOpenBook(book)}
                       className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 transition shadow-sm hover:scale-105"
                     >
                       <BookOpen className="h-3.5 w-3.5" />
@@ -710,7 +733,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                     >
                       {/* Dynamic Subject Cover Thumbnail */}
                       {firstBook ? (
-                        <PdfCoverThumbnail url={firstBook.publicUrl} title={firstBook.title} />
+                        <PdfCoverThumbnail fullPath={firstBook.fullPath} title={firstBook.title} />
                       ) : (
                         <div className="h-48 w-full flex flex-col items-center justify-center rounded-2xl bg-purple-500/10 text-purple-400">
                           <Folder className="h-10 w-10 opacity-70" />
@@ -770,7 +793,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                       }}
                     >
                       {/* First Page Dynamic Cover */}
-                      <PdfCoverThumbnail url={book.publicUrl} title={book.title} />
+                      <PdfCoverThumbnail fullPath={book.fullPath} title={book.title} />
 
                       <div className="space-y-1.5">
                         <div className="flex items-center justify-between text-[10px] font-bold">
@@ -792,7 +815,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
 
                       <button
                         type="button"
-                        onClick={() => onOpenPdf(book.publicUrl, book.title, book.className, book.subjectName)}
+                        onClick={() => handleOpenBook(book)}
                         className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 transition shadow-md shadow-purple-500/20 hover:scale-[1.02]"
                       >
                         <BookOpen className="h-3.5 w-3.5" />
@@ -816,7 +839,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                       className="p-4 flex items-center justify-between gap-4 transition hover:bg-purple-500/5 group"
                     >
                       <div className="flex items-center gap-3.5 overflow-hidden">
-                        <PdfCoverThumbnail url={book.publicUrl} title={book.title} aspect="thumb" />
+                        <PdfCoverThumbnail fullPath={book.fullPath} title={book.title} aspect="thumb" />
                         <div className="truncate">
                           <h4 className="text-sm font-bold text-[var(--theme-text)] truncate">{book.title}</h4>
                           <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--theme-text-secondary)]">
@@ -831,7 +854,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
 
                       <button
                         type="button"
-                        onClick={() => onOpenPdf(book.publicUrl, book.title, book.className, book.subjectName)}
+                        onClick={() => handleOpenBook(book)}
                         className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 transition shadow-sm hover:scale-105"
                       >
                         <BookOpen className="h-3.5 w-3.5" />
