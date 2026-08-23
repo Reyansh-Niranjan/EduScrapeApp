@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import About from "./components/About";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Footer from "./components/Footer";
@@ -120,6 +121,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <Analytics />
       <div className="min-h-screen" style={{ background: "var(--theme-bg)" }}>
         {currentView === "login" ? (
           <Suspense fallback={<FullPageLoader />}>
