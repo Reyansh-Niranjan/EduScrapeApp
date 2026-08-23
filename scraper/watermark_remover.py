@@ -191,9 +191,9 @@ def remove_watermarks_from_pdf(
 def compress_oversized_pdf(
     pdf_path: Path,
     max_size_bytes: int = 48 * 1024 * 1024,
-    target_dpi: int = 150,
+    target_dpi: int = 140,
 ) -> bool:
-    """If PDF exceeds max_size_bytes, re-encode pages to guarantee it fits under storage quotas."""
+    """If PDF exceeds max_size_bytes, re-encode pages to guarantee it fits under storage quotas with low memory usage."""
     if not HAS_PYMUPDF or not pdf_path.exists():
         return False
 
@@ -201,23 +201,38 @@ def compress_oversized_pdf(
     if current_size <= max_size_bytes:
         return False
 
-    logger.info(f"Optimizing oversized PDF {pdf_path.name} ({current_size / (1024*1024):.1f}MB > {max_size_bytes / (1024*1024):.0f}MB limit)...")
+    import gc
+
+    # For massive scans > 150MB, use 120 DPI to prevent runner OOM while preserving readability
+    effective_dpi = 120 if current_size > 150 * 1024 * 1024 else target_dpi
+
+    logger.info(f"Optimizing oversized PDF {pdf_path.name} ({current_size / (1024*1024):.1f}MB > {max_size_bytes / (1024*1024):.0f}MB limit at {effective_dpi} DPI)...")
+
+    src_doc = None
+    out_doc = None
+    tmp_out = pdf_path.with_name(f"{pdf_path.name}.opt.tmp")
 
     try:
         src_doc = fitz.open(pdf_path)
         out_doc = fitz.open()
 
         for page in src_doc:
-            pix = page.get_pixmap(dpi=target_dpi)
-            jpg_bytes = pix.tobytes("jpeg", jpg_quality=78)
+            pix = page.get_pixmap(dpi=effective_dpi)
+            jpg_bytes = pix.tobytes("jpeg", jpg_quality=75)
+            del pix
+
             new_page = out_doc.new_page(width=page.rect.width, height=page.rect.height)
             new_page.insert_image(new_page.rect, stream=jpg_bytes)
+            del jpg_bytes
 
         src_doc.close()
+        src_doc = None
 
-        tmp_out = pdf_path.with_name(f"{pdf_path.name}.opt.tmp")
         out_doc.save(tmp_out, garbage=4, clean=True, deflate=True)
         out_doc.close()
+        out_doc = None
+
+        gc.collect()
 
         new_size = tmp_out.stat().st_size
         logger.info(f"Optimized {pdf_path.name}: {current_size / (1024*1024):.1f}MB -> {new_size / (1024*1024):.1f}MB")
@@ -229,7 +244,21 @@ def compress_oversized_pdf(
 
     except Exception as e:
         logger.warning(f"Failed to optimize oversized PDF {pdf_path.name}: {e}")
+        if tmp_out.exists():
+            tmp_out.unlink(missing_ok=True)
         return False
+    finally:
+        if src_doc:
+            try:
+                src_doc.close()
+            except Exception:
+                pass
+        if out_doc:
+            try:
+                out_doc.close()
+            except Exception:
+                pass
+        gc.collect()
 
 
 if __name__ == "__main__":
