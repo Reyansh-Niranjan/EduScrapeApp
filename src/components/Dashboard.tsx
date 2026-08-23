@@ -1386,7 +1386,11 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               onOpenPdf={handleOpenPdf}
             />
           ) : activeTab === "library" ? (
-            <NestedLibrary items={libraryBooks} onOpenPdf={handleOpenPdf} />
+            <NestedLibrary
+              items={libraryBooks}
+              userClass={userProfile.classLabel}
+              onOpenPdf={handleOpenPdf}
+            />
           ) : activeTab === "notes" ? (
             <NotesSection />
           ) : activeTab === "books" ? (
