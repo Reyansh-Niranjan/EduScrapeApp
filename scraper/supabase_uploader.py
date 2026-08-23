@@ -316,3 +316,7 @@ class SupabaseReplenisher:
                 tmp_path.unlink(missing_ok=True)
 
         return success
+
+
+# Backward-compatible alias
+SupabaseUploader = SupabaseReplenisher

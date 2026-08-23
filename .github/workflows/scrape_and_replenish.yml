@@ -187,7 +187,7 @@ jobs:
               sys.exit(42)
           " || STATUS=$?
 
-          if [ "$STATUS" -eq 42 ]; then
+          if [ "$STATUS" -ne 0 ]; then
             echo "======================================================================="
             echo "🔄 Remaining textbooks to sync. Auto-dispatching next workflow run..."
             echo "======================================================================="
