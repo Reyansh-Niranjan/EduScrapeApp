@@ -112,17 +112,84 @@ jobs:
           path: scraper/catalog.json
           retention-days: 7
 
-      - name: Auto-Trigger Subsequent Run if Incomplete
-        if: always()
+  auto-continue:
+    name: Auto-Trigger Next Run if Incomplete
+    needs: [scrape-and-sync]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Verification Dependencies
+        run: |
+          pip install requests
+
+      - name: Check Live Supabase Status & Trigger Subsequent Run
         env:
           GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
-          if [ -f "all_completed.marker" ]; then
-            echo "🎉 100% of NCERT textbooks have been scraped, verified, and uploaded to Supabase Storage! No further workflow runs needed."
-          else
+          echo "======================================================================="
+          echo "Verifying live Supabase Storage against NCERT Catalog..."
+          echo "======================================================================="
+          
+          STATUS=0
+          python -c "
+          import json, os, sys
+          from scraper.supabase_uploader import SupabaseUploader
+
+          u = SupabaseUploader()
+          if not u.is_configured():
+              print('Supabase not configured in environment, triggering continuation.')
+              sys.exit(42)
+
+          existing = u.fetch_existing_files()
+          catalog_path = 'scraper/catalog.json'
+          if not os.path.exists(catalog_path):
+              print('Catalog not found locally, continuing pipeline.')
+              sys.exit(42)
+
+          with open(catalog_path, 'r', encoding='utf-8') as f:
+              catalog = json.load(f)
+
+          target_class = '${{ github.event.inputs.class || 'all' }}'
+          total = 0
+          found = 0
+          for cls in catalog.get('classes', []):
+              cls_str = str(cls.get('class'))
+              if target_class != 'all' and cls_str != target_class:
+                  continue
+              for subj in cls.get('subjects', []):
+                  for b in subj.get('books', []):
+                      total += 1
+                      rel_p = f\"Class {cls_str}/{subj.get('name')}/{b.get('title')}.pdf\"
+                      if rel_p in existing and existing[rel_p] > 0:
+                          found += 1
+
+          print(f'Supabase Status: {found}/{total} textbooks synchronized and verified.')
+          if total > 0 and found >= total:
+              print('ALL_DONE')
+              sys.exit(0)
+          else:
+              print(f'Remaining: {total - found} textbooks to process.')
+              sys.exit(42)
+          " || STATUS=$?
+
+          if [ "$STATUS" -eq 42 ]; then
             echo "======================================================================="
-            echo "🔄 Workflow stopped or ended with remaining books."
-            echo "🚀 Automatically dispatching next run to continue seamlessly from where it left off..."
+            echo "🔄 Remaining textbooks to sync. Auto-dispatching next workflow run..."
             echo "======================================================================="
             sleep 15
             gh workflow run "scrape_and_replenish.yml" \
@@ -130,4 +197,6 @@ jobs:
               -f class="${{ github.event.inputs.class || 'all' }}" \
               -f concurrency="${{ github.event.inputs.concurrency || '16' }}" \
               -f force="false"
+          else
+            echo "🎉 100% of target textbooks have been synchronized to Supabase! Pipeline complete."
           fi
