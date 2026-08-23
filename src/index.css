@@ -370,9 +370,23 @@ img {
 /* Glassmorphism & SaaS Utilities */
 .glass-panel {
   background: var(--theme-card-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--theme-border);
+}
+
+.glass-panel-interactive {
+  background: var(--theme-card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--theme-border);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-interactive:hover {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 12px 30px -10px rgba(139, 92, 246, 0.15);
+  transform: translateY(-2px);
 }
 
 .gradient-brand {
@@ -393,6 +407,50 @@ img {
   box-shadow: 0 0 30px -5px rgba(20, 184, 166, 0.3);
 }
 
+/* Skeleton Loading Shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.03) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+}
+
+.light .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 0%,
+    rgba(0, 0, 0, 0.09) 50%,
+    rgba(0, 0, 0, 0.04) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+}
+
+/* Book Cover Elevation & Spine Depth */
+.book-cover-depth {
+  position: relative;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.25), 0 2px 6px -1px rgba(0, 0, 0, 0.15);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.book-cover-depth:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 32px -8px rgba(139, 92, 246, 0.3), 0 4px 12px -2px rgba(0, 0, 0, 0.2);
+}
+
 /* Section spacing */
 section {
   padding: var(--spacing-xl) 0;
@@ -402,4 +460,5 @@ section {
 .page-transition {
   animation: fadeIn 0.4s ease-out;
 }
+
 
