@@ -28,6 +28,7 @@ import {
 import { supabase } from "../lib/supabaseClient";
 import ThemeToggle from "./ThemeToggle";
 import { PdfReader } from "./PdfReader";
+import { NestedLibrary } from "./NestedLibrary";
 
 interface DashboardProps {
   onLogout?: () => void;
@@ -591,116 +592,6 @@ function DashboardOverview({
           </div>
         </div>
       </div>
-    </motion.div>
-  );
-}
-
-/* =========================================================================
-   LIBRARY SUB-COMPONENT
-   ========================================================================= */
-function LibrarySection({
-  items,
-  onOpenPdf,
-}: {
-  items: StorageItem[];
-  onOpenPdf: (url: string, title: string, className?: string, subject?: string) => void;
-}) {
-  const [search, setSearch] = useState("");
-
-  const filtered = useMemo(() => {
-    return items.filter((item) =>
-      item.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [items, search]);
-
-  return (
-    <motion.div
-      className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto"
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">NCERT Library</h2>
-          <p className="text-xs sm:text-sm text-[var(--theme-text-secondary)] mt-1">
-            Free digital textbooks and learning resources for all subjects
-          </p>
-        </div>
-
-        {/* Search bar */}
-        <div className="relative w-full sm:w-72">
-          <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--theme-text-secondary)]" />
-          <input
-            type="text"
-            placeholder="Search textbooks..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="auth-input-field pl-9 text-xs sm:text-sm"
-          />
-        </div>
-      </div>
-
-      {filtered.length ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((item) => {
-            const publicUrl = supabase.storage.from("ncert").getPublicUrl(item.fullPath).data.publicUrl;
-            return (
-              <div
-                key={item.fullPath}
-                className="rounded-3xl border p-5 shadow-sm flex flex-col justify-between gap-4 transition-all hover:shadow-md hover:-translate-y-1"
-                style={{
-                  background: "var(--theme-card-bg)",
-                  borderColor: "var(--theme-border)",
-                }}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-400 flex-shrink-0">
-                    <BookOpen className="h-6 w-6" />
-                  </div>
-                  <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-sky-500/10 text-sky-400">
-                    NCERT
-                  </span>
-                </div>
-
-                <div>
-                  <h3 className="text-base font-bold text-[var(--theme-text)] line-clamp-2">
-                    {formatTitle(item.name)}
-                  </h3>
-                  <p className="text-xs text-[var(--theme-text-secondary)] mt-1">
-                    {formatBytes(item.size)}
-                  </p>
-                </div>
-
-                <div className="pt-3 border-t border-[var(--theme-border)] flex items-center justify-between">
-                  <span className="text-[11px] text-[var(--theme-text-secondary)]">PDF Document</span>
-                  <button
-                    type="button"
-                    onClick={() => onOpenPdf(publicUrl, formatTitle(item.name), "NCERT", "Textbook")}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-white bg-sky-600 hover:bg-sky-500 transition shadow-sm hover:scale-105"
-                  >
-                    <span>Read Book</span>
-                    <BookOpen className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        <div
-          className="rounded-3xl border border-dashed p-12 text-center"
-          style={{ borderColor: "var(--theme-border)" }}
-        >
-          <BookOpen className="mx-auto h-10 w-10 text-[var(--theme-text-secondary)] opacity-40" />
-          <p className="mt-4 text-base font-semibold text-[var(--theme-text)]">
-            {search ? "No matching books found" : "No NCERT files loaded"}
-          </p>
-          <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
-            {search ? "Try searching for a different keyword" : "Files in the NCERT bucket will show up here."}
-          </p>
-        </div>
-      )}
     </motion.div>
   );
 }
@@ -1495,7 +1386,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               onOpenPdf={handleOpenPdf}
             />
           ) : activeTab === "library" ? (
-            <LibrarySection items={libraryBooks} onOpenPdf={handleOpenPdf} />
+            <NestedLibrary items={libraryBooks} onOpenPdf={handleOpenPdf} />
           ) : activeTab === "notes" ? (
             <NotesSection />
           ) : activeTab === "books" ? (
