@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getOptimizedImageUrl } from "../utils/image";
 
 interface OptimizedImageProps {
@@ -24,20 +24,16 @@ export default function OptimizedImage({
 }: OptimizedImageProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [currentSrc, setCurrentSrc] = useState(() => getOptimizedImageUrl(src, width, 75));
-
-  useEffect(() => {
-    setHasError(false);
-    setIsLoaded(false);
-    setCurrentSrc(getOptimizedImageUrl(src, width, 75));
-  }, [src, width]);
+  const [failedOriginal, setFailedOriginal] = useState(false);
 
   if (!src) {
     return null;
   }
 
+  const optimizedSrc = failedOriginal ? src : getOptimizedImageUrl(src, width, 75);
+
   if (hasError) {
-    const fallbackClassName = `${className} flex items-center justify-center bg-gradient-to-br from-purple-600/20 to-teal-600/20 text-teal-200 text-xs`.trim();
+    const fallbackClassName = `${className} flex items-center justify-center bg-zinc-900 border border-border text-muted-foreground font-mono text-xs`.trim();
     return (
       <div className={fallbackClassName} style={{ minHeight: height }}>
         image unavailable
@@ -45,11 +41,11 @@ export default function OptimizedImage({
     );
   }
 
-  const computedClassName = `${className} transition-opacity duration-500 ${isLoaded ? "opacity-100" : "opacity-0"}`.trim();
+  const computedClassName = `${className} transition-opacity duration-300 ${isLoaded ? "opacity-100" : "opacity-0"}`.trim();
 
   return (
     <img
-      src={currentSrc}
+      src={optimizedSrc}
       alt={alt}
       width={width}
       height={height}
@@ -58,12 +54,11 @@ export default function OptimizedImage({
       fetchPriority={fetchPriority}
       sizes={sizes}
       className={computedClassName}
-      style={{ objectFit: "cover", backgroundColor: "rgba(15, 52, 96, 0.2)" }}
+      style={{ objectFit: "cover" }}
       onLoad={() => setIsLoaded(true)}
       onError={() => {
-        if (currentSrc !== src) {
-          setCurrentSrc(src);
-          setIsLoaded(false);
+        if (!failedOriginal) {
+          setFailedOriginal(true);
         } else {
           setHasError(true);
         }

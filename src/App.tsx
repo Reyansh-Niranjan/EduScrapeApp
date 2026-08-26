@@ -1,5 +1,8 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { Analytics } from "@vercel/analytics/react";
+import Lenis from "lenis";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import About from "./components/About";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Footer from "./components/Footer";
@@ -7,7 +10,10 @@ import Header from "./components/Header";
 import Hero from "./components/Hero";
 import Projects from "./components/Projects";
 import Creator from "./components/Creator";
+import BackgroundCanvas from "./components/BackgroundCanvas";
 import { supabase } from "./lib/supabaseClient";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Login = lazy(() => import("./components/Login"));
 const Dashboard = lazy(() => import("./components/Dashboard"));
@@ -16,10 +22,10 @@ const TermsOfService = lazy(() => import("./components/TermsOfService"));
 
 function FullPageLoader() {
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--theme-bg)" }}>
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600" />
-        <p style={{ color: "var(--theme-text-secondary)" }}>Loading…</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-emerald-500" />
+        <p className="text-xs font-mono text-muted-foreground">Loading workspace…</p>
       </div>
     </div>
   );
@@ -46,9 +52,34 @@ const getViewFromURL = (): View => {
 export default function App() {
   const [currentView, setCurrentView] = useState<View>(getViewFromURL);
 
+  // Initialize Lenis physics smooth scroll hooked to GSAP ticker (Inspired by subscrr.app & walaszczyk.studio)
   useEffect(() => {
-    document.documentElement.style.scrollBehavior = "smooth";
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
 
+    const lenis = new Lenis({
+      lerp: 0.12,
+      smoothWheel: true,
+      wheelMultiplier: 1.1,
+      touchMultiplier: 1.4,
+    });
+
+    lenis.on("scroll", ScrollTrigger.update);
+
+    const handleTicker = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+
+    gsap.ticker.add(handleTicker);
+    gsap.ticker.lagSmoothing(0);
+
+    return () => {
+      gsap.ticker.remove(handleTicker);
+      lenis.destroy();
+    };
+  }, []);
+
+  useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const shouldBeDark = savedTheme === "dark" || (!savedTheme && prefersDark);
@@ -122,7 +153,10 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Analytics />
-      <div className="min-h-screen" style={{ background: "var(--theme-bg)" }}>
+      <div className="min-h-screen relative" style={{ background: "var(--theme-bg)" }}>
+        {/* Ambient GPU Constellation Canvas */}
+        <BackgroundCanvas />
+
         {currentView === "login" ? (
           <Suspense fallback={<FullPageLoader />}>
             <Login
@@ -163,7 +197,7 @@ export default function App() {
         ) : currentView === "privacy" || currentView === "terms" ? (
           <>
             <Header />
-            <main className="relative">
+            <main className="relative z-10">
               <Suspense fallback={<FullPageLoader />}>
                 {currentView === "privacy" ? <PrivacyPolicy /> : <TermsOfService />}
               </Suspense>
@@ -173,7 +207,7 @@ export default function App() {
         ) : (
           <>
             <Header />
-            <main className="relative">
+            <main className="relative z-10">
               <Hero />
               <About />
               <Projects />

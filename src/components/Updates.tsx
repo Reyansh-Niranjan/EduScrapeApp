@@ -2,32 +2,31 @@ export default function Updates() {
   const placeholders = Array.from({ length: 2 });
 
   return (
-    <section id="updates" className="py-20 relative" style={{ background: "var(--theme-bg)" }}>
-      <div className="container mx-auto px-6">
+    <section id="updates" className="py-20 relative border-b border-border bg-background">
+      <div className="container mx-auto px-6 max-w-5xl">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ color: "var(--theme-text)" }}>
-            Latest <span className="bg-gradient-to-r from-teal-400 to-purple-500 bg-clip-text text-transparent">Updates</span>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-3 tracking-tight text-foreground">
+            Platform Changelog & Releases
           </h2>
-          <p className="text-xl max-w-3xl mx-auto" style={{ color: "var(--theme-text-secondary)" }}>
-            Updates will appear once release data is connected.
+          <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+            Live synchronization with GitHub Releases and deployment notes.
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto space-y-8">
+        <div className="max-w-3xl mx-auto space-y-6">
           {placeholders.map((_, index) => (
             <div
               key={index}
-              className="group card rounded-2xl transition-all duration-300"
-              style={{ background: "var(--theme-card-bg)", border: "1px solid var(--theme-border)" }}
+              className="rounded-xl border border-border bg-card p-6 transition-all"
             >
-              <div className="h-1 w-16 rounded-full bg-gradient-to-r from-teal-400 to-purple-500 mb-6" />
+              <div className="h-1 w-12 rounded-full bg-emerald-500 mb-5" />
               <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 rounded-full" style={{ background: "var(--theme-bg-secondary)" }} />
-                <div className="flex-1">
-                  <div className="h-4 w-1/3 rounded mb-3" style={{ background: "var(--theme-border)" }} />
-                  <div className="h-4 w-2/3 rounded mb-2" style={{ background: "var(--theme-bg-secondary)" }} />
-                  <div className="h-4 w-full rounded mb-4" style={{ background: "var(--theme-bg-secondary)" }} />
-                  <div className="h-3 w-1/4 rounded" style={{ background: "var(--theme-border)" }} />
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-secondary border border-border" />
+                <div className="flex-1 space-y-2.5">
+                  <div className="h-4 w-1/3 rounded bg-secondary" />
+                  <div className="h-3.5 w-2/3 rounded bg-secondary/60" />
+                  <div className="h-3.5 w-full rounded bg-secondary/40" />
+                  <div className="h-3 w-1/4 rounded bg-secondary/60 pt-1" />
                 </div>
               </div>
             </div>

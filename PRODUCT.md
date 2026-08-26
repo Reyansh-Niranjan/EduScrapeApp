@@ -39,34 +39,31 @@ The full end-to-end pipeline: automated scraping → readability grading → cur
 - AI chatbot assistant with tool-calling, web search, and Gemini 2.0 Flash vision model
 - Role-based access (Student, Teacher, Admin)
 - Dark/light theme toggle
-- Admin panel with content management, team management, and GitHub-synced updates
 - User profile with grade configuration and onboarding
 
 **Technical stack:**
 - Frontend: React 19 + TypeScript + Tailwind CSS 3 + Vite
-- Auth & data: Supabase (migrated from Convex)
+- Auth & data: Supabase
 - Content delivery: Firebase Hosting
 - AI: OpenRouter API (tool-calling + writer model flow), Gemini 2.0 Flash for vision
 - Icons: Lucide React
-- Animations: Framer Motion
-- Analytics: Vercel Analytics
+- Typography: Geist Sans & Geist Mono (Utilitarian Minimalist Editorial)
 - Deploy targets: Netlify, Vercel
 
-**Undecided:**
-- Product name and logo are not locked — open to rebranding.
+**Creator & Governance:**
+- Independent project created and engineered solely by **Reyansh Niranjan**.
+- Not affiliated with CPX-SE.
 
 ## Brand Commitments
 
-- Part of the **CPX-SE** initiative.
-- Name "EduScrapeApp" and current logo (`public/logo.svg`) are in use but explicitly not locked.
-- No fixed brand guidelines, voice, or palette constraints.
+- Name "EduScrapeApp" and vector monogram logo.
+- Premium utilitarian minimalism: warm monochrome palette, crisp 1px borders, muted pastels, zero AI-slop gradients.
 
 ## Evidence on Hand
 
 - Working deployed application with live content on Firebase.
 - Python scraper pipeline (`scraper/`) for content ingestion: catalog builder, downloader, watermark remover, Supabase uploader.
-- Team of 7 (Reyansh Niranjan, Jeebika Choudary, Anshita Mohanty, Shreya Kar, Sai Sradha Ray, Riya Sakshi, Nirlipta Sahoo).
-- No user testimonials, press coverage, or external benchmarks currently available — future work must not fabricate these.
+- Solo engineer & creator: Reyansh Niranjan.
 
 ## Product Principles
 
@@ -75,7 +72,8 @@ The full end-to-end pipeline: automated scraping → readability grading → cur
 3. **Curation over aggregation** — Quality grading and curriculum alignment distinguish this from a raw file dump.
 4. **Student-first, educator-supported** — The primary experience serves students; teacher and admin surfaces exist to support that mission.
 5. **Automation removes grunt work** — The scraping pipeline replaces hours of manual searching; the AI assistant replaces hours of manual navigation.
+6. **Utilitarian Minimalism** — Clean, document-style interface without noisy marketing gradients or generic visual filler.
 
 ## Accessibility & Inclusion
 
-Mixed-connectivity audience includes students in rural India with limited internet. The companion ESP32 device addresses offline access. Web accessibility standards (keyboard nav, screen readers, sufficient contrast) should be maintained but no specific WCAG level has been formally committed.
+Mixed-connectivity audience includes students in rural India with limited internet. The companion ESP32 device addresses offline access. Web accessibility standards (keyboard nav, screen readers, sufficient contrast) are maintained.

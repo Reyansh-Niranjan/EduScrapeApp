@@ -1,0 +1,200 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-26T22:10:30.000Z",
+  "title": "Design System: EduScrapeApp",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Obsidian Black",
+        "canonical": "#141413",
+        "tonalRamp": ["#000000", "#141413", "#272725", "#484743", "#706F6A", "#A8A7A0", "#D5D4CD", "#FBFBFA"]
+      },
+      "neutral-bg": {
+        "role": "neutral",
+        "displayName": "Warm Bone Canvas",
+        "canonical": "#FBFBFA",
+        "tonalRamp": ["#1A1A18", "#333330", "#595954", "#808078", "#ABAB9F", "#D4D4C8", "#F5F4EE", "#FBFBFA"]
+      },
+      "card-bg": {
+        "role": "neutral",
+        "displayName": "Pure Card White",
+        "canonical": "#FFFFFF",
+        "tonalRamp": ["#1A1A1A", "#333333", "#666666", "#999999", "#CCCCCC", "#EEEEEE", "#F8F8F8", "#FFFFFF"]
+      },
+      "pastel-green": {
+        "role": "accent",
+        "displayName": "Pale Sage Green",
+        "canonical": "#2D5A34",
+        "tonalRamp": ["#0D1A0F", "#1A331E", "#2D5A34", "#468250", "#6AA874", "#98C9A0", "#C9E5CD", "#EDF3EC"]
+      },
+      "pastel-blue": {
+        "role": "accent",
+        "displayName": "Pale Glacier Blue",
+        "canonical": "#1E5C8A",
+        "tonalRamp": ["#0B2132", "#133C5B", "#1E5C8A", "#2E82C0", "#55A2DC", "#8AC1EC", "#C2DFF7", "#E3EFFB"]
+      },
+      "pastel-amber": {
+        "role": "accent",
+        "displayName": "Pale Honey Amber",
+        "canonical": "#8A5B00",
+        "tonalRamp": ["#2E1E00", "#573A00", "#8A5B00", "#BF7F00", "#E6A11A", "#F5C35C", "#FCE09E", "#FBF3DB"]
+      },
+      "pastel-red": {
+        "role": "accent",
+        "displayName": "Pale Crimson",
+        "canonical": "#9F2F2D",
+        "tonalRamp": ["#36100F", "#661E1D", "#9F2F2D", "#CC4543", "#E37270", "#F09F9E", "#F9CECD", "#FDEBEC"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Geist Sans Display",
+        "purpose": "Primary headline typography with tight tracking."
+      },
+      "display-serif": {
+        "displayName": "Instrument Serif / Newsreader Italic",
+        "purpose": "Editorial emphasis accents within hero headlines."
+      },
+      "headline": {
+        "displayName": "Geist Sans Headline",
+        "purpose": "Section headers and primary subtitles."
+      },
+      "body": {
+        "displayName": "Geist Sans Body",
+        "purpose": "Standard readable prose."
+      },
+      "mono": {
+        "displayName": "Geist Mono Telemetry",
+        "purpose": "Technical metadata, status badges, code, and key metrics."
+      },
+      "caption": {
+        "displayName": "Geist Sans Caption (11px)",
+        "purpose": "Small explanatory labels and metadata."
+      },
+      "micro": {
+        "displayName": "Geist Mono Micro (10px)",
+        "purpose": "Dense uppercase telemetry badges and micro-indicators."
+      }
+    },
+    "shadows": [
+      {
+        "name": "window-shadow-light",
+        "value": "0 4px 20px -2px rgba(0, 0, 0, 0.03)",
+        "purpose": "Subtle elevation for Faux-OS window chrome in light mode."
+      },
+      {
+        "name": "window-shadow-dark",
+        "value": "0 4px 20px -2px rgba(0, 0, 0, 0.3)",
+        "purpose": "Contrast elevation for Faux-OS window chrome in dark mode."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-power2-out",
+        "value": "power2.out",
+        "purpose": "Entrance transitions and staggered reveals."
+      },
+      {
+        "name": "ease-power3-out",
+        "value": "power3.out",
+        "purpose": "High-speed 60fps quickTo 3D cursor tilt tracking."
+      },
+      {
+        "name": "scroll-duration",
+        "value": "0.75s power2.inOut",
+        "purpose": "ScrollToPlugin smooth navigation between anchor sections."
+      }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "High-contrast action button with 6px radius and active press scale.",
+      "html": "<button class=\"ds-btn-primary\">Access Digital Library</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; background: #141413; color: #ffffff; padding: 8px 16px; border-radius: 6px; font-family: 'Geist Sans', sans-serif; font-size: 14px; font-weight: 500; border: none; cursor: pointer; transition: opacity 0.15s ease, transform 0.15s ease; } .ds-btn-primary:hover { opacity: 0.92; } .ds-btn-primary:active { transform: scale(0.98); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Outlined button with 1px border and subtle foreground hover.",
+      "html": "<button class=\"ds-btn-secondary\">Pipeline Architecture</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; background: transparent; color: #706F6A; padding: 8px 16px; border-radius: 6px; font-family: 'Geist Sans', sans-serif; font-size: 14px; font-weight: 500; border: 1px solid #E5E4DE; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease; } .ds-btn-secondary:hover { color: #141413; border-color: #706F6A; }"
+    },
+    {
+      "name": "Status Badge",
+      "kind": "chip",
+      "refersTo": "badge-green",
+      "description": "Muted spot pastel badge with monospace uppercase text.",
+      "html": "<span class=\"ds-badge-green\"><span class=\"ds-badge-dot\"></span>LIVE SYNC</span>",
+      "css": ".ds-badge-green { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 4px; background: #EDF3EC; color: #2D5A34; font-family: 'Geist Mono', monospace; font-size: 10px; font-weight: 600; border: 1px solid rgba(45, 90, 52, 0.15); } .ds-badge-dot { width: 6px; height: 6px; border-radius: 9999px; background: #2D5A34; }"
+    },
+    {
+      "name": "Faux-OS Window Chrome",
+      "kind": "custom",
+      "refersTo": "window-chrome",
+      "description": "Tactile window frame with 3 traffic dots and monospace header.",
+      "html": "<div class=\"ds-window\"><div class=\"ds-window-header\"><div class=\"ds-window-dots\"><span class=\"ds-dot\"></span><span class=\"ds-dot\"></span><span class=\"ds-dot\"></span></div><span class=\"ds-window-title\">eduscrape://class-10-math</span></div><div class=\"ds-window-body\">Real Numbers (22 pgs)</div></div>",
+      "css": ".ds-window { border: 1px solid #E5E4DE; border-radius: 6px; background: #FFFFFF; overflow: hidden; font-family: 'Geist Mono', monospace; } .ds-window-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #F3F2EE; border-bottom: 1px solid #E5E4DE; font-size: 11px; } .ds-window-dots { display: flex; gap: 5px; } .ds-dot { width: 8px; height: 8px; border-radius: 9999px; background: #706F6A; opacity: 0.4; } .ds-window-title { color: #706F6A; } .ds-window-body { padding: 16px; font-size: 12px; color: #141413; }"
+    },
+    {
+      "name": "Bento Container Card",
+      "kind": "card",
+      "refersTo": "bento-card",
+      "description": "Flat container card with 1px border, generous padding, and 3D quickTo cursor tilt.",
+      "html": "<div class=\"ds-bento-card\"><h3>Ingestion Engine</h3><p>Traverses digital archives into structured JSON.</p></div>",
+      "css": ".ds-bento-card { border: 1px solid #E5E4DE; border-radius: 6px; background: #FFFFFF; padding: 28px; font-family: 'Geist Sans', sans-serif; transition: border-color 0.2s ease; will-change: transform; } .ds-bento-card:hover { border-color: #706F6A; } .ds-bento-card h3 { font-size: 18px; font-weight: 700; color: #141413; margin: 0 0 8px 0; } .ds-bento-card p { font-size: 13px; color: #706F6A; margin: 0; line-height: 1.5; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Editorial Hardware Laboratory",
+    "overview": "EduScrapeApp embodies the disciplined restraint of precision scientific instrumentation combined with the typography of an elite architectural journal. The interface prioritizes scannability, dense tabular taxonomy, high-contrast monochrome surfaces, and 60fps compositor physics over generic SaaS gradient mush and decorative filler.\n\nEvery component feels machined and tactile: hairline 1px borders, subtle millimeter dot-matrix grids, Faux-OS window chrome, and spot pastels reserved strictly for telemetry and semantic status.",
+    "keyCharacteristics": [
+      "Warm bone (#FBFBFA) and deep obsidian (#0E0E10) canvas architecture.",
+      "Dual typographic pairing: ultra-tight Geist Sans display with dramatic Instrument Serif italic accents.",
+      "Monospace telemetry bands for high-density curriculum stats and hardware specs.",
+      "Zero AI-slop: banned purple/teal gradients, neon glow blobs, and heavy blurred drop shadows.",
+      "Micro-interactions powered by GSAP with 60fps GPU acceleration."
+    ],
+    "rules": [
+      {
+        "name": "The Rarity Rule",
+        "body": "Color accents occupy ≤5% of screen real estate. The monochrome canvas provides clarity; color exists exclusively for functional meaning.",
+        "section": "colors"
+      },
+      {
+        "name": "The No-Gradient Rule",
+        "body": "Gradients across card surfaces, backgrounds, or text fills are prohibited. Depth is established through 1px border contrast, architectural dot grids, and Faux-OS elevation.",
+        "section": "colors"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Surfaces rest entirely flat on the canvas bounded by crisp 1px borders. Heavy blurred shadows are banned. Depth is rendered via Faux-OS Window Chrome, Subtle Horizon Glow, and Interactive 3D Tilt.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do maintain strict 1px hair-thin borders (#E5E4DE / rgba(255,255,255,0.08)) on all containers.",
+      "Do pair Geist Sans with Instrument Serif italics for primary headline statements.",
+      "Do use gsap.quickTo() for cursor tracking to ensure 60fps compositor performance without layout reflow.",
+      "Do use ScrollToPlugin for all anchor navigation links with automatic 56px header offset compensation.",
+      "Do credit exclusively Reyansh Niranjan as the solo architect and creator."
+    ],
+    "donts": [
+      "Don't add purple/teal radial glow blobs, blur bubbles, or generic AI-slop gradients.",
+      "Don't use emojis in technical UI elements; use crisp Lucide icons.",
+      "Don't use heavy multi-stop drop shadows.",
+      "Don't reference CPX-SE or fictional team rosters anywhere in the platform.",
+      "Don't animate top, left, width, or height; always animate transform (x, y, scale, rotation) and opacity."
+    ]
+  }
+}
