@@ -27,7 +27,8 @@ export default function BackgroundCanvas() {
     if (prefersReducedMotion) return;
 
     // Responsive node count based on screen size
-    const nodeCount = Math.floor(Math.min(width, 1400) / 32);
+    const isMobile = width < 768;
+    const nodeCount = Math.floor(Math.min(width, isMobile ? 600 : 1400) / (isMobile ? 40 : 32));
     const nodes: NodePoint[] = [];
 
     for (let i = 0; i < nodeCount; i++) {
@@ -60,8 +61,24 @@ export default function BackgroundCanvas() {
 
     const maxDistance = 120;
     const mouseRadius = 160;
+    let isVisible = true;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]) {
+          isVisible = entries[0].isIntersecting;
+        }
+      },
+      { threshold: 0 }
+    );
+    observer.observe(canvas);
 
     const render = () => {
+      if (!isVisible) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       ctx.clearRect(0, 0, width, height);
 
       const isDark = document.documentElement.classList.contains("dark");
@@ -100,22 +117,47 @@ export default function BackgroundCanvas() {
         ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
         ctx.fillStyle = `${dotColor} ${Math.min(node.baseAlpha * alphaMultiplier, 0.45)})`;
         ctx.fill();
+      }
 
-        // Connect adjacent nodes
-        for (let j = i + 1; j < nodes.length; j++) {
-          const other = nodes[j];
-          const dx = node.x - other.x;
-          const dy = node.y - other.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+      // Build spatial grid for O(n*k) connection lookup
+      const grid = new Map<string, number[]>();
+      const cellSize = maxDistance;
+      for (let i = 0; i < nodes.length; i++) {
+        const cx = Math.floor(nodes[i].x / cellSize);
+        const cy = Math.floor(nodes[i].y / cellSize);
+        const key = `${cx},${cy}`;
+        const cell = grid.get(key);
+        if (cell) cell.push(i);
+        else grid.set(key, [i]);
+      }
 
-          if (dist < maxDistance) {
-            const lineAlpha = (1 - dist / maxDistance) * (isDark ? 0.07 : 0.04);
-            ctx.beginPath();
-            ctx.moveTo(node.x, node.y);
-            ctx.lineTo(other.x, other.y);
-            ctx.strokeStyle = `rgba(${lineColor}, ${lineAlpha})`;
-            ctx.lineWidth = 0.75;
-            ctx.stroke();
+      // Draw connections using spatial hash
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const cx = Math.floor(node.x / cellSize);
+        const cy = Math.floor(node.y / cellSize);
+
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            const neighbors = grid.get(`${cx + dx},${cy + dy}`);
+            if (!neighbors) continue;
+            for (let k = 0; k < neighbors.length; k++) {
+              const j = neighbors[k];
+              if (j <= i) continue; // avoid duplicate pairs
+              const other = nodes[j];
+              const ddx = node.x - other.x;
+              const ddy = node.y - other.y;
+              const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+              if (dist < maxDistance) {
+                const lineAlpha = (1 - dist / maxDistance) * (isDark ? 0.07 : 0.04);
+                ctx.beginPath();
+                ctx.moveTo(node.x, node.y);
+                ctx.lineTo(other.x, other.y);
+                ctx.strokeStyle = `rgba(${lineColor}, ${lineAlpha})`;
+                ctx.lineWidth = 0.75;
+                ctx.stroke();
+              }
+            }
           }
         }
       }
@@ -127,6 +169,7 @@ export default function BackgroundCanvas() {
 
     return () => {
       cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("resize", handleResize);
     };
@@ -136,7 +179,6 @@ export default function BackgroundCanvas() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 pointer-events-none z-0 opacity-80"
-      style={{ willChange: "transform" }}
       aria-hidden="true"
     />
   );

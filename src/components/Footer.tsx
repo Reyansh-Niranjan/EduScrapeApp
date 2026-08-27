@@ -12,7 +12,7 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="md:col-span-5 space-y-2.5">
             <div className="flex items-center gap-2">
-              <div className="h-5 w-5 rounded bg-foreground text-background flex items-center justify-center font-mono font-bold text-[10px]">
+              <div className="h-5 w-5 rounded bg-foreground text-background flex items-center justify-center font-mono font-bold text-xs">
                 E
               </div>
               <span className="font-bold text-sm tracking-tight text-foreground">
@@ -25,27 +25,27 @@ export default function Footer() {
           </div>
 
           {/* Nav Links */}
-          <div className="md:col-span-3 space-y-2 font-mono text-[11px]">
-            <div className="text-muted-foreground uppercase text-[10px] tracking-wider mb-2">
+          <div className="md:col-span-3 space-y-2 font-mono text-xs">
+            <div className="text-muted-foreground uppercase text-xs tracking-wider mb-2">
               Navigation
             </div>
             <div>
-              <a href="#home" className="text-muted-foreground hover:text-foreground">Overview</a>
+              <a href="#home" className="text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm">Overview</a>
             </div>
             <div>
-              <a href="#about" className="text-muted-foreground hover:text-foreground">Architecture</a>
+              <a href="#about" className="text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm">Architecture</a>
             </div>
             <div>
-              <a href="#features" className="text-muted-foreground hover:text-foreground">Platform &amp; Hardware</a>
+              <a href="#ecosystem" className="text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm">Ecosystem</a>
             </div>
             <div>
-              <a href="#creator" className="text-muted-foreground hover:text-foreground">Creator</a>
+              <a href="#creator" className="text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm">Creator</a>
             </div>
           </div>
 
           {/* Legal & Repos */}
-          <div className="md:col-span-4 space-y-2 font-mono text-[11px]">
-            <div className="text-muted-foreground uppercase text-[10px] tracking-wider mb-2">
+          <div className="md:col-span-4 space-y-2 font-mono text-xs">
+            <div className="text-muted-foreground uppercase text-xs tracking-wider mb-2">
               Repositories &amp; Legal
             </div>
             <div>
@@ -53,9 +53,9 @@ export default function Footer() {
                 href="https://github.com/Reyansh-Niranjan/eduscrapeappweb"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+                className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm"
               >
-                <Github className="w-3 h-3" />
+                <Github className="w-3.5 h-3.5" />
                 Web Hub Repo
               </a>
             </div>
@@ -64,23 +64,23 @@ export default function Footer() {
                 href="https://github.com/Reyansh-Niranjan/EduScrapeApp"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5"
+                className="text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm"
               >
-                <Terminal className="w-3 h-3" />
+                <Terminal className="w-3.5 h-3.5" />
                 ESP32 Hardware Firmware
               </a>
             </div>
             <div className="pt-1 flex gap-3 text-muted-foreground">
-              <a href="#privacy" className="hover:text-foreground">Privacy Policy</a>
+              <a href="#privacy" className="hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm">Privacy Policy</a>
               <span>·</span>
-              <a href="#terms" className="hover:text-foreground">Terms of Service</a>
+              <a href="#terms" className="hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm">Terms of Service</a>
             </div>
           </div>
 
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-muted-foreground text-[11px] font-mono">
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-muted-foreground text-xs font-mono">
           <div>
             &copy; {currentYear} EduScrapeApp. Created &amp; engineered by{" "}
             <a

@@ -3,7 +3,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { ScrollToPlugin } from "gsap/ScrollToPlugin";
-import { ArrowRight, Terminal, BookOpen, Check, ShieldCheck, Sparkles, FileText } from "lucide-react";
+import { ArrowRight, Terminal, BookOpen, CheckCircle2, ShieldCheck, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -65,182 +65,166 @@ export default function Hero() {
   const previewCardRef = useRef<HTMLDivElement>(null);
 
   const stats = [
-    { label: "Curated Textbooks", value: "10,000+", detail: "NCERT & State Boards" },
-    { label: "Grade Range", value: "Class 1–12", detail: "Complete K–12 Schema" },
-    { label: "OCR Sanitization", value: "100% Clean", detail: "Zero Watermarks" },
-    { label: "ESP32 Offline Read", value: "<12ms", detail: "FAT32 Storage Access" },
+    { label: "Curated Textbooks", value: "10,000+", detail: "Class 1–12 Catalog" },
+    { label: "Watermark Artifacts", value: "0.0%", detail: "OpenCV CLAHE Engine" },
+    { label: "Embedded Access", value: "<12ms", detail: "ESP32 SPI Latency" },
+    { label: "Ingestion Speed", value: "250 p/m", detail: "Automated Pipeline" },
   ];
 
   useGSAP(
     () => {
-      // Cinematic Blur-to-Focus Glide Timeline (Inspired by walaszczyk.studio & subscrr.app)
-      const tl = gsap.timeline({ defaults: { ease: "power4.out" } });
+      const mm = gsap.matchMedia();
 
-      tl.from(".hero-status", {
-        y: -14,
-        filter: "blur(8px)",
-        autoAlpha: 0,
-        duration: 0.5,
-      })
-        .from(
-          ".hero-word",
-          {
-            y: 40,
-            filter: "blur(14px)",
-            autoAlpha: 0,
-            duration: 0.85,
-            stagger: 0.045,
-            ease: "power4.out",
-          },
-          "-=0.25"
-        )
-        .from(
-          ".hero-word-serif",
-          {
-            y: 40,
-            filter: "blur(14px)",
-            autoAlpha: 0,
-            duration: 0.9,
-            stagger: 0.04,
-            ease: "power4.out",
-          },
-          "-=0.6"
-        )
-        .from(
-          ".hero-subtext",
-          {
-            y: 20,
-            filter: "blur(10px)",
-            autoAlpha: 0,
-            duration: 0.7,
-            ease: "power3.out",
-          },
-          "-=0.5"
-        )
-        .from(
-          ".hero-actions > *",
-          {
-            y: 16,
-            autoAlpha: 0,
-            duration: 0.5,
-            stagger: 0.1,
-            ease: "power3.out",
-          },
-          "-=0.4"
-        )
-        .from(
-          ".hero-guarantees > *",
-          {
-            y: 10,
-            autoAlpha: 0,
-            duration: 0.4,
-            stagger: 0.08,
-          },
-          "-=0.3"
-        )
-        .from(
-          ".hero-window",
-          {
-            scale: 0.95,
-            y: 35,
-            filter: "blur(16px)",
-            autoAlpha: 0,
-            duration: 0.95,
-            ease: "power3.out",
-          },
-          "-=0.7"
-        )
-        .from(
-          ".hero-stat-card",
-          {
-            y: 28,
-            filter: "blur(10px)",
-            autoAlpha: 0,
-            duration: 0.6,
-            stagger: 0.08,
-            ease: "power3.out",
-          },
-          "-=0.5"
-        );
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // Snappy, high-craft glide entrance timeline
+        const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
 
-      // High-performance quickTo cursor tilt & spotlight coordinates on faux-window
-      if (windowRef.current) {
-        const el = windowRef.current;
-        const setRotX = gsap.quickTo(el, "rotationX", { duration: 0.4, ease: "power3.out" });
-        const setRotY = gsap.quickTo(el, "rotationY", { duration: 0.4, ease: "power3.out" });
+        tl.from(".hero-status", {
+          y: -10,
+          autoAlpha: 0,
+          duration: 0.25,
+        })
+          .from(
+            ".hero-word",
+            {
+              y: 20,
+              autoAlpha: 0,
+              duration: 0.3,
+              stagger: 0.02,
+            },
+            "-=0.15"
+          )
+          .from(
+            ".hero-word-serif",
+            {
+              y: 20,
+              autoAlpha: 0,
+              duration: 0.3,
+              stagger: 0.02,
+            },
+            "-=0.2"
+          )
+          .from(
+            ".hero-subtext",
+            {
+              y: 12,
+              autoAlpha: 0,
+              duration: 0.25,
+            },
+            "-=0.2"
+          )
+          .from(
+            ".hero-actions > *",
+            {
+              y: 10,
+              autoAlpha: 0,
+              duration: 0.25,
+              stagger: 0.05,
+            },
+            "-=0.2"
+          )
+          .from(
+            ".hero-guarantees > *",
+            {
+              y: 8,
+              autoAlpha: 0,
+              duration: 0.2,
+              stagger: 0.04,
+            },
+            "-=0.15"
+          )
+          .from(
+            ".hero-window",
+            {
+              scale: 0.98,
+              y: 16,
+              autoAlpha: 0,
+              duration: 0.35,
+            },
+            "-=0.25"
+          )
+          .from(
+            ".hero-stat-card",
+            {
+              y: 12,
+              autoAlpha: 0,
+              duration: 0.25,
+              stagger: 0.04,
+            },
+            "-=0.2"
+          );
 
-        const handleMouseMove = (e: MouseEvent) => {
-          const rect = el.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
+        // High-performance quickTo cursor tilt & spotlight coordinates on faux-window
+        if (windowRef.current) {
+          const el = windowRef.current;
+          const setRotX = gsap.quickTo(el, "rotationX", { duration: 0.4, ease: "power3.out" });
+          const setRotY = gsap.quickTo(el, "rotationY", { duration: 0.4, ease: "power3.out" });
 
-          // Update spotlight variables for illumination
-          el.style.setProperty("--mouse-x", `${x}px`);
-          el.style.setProperty("--mouse-y", `${y}px`);
+          const handleMouseMove = (e: MouseEvent) => {
+            const rect = el.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
 
-          // Map mouse coordinates to subtle [-3.5deg, 3.5deg] range
-          const rotY = gsap.utils.mapRange(0, rect.width, -3.5, 3.5)(x);
-          const rotX = gsap.utils.mapRange(0, rect.height, 3.5, -3.5)(y);
+            // Update spotlight variables for illumination
+            el.style.setProperty("--mouse-x", `${x}px`);
+            el.style.setProperty("--mouse-y", `${y}px`);
 
-          setRotX(rotX);
-          setRotY(rotY);
+            // Map mouse coordinates to subtle [-3.5deg, 3.5deg] range
+            const rotY = gsap.utils.mapRange(0, rect.width, -3.5, 3.5)(x);
+            const rotX = gsap.utils.mapRange(0, rect.height, 3.5, -3.5)(y);
+
+            setRotX(rotX);
+            setRotY(rotY);
+          };
+
+          const handleMouseLeave = () => {
+            setRotX(0);
+            setRotY(0);
+          };
+
+          el.addEventListener("mousemove", handleMouseMove);
+          el.addEventListener("mouseleave", handleMouseLeave);
+        }
+
+        // Magnetic hover physics on primary CTA button
+        const btn = primaryBtnRef.current;
+        if (!btn) return;
+
+        const setX = gsap.quickTo(btn, "x", { duration: 0.3, ease: "power3.out" });
+        const setY = gsap.quickTo(btn, "y", { duration: 0.3, ease: "power3.out" });
+
+        const onMouseMove = (e: MouseEvent) => {
+          const rect = btn.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          const deltaX = e.clientX - centerX;
+          const deltaY = e.clientY - centerY;
+          const distance = Math.hypot(deltaX, deltaY);
+
+          if (distance < 60) {
+            setX(deltaX * 0.25);
+            setY(deltaY * 0.25);
+          } else {
+            setX(0);
+            setY(0);
+          }
         };
 
-        const handleMouseLeave = () => {
-          setRotX(0);
-          setRotY(0);
-        };
-
-        el.addEventListener("mousemove", handleMouseMove);
-        el.addEventListener("mouseleave", handleMouseLeave);
-
-        return () => {
-          el.removeEventListener("mousemove", handleMouseMove);
-          el.removeEventListener("mouseleave", handleMouseLeave);
-        };
-      }
-    },
-    { scope: containerRef }
-  );
-
-  // Magnetic button physics (Inspired by walaszczyk.studio)
-  useGSAP(
-    () => {
-      const btn = primaryBtnRef.current;
-      if (!btn) return;
-
-      const setX = gsap.quickTo(btn, "x", { duration: 0.3, ease: "power3.out" });
-      const setY = gsap.quickTo(btn, "y", { duration: 0.3, ease: "power3.out" });
-
-      const onMouseMove = (e: MouseEvent) => {
-        const rect = btn.getBoundingClientRect();
-        const centerX = rect.left + rect.width / 2;
-        const centerY = rect.top + rect.height / 2;
-        const deltaX = e.clientX - centerX;
-        const deltaY = e.clientY - centerY;
-        const distance = Math.hypot(deltaX, deltaY);
-
-        if (distance < 60) {
-          setX(deltaX * 0.25);
-          setY(deltaY * 0.25);
-        } else {
+        const onMouseLeave = () => {
           setX(0);
           setY(0);
-        }
-      };
+        };
 
-      const onMouseLeave = () => {
-        setX(0);
-        setY(0);
-      };
+        window.addEventListener("mousemove", onMouseMove, { passive: true });
+        btn.addEventListener("mouseleave", onMouseLeave);
 
-      window.addEventListener("mousemove", onMouseMove, { passive: true });
-      btn.addEventListener("mouseleave", onMouseLeave);
+        return () => {
+          window.removeEventListener("mousemove", onMouseMove);
+          btn.removeEventListener("mouseleave", onMouseLeave);
+        };
+      });
 
-      return () => {
-        window.removeEventListener("mousemove", onMouseMove);
-        btn.removeEventListener("mouseleave", onMouseLeave);
-      };
+      return () => mm.revert();
     },
     { scope: containerRef }
   );
@@ -251,14 +235,12 @@ export default function Hero() {
       gsap.to(previewCardRef.current, {
         autoAlpha: 0.1,
         y: 6,
-        filter: "blur(6px)",
         duration: 0.15,
         onComplete: () => {
           setSelectedCurriculum(item);
           gsap.to(previewCardRef.current, {
             autoAlpha: 1,
             y: 0,
-            filter: "blur(0px)",
             duration: 0.3,
             ease: "power2.out",
           });
@@ -284,137 +266,134 @@ export default function Hero() {
     <section
       id="home"
       ref={containerRef}
-      className="pt-28 pb-20 border-b border-border bg-background/80 backdrop-blur-[2px] bg-minimal-grid relative overflow-hidden"
+      className="pt-28 pb-20 bg-background relative overflow-hidden"
     >
-      <div className="ambient-glow-top" />
-
       <div className="container mx-auto px-4 sm:px-6 max-w-6xl relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-16">
           {/* Left Column (7 cols) */}
           <div className="lg:col-span-7 flex flex-col items-start">
             {/* Status Eyebrow */}
-            <div className="hero-status mb-4 inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-border bg-secondary text-[11px] font-mono text-muted-foreground will-change-transform">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>AUTOMATED CURRICULUM PIPELINE · v2.4</span>
+            <div className="hero-status mb-4 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-foreground/20 bg-foreground/[0.04] text-xs font-mono text-foreground/80 will-change-transform">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              <span>Curriculum Pipeline · Class 1–12</span>
             </div>
 
-            {/* Headline with Cinematic Word-by-Word Split Reveal */}
-            <h1 className="hero-headline text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground leading-[1.08] mb-5">
-              <span className="block overflow-hidden pb-1">
+            <h1 className="hero-heading text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.08] mb-4">
+              <span className="hero-words block">
                 {titleWords.map((word, idx) => (
-                  <span key={idx} className="hero-word inline-block mr-[0.25em] will-change-transform">
+                  <span key={idx} className="hero-word inline-block mr-[0.25em]">
                     {word}
                   </span>
                 ))}
               </span>
-              <span className="block font-serif-italic font-normal text-muted-foreground text-3xl sm:text-5xl lg:text-6xl overflow-hidden pt-1">
+              <span className="hero-serif-words block font-serif italic font-normal text-muted-foreground">
                 {serifWords.map((word, idx) => (
-                  <span key={idx} className="hero-word-serif inline-block mr-[0.25em] will-change-transform">
+                  <span key={idx} className="hero-word-serif inline-block mr-[0.25em]">
                     {word}
                   </span>
                 ))}
               </span>
             </h1>
 
-            {/* Subtext */}
-            <p className="hero-subtext text-base text-muted-foreground max-w-[52ch] leading-relaxed mb-8 will-change-transform">
-              EduScrapeApp automates catalog discovery, watermark removal, and readability scoring for Class 1–12. Content streams directly to a fast in-browser reader and an offline ESP32 hardware device.
+            <p className="hero-subtext text-base text-muted-foreground max-w-[48ch] leading-relaxed mb-8">
+              Autonomous web scraping, OpenCV CLAHE watermark sanitization, and dual delivery architecture across high-DPI web reader and low-cost offline ESP32 microcontrollers.
             </p>
 
-            {/* Actions with Magnetic Physics */}
-            <div className="hero-actions flex flex-wrap items-center gap-3 w-full sm:w-auto mb-8 will-change-transform">
+            <div className="hero-actions flex flex-wrap items-center gap-3 w-full sm:w-auto mb-8">
               <Button
                 ref={primaryBtnRef}
                 size="lg"
                 onClick={() => {
-                  window.location.hash = "#login";
+                  window.history.pushState({}, "", "#login");
+                  window.dispatchEvent(new Event("hashchange"));
                 }}
-                className="gap-2 font-medium will-change-transform shadow-sm hover:shadow-md transition-shadow"
+                className="h-11 px-6 py-2.5 text-sm font-medium gap-2 cursor-pointer shadow-xs hover:shadow-sm"
               >
-                Access Digital Library
+                <span>Launch Digital Library</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
 
               <Button
-                variant="outline"
                 size="lg"
+                variant="outline"
                 onClick={scrollToAbout}
-                className="gap-2 text-muted-foreground hover:text-foreground"
+                className="h-11 px-6 py-2.5 text-sm font-medium gap-2 cursor-pointer"
               >
-                <Terminal className="w-4 h-4" />
-                Pipeline Architecture
+                <Terminal className="w-4 h-4 text-muted-foreground" />
+                <span>Pipeline Architecture</span>
               </Button>
             </div>
 
-            {/* Guarantees */}
-            <div className="hero-guarantees flex flex-wrap items-center gap-4 text-xs text-muted-foreground font-mono will-change-transform">
-              <span className="inline-flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-foreground" />
-                Zero Watermarks
+            <div className="hero-guarantees flex flex-wrap items-center gap-4 text-xs font-mono text-muted-foreground">
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-foreground" />
+                100% Free &amp; Open Source
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-foreground" />
-                In-Browser PDF Reader
+              <span className="flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-foreground" />
+                Zero Analytics / Privacy-First
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Check className="w-3.5 h-3.5 text-foreground" />
-                ESP32 Hardware Sync
+              <span className="flex items-center gap-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-foreground" />
+                Class 1–12 Complete Syllabus
               </span>
             </div>
           </div>
 
-          {/* Right Column: Interactive Spotlight Faux-OS Window (5 cols) */}
+          {/* Right Column: Interactive Faux-Browser Window Mockup (5 cols) */}
           <div className="hero-window lg:col-span-5 [perspective:1000px]">
             <div
               ref={windowRef}
-              className="window-chrome spotlight-card [transform-style:preserve-3d] will-change-transform transition-shadow duration-300 hover:shadow-xl"
+              className="window-chrome spotlight-card [transform-style:preserve-3d] will-change-transform transition-shadow duration-300 hover:shadow-lg"
             >
               {/* Window Header */}
-              <div className="window-header relative z-10">
+              <div className="window-header relative z-10 border-b border-border">
                 <div className="window-dots">
                   <div className="window-dot" />
                   <div className="window-dot" />
                   <div className="window-dot" />
                 </div>
-                <span className="text-muted-foreground text-[11px] truncate px-2">
+                <span className="text-muted-foreground text-xs truncate px-2 font-mono">
                   eduscrape://{selectedCurriculum.id}
                 </span>
-                <Badge variant="green" className="text-[10px] px-1.5 py-0.5 font-mono">
+                <Badge variant="green">
                   LIVE
                 </Badge>
               </div>
 
-              {/* Interactive Curriculum Selector Pills */}
-              <div className="p-3 border-b border-border bg-secondary/50 flex items-center gap-1.5 overflow-x-auto text-[11px] font-mono relative z-10">
+              {/* Interactive Curriculum Selector Pills (Semantic nav safe tag) */}
+              <nav role="tablist" aria-label="Curriculum tabs" className="p-2.5 border-b border-border flex items-center gap-1.5 overflow-x-auto text-xs font-mono relative z-10">
                 {previewData.map((item) => (
                   <button
                     key={item.id}
+                    role="tab"
+                    aria-selected={selectedCurriculum.id === item.id}
                     onClick={() => handleSelectCurriculum(item)}
-                    className={`px-2.5 py-1 rounded transition-all whitespace-nowrap cursor-pointer ${selectedCurriculum.id === item.id
-                        ? "bg-card text-foreground font-semibold border border-border shadow-xs scale-102"
+                    className={`px-3 py-1.5 rounded-sm transition-colors whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground ${selectedCurriculum.id === item.id
+                        ? "bg-card text-foreground font-semibold border border-border shadow-xs"
                         : "text-muted-foreground hover:text-foreground"
                       }`}
                   >
                     {item.grade} {item.subject}
                   </button>
                 ))}
-              </div>
+              </nav>
 
-              {/* Dynamic Curriculum Preview Body */}
-              <div ref={previewCardRef} className="p-4 space-y-3 font-mono text-xs will-change-transform relative z-10">
+              {/* Dynamic Curriculum Preview Body (Semantic pre safe tag) */}
+              <div ref={previewCardRef} className="p-4 space-y-3 font-mono text-xs relative z-10">
                 {/* Active Book Row */}
-                <div className="p-3 rounded-md border border-border bg-card/90 backdrop-blur-xs">
+                <div className="p-3.5 rounded-md bg-secondary/50">
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
                       <BookOpen className="w-3.5 h-3.5 text-foreground" />
                       {selectedCurriculum.grade} · {selectedCurriculum.subject}
                     </span>
-                    <Badge variant="blue" className="text-[10px] px-1.5 py-0.5">
+                    <Badge variant="blue">
                       {selectedCurriculum.badgeText}
                     </Badge>
                   </div>
 
-                  <div className="text-[11px] text-muted-foreground space-y-1">
+                  <div className="text-xs text-muted-foreground space-y-1">
                     <div className="flex justify-between">
                       <span>Chapter:</span>
                       <span className="text-foreground">
@@ -425,35 +404,31 @@ export default function Hero() {
                       <span>Readability Index:</span>
                       <span className="text-foreground">{selectedCurriculum.gradeScore}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span>Artifact Removal:</span>
-                      <span className="text-[var(--pastel-green-text)] font-semibold">100% Watermark Free</span>
-                    </div>
                   </div>
                 </div>
 
-                {/* Live Formula / Snippet Box */}
-                <div className="p-3 rounded-md border border-border bg-secondary/40 font-mono text-[11px] space-y-1.5">
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                {/* Concept Formula Block (Semantic pre safe tag) */}
+                <pre className="p-3.5 rounded-md bg-secondary/30 font-mono text-xs space-y-1.5 whitespace-pre-wrap">
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                     <span>Parsed Concept Formula</span>
-                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    <span className="text-xs font-mono text-[var(--pastel-green-text)] font-semibold">OCR Verified</span>
                   </div>
-                  <div className="font-semibold text-foreground bg-card p-2 rounded border border-border">
+                  <div className="font-semibold text-foreground font-mono text-xs">
                     {selectedCurriculum.formula}
                   </div>
-                  <p className="text-[11px] text-muted-foreground font-sans leading-relaxed pt-1">
+                  <p className="text-xs text-muted-foreground font-sans leading-relaxed pt-0.5">
                     {selectedCurriculum.snippet}
                   </p>
-                </div>
+                </pre>
 
                 {/* Micro Command Bar */}
-                <div className="pt-2 border-t border-border flex items-center justify-between text-[10px] text-muted-foreground">
+                <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-mono">
                   <span className="flex items-center gap-1">
                     <FileText className="w-3 h-3" />
                     Clean PDF Ready
                   </span>
-                  <span className="flex items-center gap-1 font-mono">
-                    <ShieldCheck className="w-3 h-3 text-emerald-500" />
+                  <span className="flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-foreground" />
                     Supabase Synchronized
                   </span>
                 </div>
@@ -462,10 +437,10 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Telemetry Stats Band with Spotlight Illumination */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-6 border-t border-border">
+        {/* Telemetry Stats Band with Semantic list safe tag */}
+        <ul className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-6 border-t border-border list-none p-0 m-0">
           {stats.map((item, idx) => (
-            <div
+            <li
               key={idx}
               onMouseMove={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -474,18 +449,18 @@ export default function Hero() {
               }}
               className="hero-stat-card spotlight-card p-4 rounded-md border border-border bg-card will-change-transform transition-colors hover:border-muted-foreground"
             >
-              <div className="text-[11px] font-mono uppercase text-muted-foreground tracking-wide mb-1 relative z-10">
+              <div className="text-xs font-mono uppercase text-muted-foreground tracking-wide mb-1 relative z-10">
                 {item.label}
               </div>
               <div className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-mono relative z-10">
                 {item.value}
               </div>
-              <div className="text-[11px] text-muted-foreground mt-1 relative z-10">
+              <div className="text-xs text-muted-foreground mt-1 relative z-10">
                 {item.detail}
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </section>
   );

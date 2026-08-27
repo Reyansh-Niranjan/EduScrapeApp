@@ -116,14 +116,14 @@ html.lenis body {
     --ring: #EDEDED;
 
     /* Spot Muted Pastels (Dark) */
-    --pastel-green-bg: #14281A;
-    --pastel-green-text: #4ADE80;
-    --pastel-blue-bg: #132738;
-    --pastel-blue-text: #60A5FA;
-    --pastel-amber-bg: #2E220D;
-    --pastel-amber-text: #FBBF24;
-    --pastel-red-bg: #321718;
-    --pastel-red-text: #F87171;
+    --pastel-green-bg: #142416;
+    --pastel-green-text: #86C190;
+    --pastel-blue-bg: #13202E;
+    --pastel-blue-text: #8BB6D8;
+    --pastel-amber-bg: #261D10;
+    --pastel-amber-text: #E5B865;
+    --pastel-red-bg: #2B1516;
+    --pastel-red-text: #E08585;
 
     /* Legacy Bridge Tokens */
     --theme-bg: var(--background);
@@ -147,12 +147,42 @@ html.lenis body {
     border-color: var(--border);
   }
 
+  ::selection {
+    background-color: var(--foreground);
+    color: var(--background);
+  }
+
+  /* Minimalist Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
     letter-spacing: -0.012em;
     line-height: 1.6;
+    caret-color: var(--foreground);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -171,11 +201,17 @@ html.lenis body {
     color: var(--foreground);
   }
 
+  a {
+    text-underline-offset: 4px;
+  }
+
+  .font-mono,
   code,
   kbd,
   samp,
   pre {
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -185,32 +221,6 @@ html.lenis body {
   font-style: italic;
   font-weight: 400;
   letter-spacing: -0.01em;
-}
-
-/* Subtle Architectural Dot Pattern Background */
-.bg-minimal-grid {
-  background-size: 24px 24px;
-  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-}
-
-.dark .bg-minimal-grid {
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-}
-
-/* Top Horizon Glow */
-.ambient-glow-top {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 1000px;
-  height: 420px;
-  background: radial-gradient(ellipse at 50% 0%, rgba(0, 0, 0, 0.03) 0%, transparent 70%);
-  pointer-events: none;
-}
-
-.dark .ambient-glow-top {
-  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.04) 0%, transparent 70%);
 }
 
 /* Interactive Cursor Spotlight Glow Effect (Inspired by subscrr.app) */
@@ -264,20 +274,14 @@ kbd {
   border-radius: var(--radius);
   background-color: var(--card);
   overflow: hidden;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03);
-}
-
-.dark .window-chrome {
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
 }
 
 .window-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.6rem 1rem;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border);
-  background-color: var(--secondary);
   font-family: var(--font-mono);
   font-size: 0.75rem;
 }
@@ -291,7 +295,7 @@ kbd {
 .window-dot {
   width: 8px;
   height: 8px;
-  border-radius: 9999px;
+  border-radius: 4px;
   background-color: var(--muted-foreground);
   opacity: 0.35;
 }
@@ -322,11 +326,13 @@ kbd {
   padding-right: 0.75rem;
   font-size: 0.875rem;
   outline: none;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
+.auth-input-field:focus-visible,
 .auth-input-field:focus {
   border-color: var(--foreground);
+  box-shadow: 0 0 0 1px var(--foreground);
 }
 
 .auth-button {
@@ -340,6 +346,7 @@ kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
   transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
@@ -382,4 +389,16 @@ kbd {
   border-radius: var(--radius);
   background-color: var(--card);
   padding: 1.5rem;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

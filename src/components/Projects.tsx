@@ -18,12 +18,12 @@ export default function Projects() {
       badge: "CLOUD PLATFORM",
       badgeVariant: "blue" as const,
       description:
-        "High-density web application providing instant PDF reading, Class 1–12 curriculum hierarchy, deep AI vision diagram search, and direct chapter downloads.",
+        "High-performance browser application providing instant high-DPI textbook reading, Class 1–12 catalog search, and offline chapter downloads.",
       specs: [
         { label: "Frontend", value: "React 19 · Vite 8" },
-        { label: "Auth & DB", value: "Supabase PostgreSQL" },
-        { label: "CDN Storage", value: "Firebase Hosting" },
-        { label: "Vision AI", value: "Gemini 2.0 Flash" },
+        { label: "Auth & Database", value: "Supabase PostgreSQL" },
+        { label: "Storage CDN", value: "Supabase Storage (PDF.js)" },
+        { label: "AI Explainer", value: "Gemini 2.0 Flash" },
       ],
       icon: Globe,
       repoUrl: "https://github.com/Reyansh-Niranjan/eduscrapeappweb",
@@ -37,11 +37,11 @@ export default function Projects() {
       badge: "EMBEDDED HARDWARE",
       badgeVariant: "amber" as const,
       description:
-        "Autonomous ESP32 physical reader with tactile D-pad navigation, monochrome display, and MicroSD storage. Built for offline study in remote areas with zero internet connectivity.",
+        "Autonomous physical reading device with tactile D-pad navigation, high-contrast monochrome display, and MicroSD card storage for zero-connectivity classrooms.",
       specs: [
         { label: "Processor", value: "ESP-WROOM-32 Dual Core" },
-        { label: "Storage Bus", value: "MicroSD FAT32 SPI" },
-        { label: "Firmware", value: "Custom C++ Display Driver" },
+        { label: "Storage Bus", value: "MicroSD FAT32 (SPI)" },
+        { label: "Display Driver", value: "Custom Embedded C++" },
         { label: "Page Latency", value: "<12ms Instant Render" },
       ],
       icon: Cpu,
@@ -54,105 +54,112 @@ export default function Projects() {
 
   useGSAP(
     () => {
-      // Header blur reveal
-      gsap.from(".projects-header-item", {
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 85%",
-        },
-        y: 28,
-        filter: "blur(12px)",
-        autoAlpha: 0,
-        duration: 0.8,
-        stagger: 0.1,
-        ease: "power4.out",
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // Header reveal
+        gsap.from(".projects-header-item", {
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 85%",
+            once: true,
+          },
+          y: 16,
+          autoAlpha: 0,
+          duration: 0.35,
+          stagger: 0.05,
+          ease: "power3.out",
+          immediateRender: false,
+        });
+
+        // Cards Glide entrance
+        gsap.from(".gsap-ecosystem-card", {
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 75%",
+            once: true,
+          },
+          y: 20,
+          autoAlpha: 0,
+          stagger: 0.08,
+          duration: 0.35,
+          ease: "power3.out",
+          immediateRender: false,
+        });
+
+        // Parallax image scrub inside media frames
+        const parallaxImages = gsap.utils.toArray<HTMLElement>(".parallax-media-img", containerRef.current);
+        parallaxImages.forEach((img) => {
+          gsap.fromTo(
+            img,
+            { yPercent: -7, scale: 1.08 },
+            {
+              yPercent: 7,
+              scale: 1.08,
+              ease: "none",
+              scrollTrigger: {
+                trigger: img.parentElement,
+                start: "top bottom",
+                end: "bottom top",
+                scrub: 1.2,
+              },
+            }
+          );
+        });
+
+        // QuickTo tilt physics & spotlight coordination on ecosystem cards
+        const cards = gsap.utils.toArray<HTMLElement>(".gsap-ecosystem-card", containerRef.current);
+        cards.forEach((card) => {
+          const setRotX = gsap.quickTo(card, "rotationX", { duration: 0.4, ease: "power3.out" });
+          const setRotY = gsap.quickTo(card, "rotationY", { duration: 0.4, ease: "power3.out" });
+
+          const onMove = (e: MouseEvent) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Track cursor for spotlight illumination
+            card.style.setProperty("--mouse-x", `${x}px`);
+            card.style.setProperty("--mouse-y", `${y}px`);
+
+            const rotY = gsap.utils.mapRange(0, rect.width, -2.5, 2.5)(x);
+            const rotX = gsap.utils.mapRange(0, rect.height, 2.5, -2.5)(y);
+            setRotX(rotX);
+            setRotY(rotY);
+          };
+
+          const onLeave = () => {
+            setRotX(0);
+            setRotY(0);
+          };
+
+          card.addEventListener("mousemove", onMove);
+          card.addEventListener("mouseleave", onLeave);
+        });
       });
 
-      // Cards Blur-to-Focus Glide entrance
-      gsap.from(".gsap-ecosystem-card", {
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 75%",
-          toggleActions: "play none none none",
-        },
-        y: 40,
-        filter: "blur(14px)",
-        autoAlpha: 0,
-        stagger: 0.18,
-        duration: 0.9,
-        ease: "power4.out",
-      });
-
-      // Parallax image scrub inside media frames (Inspired by subscrr.app data-parallax)
-      const parallaxImages = gsap.utils.toArray<HTMLElement>(".parallax-media-img", containerRef.current);
-      parallaxImages.forEach((img) => {
-        gsap.fromTo(
-          img,
-          { yPercent: -7, scale: 1.08 },
-          {
-            yPercent: 7,
-            scale: 1.08,
-            ease: "none",
-            scrollTrigger: {
-              trigger: img.parentElement,
-              start: "top bottom",
-              end: "bottom top",
-              scrub: 1.2,
-            },
-          }
-        );
-      });
-
-      // QuickTo tilt physics & spotlight coordination on ecosystem cards
-      const cards = gsap.utils.toArray<HTMLElement>(".gsap-ecosystem-card", containerRef.current);
-      cards.forEach((card) => {
-        const setRotX = gsap.quickTo(card, "rotationX", { duration: 0.4, ease: "power3.out" });
-        const setRotY = gsap.quickTo(card, "rotationY", { duration: 0.4, ease: "power3.out" });
-
-        const onMove = (e: MouseEvent) => {
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-
-          // Track cursor for spotlight illumination
-          card.style.setProperty("--mouse-x", `${x}px`);
-          card.style.setProperty("--mouse-y", `${y}px`);
-
-          const rotY = gsap.utils.mapRange(0, rect.width, -2.5, 2.5)(x);
-          const rotX = gsap.utils.mapRange(0, rect.height, 2.5, -2.5)(y);
-          setRotX(rotX);
-          setRotY(rotY);
-        };
-
-        const onLeave = () => {
-          setRotX(0);
-          setRotY(0);
-        };
-
-        card.addEventListener("mousemove", onMove);
-        card.addEventListener("mouseleave", onLeave);
-      });
+      return () => mm.revert();
     },
     { scope: containerRef }
   );
 
   return (
     <section
-      id="features"
+      id="ecosystem"
       ref={containerRef}
-      className="py-24 border-b border-border bg-background/80 backdrop-blur-[2px] relative [perspective:1200px]"
+      className="py-24 bg-background relative [perspective:1200px]"
     >
       <div className="container mx-auto px-4 sm:px-6 max-w-6xl">
         {/* Section Header */}
         <div className="max-w-3xl mb-16">
-          <div className="projects-header-item text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-2 will-change-transform">
-            Dual Platform Ecosystem
+          <div className="projects-header-item text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 will-change-transform">
+            DUAL PLATFORM ECOSYSTEM
           </div>
           <h2 className="projects-header-item text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4 will-change-transform">
             Cloud web hub &amp; offline hardware.
           </h2>
-          <p className="projects-header-item text-base text-muted-foreground leading-relaxed will-change-transform">
-            A unified content pipeline engineered to serve both high-bandwidth environments and rural regions with zero network infrastructure.
+          <p className="projects-header-item text-base text-muted-foreground leading-relaxed max-w-[50ch] will-change-transform">
+            A single, unified content pipeline engineered to serve both high-bandwidth connected environments and remote regions with zero network infrastructure.
           </p>
         </div>
 
@@ -166,7 +173,7 @@ export default function Projects() {
                 className="gsap-ecosystem-card spotlight-card rounded-md border border-border bg-card overflow-hidden flex flex-col justify-between transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]"
               >
                 {/* Visual Preview Frame with Parallax Image Scrub */}
-                <div className="relative aspect-[16/10] w-full border-b border-border bg-secondary overflow-hidden">
+                <div className="relative aspect-[16/10] w-full border-b border-border overflow-hidden">
                   <img
                     src={item.imageUrl}
                     alt={item.name}
@@ -174,7 +181,7 @@ export default function Projects() {
                     loading="lazy"
                   />
                   <div className="absolute top-3 right-3 z-10">
-                    <Badge variant={item.badgeVariant} className="text-[10px]">
+                    <Badge variant={item.badgeVariant}>
                       {item.badge}
                     </Badge>
                   </div>
@@ -188,26 +195,26 @@ export default function Projects() {
                       <span>{item.name}</span>
                     </h3>
 
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-6">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-6 max-w-[48ch]">
                       {item.description}
                     </p>
 
-                    {/* Technical Specs Table */}
-                    <div className="p-4 rounded-md border border-border bg-secondary/50 mb-6 font-mono text-xs">
-                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                    {/* Technical Specs Table (Semantic list safe tag) */}
+                    <div className="pt-4 pb-2 border-t border-border mb-6 font-mono text-xs">
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
                         <span>Architecture Specifications</span>
                         <Terminal className="w-3 h-3 text-muted-foreground" />
                       </div>
-                      <div className="grid grid-cols-2 gap-y-2.5 gap-x-4">
+                      <ul className="grid grid-cols-2 gap-y-3 gap-x-4 list-none p-0 m-0">
                         {item.specs.map((spec, sIdx) => (
-                          <div key={sIdx} className="flex flex-col">
-                            <span className="text-[10px] text-muted-foreground">{spec.label}</span>
-                            <span className="font-semibold text-foreground text-[11px] truncate mt-0.5">
+                          <li key={sIdx} className="flex flex-col">
+                            <span className="text-xs text-muted-foreground">{spec.label}</span>
+                            <span className="font-semibold text-foreground text-xs truncate mt-0.5">
                               {spec.value}
                             </span>
-                          </div>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </div>
                   </div>
 
@@ -217,9 +224,10 @@ export default function Projects() {
                       <Button
                         size="sm"
                         onClick={() => {
-                          window.location.hash = item.actionHash!;
+                          window.history.pushState({}, "", item.actionHash!);
+                          window.dispatchEvent(new Event("hashchange"));
                         }}
-                        className="flex-1 justify-center text-xs gap-1.5 cursor-pointer shadow-xs hover:shadow-sm"
+                        className="flex-1 justify-center text-xs py-1.5 gap-1.5 cursor-pointer shadow-xs hover:shadow-sm"
                       >
                         {item.actionText}
                         <ArrowUpRight className="w-3.5 h-3.5" />
@@ -231,7 +239,7 @@ export default function Projects() {
                         rel="noopener noreferrer"
                         className="flex-1"
                       >
-                        <Button size="sm" className="w-full justify-center text-xs gap-1.5 cursor-pointer shadow-xs hover:shadow-sm">
+                        <Button size="sm" className="w-full justify-center text-xs py-1.5 gap-1.5 cursor-pointer shadow-xs hover:shadow-sm">
                           {item.actionText}
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Button>
@@ -242,7 +250,7 @@ export default function Projects() {
                       href={item.repoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground text-xs font-mono inline-flex items-center gap-1.5 transition-colors hover:border-muted-foreground"
+                      className="px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground text-xs font-mono inline-flex items-center gap-1.5 transition-colors hover:border-muted-foreground"
                     >
                       <Github className="w-3.5 h-3.5" />
                       Source

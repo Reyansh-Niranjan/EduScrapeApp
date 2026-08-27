@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -13,6 +14,25 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const progressBarRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
+
+  // Close mobile menu on Escape & lock body scroll
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   // GSAP Scroll Progress Indicator (scrubs 0 to 1 based on page scroll)
   useGSAP(
@@ -35,9 +55,8 @@ export default function Header() {
 
   const navLinks = [
     { label: "Overview", href: "#home" },
-    { label: "Pipeline Stream", href: "#pipeline-stream" },
     { label: "Architecture", href: "#about" },
-    { label: "Hardware Anatomy", href: "#hardware-anatomy" },
+    { label: "Ecosystem", href: "#ecosystem" },
     { label: "Creator", href: "#creator" },
   ];
 
@@ -52,6 +71,11 @@ export default function Header() {
       ease: "power2.inOut",
       overwrite: "auto",
     });
+  };
+
+  const navigateToLogin = () => {
+    window.history.pushState({}, "", "#login");
+    window.dispatchEvent(new Event("hashchange"));
   };
 
   return (
@@ -70,7 +94,7 @@ export default function Header() {
         <a
           href="#home"
           onClick={(e) => handleNavClick(e, "#home")}
-          className="flex items-center gap-2.5 text-foreground hover:opacity-85 transition-opacity"
+          className="flex items-center gap-2.5 text-foreground hover:opacity-85 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
         >
           <div className="h-7 w-7 rounded-md bg-foreground text-background flex items-center justify-center font-bold font-mono text-xs">
             E
@@ -78,9 +102,6 @@ export default function Header() {
           <div className="flex items-baseline gap-1.5">
             <span className="font-bold text-sm tracking-tight text-foreground">
               EduScrapeApp
-            </span>
-            <span className="text-[10px] font-mono text-muted-foreground">
-              v2.4
             </span>
           </div>
         </a>
@@ -92,7 +113,7 @@ export default function Header() {
               key={link.href}
               href={link.href}
               onClick={(e) => handleNavClick(e, link.href)}
-              className="hover:text-foreground transition-colors cursor-pointer"
+              className="hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
             >
               {link.label}
             </a>
@@ -104,10 +125,8 @@ export default function Header() {
           <ThemeToggle />
           <Button
             size="sm"
-            onClick={() => {
-              window.location.hash = "#login";
-            }}
-            className="text-xs h-8 px-3 gap-1.5 font-medium cursor-pointer"
+            onClick={navigateToLogin}
+            className="text-xs h-8 px-3 py-1.5 gap-1.5 font-medium cursor-pointer"
           >
             <span>Sign In</span>
             <ArrowUpRight className="w-3 h-3 opacity-70" />
@@ -119,8 +138,10 @@ export default function Header() {
           <ThemeToggle />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-1.5 rounded-md border border-border text-foreground hover:bg-secondary transition-colors"
+            className="p-1.5 rounded-md border border-border text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
             aria-label="Toggle Navigation Menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav-menu"
           >
             {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
           </button>
@@ -128,32 +149,46 @@ export default function Header() {
       </div>
 
       {/* Mobile Drawer Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-b border-border bg-background px-4 py-4 space-y-3 font-mono text-xs">
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={(e) => handleNavClick(e, link.href)}
-              className="block py-1.5 text-muted-foreground hover:text-foreground cursor-pointer"
-            >
-              {link.label}
-            </a>
-          ))}
-          <div className="pt-2 border-t border-border">
-            <Button
-              size="sm"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                window.location.hash = "#login";
-              }}
-              className="w-full text-xs"
-            >
-              Sign In to Library
-            </Button>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            id="mobile-nav-menu"
+            role="navigation"
+            aria-label="Mobile navigation"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="md:hidden border-b border-border bg-background px-4 py-4 space-y-3 font-mono text-xs overflow-hidden"
+          >
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, link.href);
+                }}
+                className="block py-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
+              >
+                {link.label}
+              </a>
+            ))}
+            <div className="pt-2 border-t border-border">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigateToLogin();
+                }}
+                className="w-full text-xs cursor-pointer"
+              >
+                Sign In to Library
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

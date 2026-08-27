@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import {
   Eye,
   EyeOff,
@@ -8,6 +8,7 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle2,
+  ChevronDown,
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { supabase } from "../lib/supabaseClient";
@@ -18,6 +19,7 @@ interface LoginProps {
 }
 
 export default function Login({ onCancel, onSuccess }: LoginProps) {
+  const shouldReduceMotion = useReducedMotion();
   const [mode, setMode] = useState<"sign-in" | "create">("sign-in");
   const isCreate = mode === "create";
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -126,65 +128,88 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col justify-between p-4 sm:p-6 lg:p-8">
       {/* Top Bar */}
-      <div className="w-full max-w-5xl mx-auto flex items-center justify-between">
+      <motion.div
+        initial={shouldReduceMotion ? false : { opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="w-full max-w-5xl mx-auto flex items-center justify-between"
+      >
         <button
           onClick={onCancel}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-xs font-medium text-muted-foreground hover:text-foreground transition"
+          aria-label="Back to homepage"
+          className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-xs font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-all duration-150 active:scale-[0.97]"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5" />
           Back to Overview
         </button>
         <ThemeToggle />
-      </div>
+      </motion.div>
 
-      {/* Main Container */}
-      <div className="w-full max-w-4xl mx-auto my-8">
-        <div className="rounded-md border border-border bg-card grid grid-cols-1 md:grid-cols-12 overflow-hidden">
+      {/* Main Card Container */}
+      <motion.div
+        initial={shouldReduceMotion ? false : { opacity: 0, y: 14, scale: 0.985 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full max-w-4xl mx-auto my-8"
+      >
+        <div className="rounded-md border border-border bg-card grid grid-cols-1 md:grid-cols-12 overflow-hidden shadow-xs md:min-h-[580px]">
           
           {/* Left Context Column (5 cols) */}
           <div className="md:col-span-5 p-6 sm:p-8 bg-secondary/40 border-b md:border-b-0 md:border-r border-border flex flex-col justify-between">
             <div className="space-y-6">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-md border border-border bg-card flex items-center justify-center p-1">
-                  <img src="/logo-icon.svg" alt="EduScrapeApp" className="w-full h-full object-contain" />
+                <div className="w-7 h-7 rounded-md bg-foreground text-background flex items-center justify-center font-bold font-mono text-xs">
+                  E
                 </div>
                 <span className="font-semibold text-sm text-foreground tracking-tight">
                   EduScrapeApp
                 </span>
               </div>
 
-              <div>
-                <h2 className="text-xl font-bold tracking-tight text-foreground">
-                  {isCreate ? "Create workspace account" : "Access your workspace"}
-                </h2>
-                <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
-                  Browse Class 1–12 NCERT textbooks, track study progress, and query diagrams via Gemini 2.0 Flash vision.
-                </p>
+              <div className="min-h-[72px]">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={mode}
+                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -4 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                  >
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                      {isCreate ? "Create workspace account" : "Access your workspace"}
+                    </h2>
+                    <p className="mt-1.5 text-xs text-muted-foreground leading-relaxed">
+                      {isCreate
+                        ? "Set up your personal Class 1–12 bookshelf, sync study notes across devices, and query diagrams."
+                        : "Browse Class 1–12 NCERT textbooks, track study progress, and query diagrams via Gemini 2.0 Flash vision."}
+                    </p>
+                  </motion.div>
+                </AnimatePresence>
               </div>
 
-              <div className="space-y-3 pt-2 font-mono text-xs">
-                <div className="p-3 rounded-md border border-border bg-card">
-                  <div className="font-semibold text-foreground text-[11px] mb-0.5">
+              <ul className="space-y-3 pt-2 font-mono text-xs list-none p-0 m-0">
+                <li className="p-3 rounded-md bg-background/60 transition-colors">
+                  <div className="font-semibold text-foreground text-xs mb-0.5">
                     Class 1–12 Library
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     Complete syllabus taxonomy and watermark-free PDFs.
                   </div>
-                </div>
+                </li>
 
-                <div className="p-3 rounded-md border border-border bg-card">
-                  <div className="font-semibold text-foreground text-[11px] mb-0.5">
+                <li className="p-3 rounded-md bg-background/60 transition-colors">
+                  <div className="font-semibold text-foreground text-xs mb-0.5">
                     Offline Sync Ready
                   </div>
-                  <div className="text-[11px] text-muted-foreground">
+                  <div className="text-xs text-muted-foreground">
                     Export archives directly to companion ESP32 hardware.
                   </div>
-                </div>
-              </div>
+                </li>
+              </ul>
             </div>
 
-            <div className="pt-6 mt-6 border-t border-border flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+            <div className="pt-6 mt-6 border-t border-border flex items-center gap-1.5 text-xs font-mono text-muted-foreground">
+              <ShieldCheck className="w-3.5 h-3.5 text-foreground" />
               <span>Independent Open Education</span>
             </div>
           </div>
@@ -193,46 +218,80 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
           <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-center">
             <div className="w-full max-w-sm mx-auto">
               
-              {/* Mode Tabs */}
-              <div className="grid grid-cols-2 gap-1 p-1 rounded-md bg-secondary border border-border mb-6 text-xs font-medium">
+              {/* Animated Mode Tabs with Sliding Spring Pill */}
+              <nav
+                role="tablist"
+                aria-label="Authentication mode"
+                className="relative grid grid-cols-2 gap-1 p-1 rounded-md bg-secondary mb-6 text-xs font-medium"
+              >
                 <button
                   type="button"
+                  role="tab"
+                  id="tab-sign-in"
+                  aria-selected={mode === "sign-in"}
                   onClick={() => {
                     setMode("sign-in");
                     setErrorMessage(null);
                     setSuccessMessage(null);
                   }}
-                  className={`py-1.5 rounded-sm transition-colors ${
+                  className={`relative py-1.5 rounded-sm transition-colors text-xs font-medium z-10 cursor-pointer ${
                     mode === "sign-in"
-                      ? "bg-card text-foreground shadow-xs font-semibold"
+                      ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  Sign In
+                  {mode === "sign-in" && (
+                    <motion.div
+                      layoutId="auth-tab-pill"
+                      className="absolute inset-0 bg-card rounded-sm shadow-xs border border-border"
+                      transition={
+                        shouldReduceMotion
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 450, damping: 35 }
+                      }
+                    />
+                  )}
+                  <span className="relative z-10">Sign In</span>
                 </button>
+
                 <button
                   type="button"
+                  role="tab"
+                  id="tab-create"
+                  aria-selected={mode === "create"}
                   onClick={() => {
                     setMode("create");
                     setErrorMessage(null);
                     setSuccessMessage(null);
                   }}
-                  className={`py-1.5 rounded-sm transition-colors ${
+                  className={`relative py-1.5 rounded-sm transition-colors text-xs font-medium z-10 cursor-pointer ${
                     mode === "create"
-                      ? "bg-card text-foreground shadow-xs font-semibold"
+                      ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  Create Account
+                  {mode === "create" && (
+                    <motion.div
+                      layoutId="auth-tab-pill"
+                      className="absolute inset-0 bg-card rounded-sm shadow-xs border border-border"
+                      transition={
+                        shouldReduceMotion
+                          ? { duration: 0 }
+                          : { type: "spring", stiffness: 450, damping: 35 }
+                      }
+                    />
+                  )}
+                  <span className="relative z-10">Create Account</span>
                 </button>
-              </div>
+              </nav>
 
-              {/* Google OAuth */}
+              {/* Google OAuth Button */}
               <button
                 type="button"
                 onClick={handleOAuth}
+                aria-label="Sign in with Google"
                 disabled={isOAuthLoading || isSubmitting}
-                className="w-full flex items-center justify-center gap-2.5 py-2 px-3 rounded-md border border-border bg-background text-xs font-medium hover:bg-secondary transition disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2.5 py-2 px-3 rounded-md border border-border bg-background text-xs font-medium hover:bg-secondary hover:border-muted-foreground transition-all duration-150 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isOAuthLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -261,17 +320,19 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
 
               <div className="my-4 flex items-center gap-3">
                 <div className="h-px flex-1 bg-border" />
-                <span className="text-[10px] uppercase font-mono text-muted-foreground">or email</span>
+                <span className="text-xs uppercase font-mono text-muted-foreground">or email</span>
                 <div className="h-px flex-1 bg-border" />
               </div>
 
-              {/* Error & Success Messages */}
+              {/* Error & Success Messages with Micro-Haptics */}
               <AnimatePresence>
                 {errorMessage && (
                   <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    key="error-msg"
+                    initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -6, x: 0 }}
+                    animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, x: [0, -4, 4, -2, 2, 0] }}
                     exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
                     className="mb-4 p-2.5 rounded-md border border-destructive/30 bg-[var(--pastel-red-bg)] text-xs text-[var(--pastel-red-text)] flex items-start gap-2"
                   >
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -281,9 +342,11 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
 
                 {successMessage && (
                   <motion.div
-                    initial={{ opacity: 0, y: -4 }}
+                    key="success-msg"
+                    initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.22, ease: "easeOut" }}
                     className="mb-4 p-2.5 rounded-md border border-emerald-500/30 bg-[var(--pastel-green-bg)] text-xs text-[var(--pastel-green-text)] flex items-start gap-2"
                   >
                     <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
@@ -294,44 +357,57 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
 
               {/* Form */}
               <form className="space-y-3.5" onSubmit={handleSubmit}>
-                {isCreate && (
-                  <>
-                    <div className="space-y-1">
-                      <label className="block text-[11px] font-mono text-muted-foreground uppercase" htmlFor="login-name">
-                        Full Name
-                      </label>
-                      <input
-                        id="login-name"
-                        name="full_name"
-                        type="text"
-                        placeholder="Reyansh Niranjan"
-                        className="auth-input-field"
-                        required
-                      />
-                    </div>
+                {/* Dynamically Expanded Create Fields */}
+                <AnimatePresence initial={false}>
+                  {isCreate && (
+                    <motion.div
+                      key="create-fields-top"
+                      initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden space-y-3.5"
+                    >
+                      <div className="space-y-1 pt-1">
+                        <label className="block text-xs font-mono text-muted-foreground uppercase" htmlFor="login-name">
+                          Full Name
+                        </label>
+                        <input
+                          id="login-name"
+                          name="full_name"
+                          type="text"
+                          placeholder="Reyansh Niranjan"
+                          className="auth-input-field"
+                          required={isCreate}
+                        />
+                      </div>
 
-                    <div className="space-y-1">
-                      <label className="block text-[11px] font-mono text-muted-foreground uppercase" htmlFor="login-grade">
-                        Grade Level
-                      </label>
-                      <select
-                        id="login-grade"
-                        name="grade"
-                        defaultValue="10"
-                        className="auth-input-field"
-                      >
-                        {Array.from({ length: 12 }, (_, i) => i + 1).map((gradeNum) => (
-                          <option key={gradeNum} value={String(gradeNum)}>
-                            Class {gradeNum}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </>
-                )}
+                      <div className="space-y-1">
+                        <label className="block text-xs font-mono text-muted-foreground uppercase" htmlFor="login-grade">
+                          Grade Level
+                        </label>
+                        <div className="relative flex items-center">
+                          <select
+                            id="login-grade"
+                            name="grade"
+                            defaultValue="10"
+                            className="auth-input-field appearance-none pr-9 cursor-pointer"
+                          >
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map((gradeNum) => (
+                              <option key={gradeNum} value={String(gradeNum)} className="bg-card text-foreground">
+                                Class {gradeNum}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="w-3.5 h-3.5 text-muted-foreground absolute right-3 pointer-events-none" />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-mono text-muted-foreground uppercase" htmlFor="login-email">
+                  <label className="block text-xs font-mono text-muted-foreground uppercase" htmlFor="login-email">
                     Email Address
                   </label>
                   <input
@@ -345,7 +421,7 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[11px] font-mono text-muted-foreground uppercase" htmlFor="login-password">
+                  <label className="block text-xs font-mono text-muted-foreground uppercase" htmlFor="login-password">
                     Password
                   </label>
                   <div className="relative flex items-center">
@@ -356,54 +432,90 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
                       value={passwordValue}
                       onChange={(e) => setPasswordValue(e.target.value)}
                       placeholder="••••••••"
-                      className="auth-input-field pr-9"
+                      className="auth-input-field pr-10"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2.5 p-1 text-muted-foreground hover:text-foreground"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showPassword}
+                      className="absolute right-1 w-8 h-8 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground"
                     >
                       {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
                   </div>
                 </div>
 
-                {isCreate && (
-                  <div className="space-y-1">
-                    <label className="block text-[11px] font-mono text-muted-foreground uppercase" htmlFor="login-confirm">
-                      Confirm Password
-                    </label>
-                    <div className="relative flex items-center">
-                      <input
-                        id="login-confirm"
-                        name="password_confirm"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="••••••••"
-                        className="auth-input-field pr-9"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-2.5 p-1 text-muted-foreground hover:text-foreground"
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {/* Dynamically Expanded Confirm Password Field */}
+                <AnimatePresence initial={false}>
+                  {isCreate && (
+                    <motion.div
+                      key="create-confirm-field"
+                      initial={shouldReduceMotion ? undefined : { opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={shouldReduceMotion ? undefined : { opacity: 0, height: 0 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-1 pt-1">
+                        <label className="block text-xs font-mono text-muted-foreground uppercase" htmlFor="login-confirm">
+                          Confirm Password
+                        </label>
+                        <div className="relative flex items-center">
+                          <input
+                            id="login-confirm"
+                            name="password_confirm"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="••••••••"
+                            className="auth-input-field pr-10"
+                            required={isCreate}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                            aria-pressed={showConfirmPassword}
+                            className="absolute right-1 w-8 h-8 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground"
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <button
                   type="submit"
                   disabled={isSubmitting || isOAuthLoading}
-                  className="auth-button mt-4"
+                  className="auth-button mt-4 relative overflow-hidden transition-all duration-150 active:scale-[0.98]"
                 >
-                  {isSubmitting ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <span>{isCreate ? "Create Workspace Account" : "Sign In to Library"}</span>
-                  )}
+                  <AnimatePresence mode="wait" initial={false}>
+                    {isSubmitting ? (
+                      <motion.div
+                        key="submitting"
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.12 }}
+                        className="flex items-center justify-center gap-2"
+                      >
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>{isCreate ? "Creating account..." : "Signing in..."}</span>
+                      </motion.div>
+                    ) : (
+                      <motion.span
+                        key={mode}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.12 }}
+                      >
+                        {isCreate ? "Create Workspace Account" : "Sign In to Library"}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </button>
               </form>
 
@@ -411,11 +523,17 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
           </div>
 
         </div>
-      </div>
+      </motion.div>
 
-      <div className="w-full max-w-5xl mx-auto text-center text-[11px] font-mono text-muted-foreground">
+      {/* Bottom Footer Line */}
+      <motion.div
+        initial={shouldReduceMotion ? undefined : { opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3, delay: 0.15 }}
+        className="w-full max-w-5xl mx-auto text-center text-xs font-mono text-muted-foreground"
+      >
         EduScrapeApp · Class 1–12 Automated Curriculum Platform
-      </div>
+      </motion.div>
     </div>
   );
 }

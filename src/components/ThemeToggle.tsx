@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const getTheme = () => {
   const savedTheme = localStorage.getItem("theme");
@@ -48,15 +49,35 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground hover:text-foreground transition-all active:scale-[0.95]"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-border bg-card text-muted-foreground hover:text-foreground transition-colors active:scale-[0.95] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground relative overflow-hidden"
       aria-label="Toggle theme"
       title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
     >
-      {isDark ? (
-        <Sun className="h-3.5 w-3.5 text-foreground transition-transform duration-150" />
-      ) : (
-        <Moon className="h-3.5 w-3.5 text-foreground transition-transform duration-150" />
-      )}
+      <AnimatePresence mode="wait" initial={false}>
+        {isDark ? (
+          <motion.span
+            key="sun"
+            initial={{ rotate: -90, scale: 0.7, opacity: 0 }}
+            animate={{ rotate: 0, scale: 1, opacity: 1 }}
+            exit={{ rotate: 90, scale: 0.7, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center justify-center"
+          >
+            <Sun className="h-3.5 w-3.5" />
+          </motion.span>
+        ) : (
+          <motion.span
+            key="moon"
+            initial={{ rotate: 90, scale: 0.7, opacity: 0 }}
+            animate={{ rotate: 0, scale: 1, opacity: 1 }}
+            exit={{ rotate: -90, scale: 0.7, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="flex items-center justify-center"
+          >
+            <Moon className="h-3.5 w-3.5" />
+          </motion.span>
+        )}
+      </AnimatePresence>
     </button>
   );
 }

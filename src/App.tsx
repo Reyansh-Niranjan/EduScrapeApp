@@ -24,7 +24,7 @@ function FullPageLoader() {
   return (
     <div className="min-h-[100dvh] flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-emerald-500" />
+        <div className="animate-spin rounded-full h-10 w-10 border-2 border-border border-t-foreground" />
         <p className="text-xs font-mono text-muted-foreground">Loading workspace…</p>
       </div>
     </div>
@@ -153,9 +153,9 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Analytics />
-      <div className="min-h-screen relative" style={{ background: "var(--theme-bg)" }}>
-        {/* Ambient GPU Constellation Canvas */}
-        <BackgroundCanvas />
+      <div className="min-h-screen relative bg-background text-foreground">
+        {/* Ambient GPU Constellation Canvas (home view only) */}
+        {currentView === "home" && <BackgroundCanvas />}
 
         {currentView === "login" ? (
           <Suspense fallback={<FullPageLoader />}>
@@ -209,8 +209,11 @@ export default function App() {
             <Header />
             <main className="relative z-10">
               <Hero />
+              <hr className="border-border m-0" />
               <About />
+              <hr className="border-border m-0" />
               <Projects />
+              <hr className="border-border m-0" />
               <Creator />
             </main>
             <Footer />
