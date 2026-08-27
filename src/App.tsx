@@ -153,7 +153,7 @@ export default function App() {
   return (
     <ErrorBoundary>
       <Analytics />
-      <div className="min-h-screen relative bg-background text-foreground">
+      <div className="min-h-[100dvh] relative bg-background text-foreground">
         {/* Ambient GPU Constellation Canvas (home view only) */}
         {currentView === "home" && <BackgroundCanvas />}
 

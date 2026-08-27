@@ -266,19 +266,19 @@ export default function Hero() {
     <section
       id="home"
       ref={containerRef}
-      className="pt-28 pb-20 bg-background relative overflow-hidden"
+      className="pt-20 sm:pt-28 pb-14 sm:pb-20 bg-background relative overflow-hidden"
     >
       <div className="container mx-auto px-4 sm:px-6 max-w-6xl relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-10 sm:mb-16">
           {/* Left Column (7 cols) */}
           <div className="lg:col-span-7 flex flex-col items-start">
             {/* Status Eyebrow */}
-            <div className="hero-status mb-4 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-foreground/20 bg-foreground/[0.04] text-xs font-mono text-foreground/80 will-change-transform">
+            <div className="hero-status mb-3 sm:mb-4 inline-flex items-center gap-2 px-2.5 py-1 sm:py-1.5 rounded-full border border-foreground/20 bg-foreground/[0.04] text-[11px] sm:text-xs font-mono text-foreground/80 will-change-transform">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
               <span>Curriculum Pipeline · Class 1–12</span>
             </div>
 
-            <h1 className="hero-heading text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.08] mb-4">
+            <h1 className="hero-heading text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-foreground leading-[1.1] mb-3 sm:mb-4 pb-1">
               <span className="hero-words block">
                 {titleWords.map((word, idx) => (
                   <span key={idx} className="hero-word inline-block mr-[0.25em]">
@@ -295,11 +295,11 @@ export default function Hero() {
               </span>
             </h1>
 
-            <p className="hero-subtext text-base text-muted-foreground max-w-[48ch] leading-relaxed mb-8">
-              Autonomous web scraping, OpenCV CLAHE watermark sanitization, and dual delivery architecture across high-DPI web reader and low-cost offline ESP32 microcontrollers.
+            <p className="hero-subtext text-xs sm:text-base text-muted-foreground max-w-[48ch] leading-relaxed mb-6 sm:mb-8">
+              Autonomous scraping, OpenCV watermark sanitization, and dual high-DPI web and offline ESP32 delivery across Class 1–12.
             </p>
 
-            <div className="hero-actions flex flex-wrap items-center gap-3 w-full sm:w-auto mb-8">
+            <div className="hero-actions flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto mb-6 sm:mb-8">
               <Button
                 ref={primaryBtnRef}
                 size="lg"
@@ -307,7 +307,7 @@ export default function Hero() {
                   window.history.pushState({}, "", "#login");
                   window.dispatchEvent(new Event("hashchange"));
                 }}
-                className="h-11 px-6 py-2.5 text-sm font-medium gap-2 cursor-pointer shadow-xs hover:shadow-sm"
+                className="h-12 sm:h-11 px-6 py-2.5 text-xs sm:text-sm font-medium gap-2 justify-center cursor-pointer shadow-xs hover:shadow-sm touch-manipulation active:scale-[0.97]"
               >
                 <span>Launch Digital Library</span>
                 <ArrowRight className="w-4 h-4" />
@@ -317,24 +317,24 @@ export default function Hero() {
                 size="lg"
                 variant="outline"
                 onClick={scrollToAbout}
-                className="h-11 px-6 py-2.5 text-sm font-medium gap-2 cursor-pointer"
+                className="h-12 sm:h-11 px-6 py-2.5 text-xs sm:text-sm font-medium gap-2 justify-center cursor-pointer touch-manipulation active:scale-[0.97]"
               >
                 <Terminal className="w-4 h-4 text-muted-foreground" />
                 <span>Pipeline Architecture</span>
               </Button>
             </div>
 
-            <div className="hero-guarantees flex flex-wrap items-center gap-4 text-xs font-mono text-muted-foreground">
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5 text-foreground" />
+            <div className="hero-guarantees flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs font-mono text-muted-foreground">
+              <span className="flex items-center gap-1.5 bg-secondary/40 sm:bg-transparent px-2 py-1 sm:p-0 rounded-sm">
+                <CheckCircle2 className="w-3.5 h-3.5 text-foreground shrink-0" />
                 100% Free &amp; Open Source
               </span>
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-foreground" />
-                Zero Analytics / Privacy-First
+              <span className="flex items-center gap-1.5 bg-secondary/40 sm:bg-transparent px-2 py-1 sm:p-0 rounded-sm">
+                <ShieldCheck className="w-3.5 h-3.5 text-foreground shrink-0" />
+                Zero Analytics / Privacy
               </span>
-              <span className="flex items-center gap-1.5">
-                <BookOpen className="w-3.5 h-3.5 text-foreground" />
+              <span className="flex items-center gap-1.5 bg-secondary/40 sm:bg-transparent px-2 py-1 sm:p-0 rounded-sm">
+                <BookOpen className="w-3.5 h-3.5 text-foreground shrink-0" />
                 Class 1–12 Complete Syllabus
               </span>
             </div>
@@ -347,13 +347,13 @@ export default function Hero() {
               className="window-chrome spotlight-card [transform-style:preserve-3d] will-change-transform transition-shadow duration-300 hover:shadow-lg"
             >
               {/* Window Header */}
-              <div className="window-header relative z-10 border-b border-border">
+              <div className="window-header relative z-10 border-b border-border py-2 px-3 sm:py-3 sm:px-4">
                 <div className="window-dots">
                   <div className="window-dot" />
                   <div className="window-dot" />
                   <div className="window-dot" />
                 </div>
-                <span className="text-muted-foreground text-xs truncate px-2 font-mono">
+                <span className="text-muted-foreground text-[11px] sm:text-xs truncate px-2 font-mono">
                   eduscrape://{selectedCurriculum.id}
                 </span>
                 <Badge variant="green">
@@ -361,15 +361,15 @@ export default function Hero() {
                 </Badge>
               </div>
 
-              {/* Interactive Curriculum Selector Pills (Semantic nav safe tag) */}
-              <nav role="tablist" aria-label="Curriculum tabs" className="p-2.5 border-b border-border flex items-center gap-1.5 overflow-x-auto text-xs font-mono relative z-10">
+              {/* Interactive Curriculum Selector Pills */}
+              <nav role="tablist" aria-label="Curriculum tabs" className="p-2 border-b border-border flex items-center gap-1.5 overflow-x-auto text-[11px] sm:text-xs font-mono relative z-10 mobile-scroll-row">
                 {previewData.map((item) => (
                   <button
                     key={item.id}
                     role="tab"
                     aria-selected={selectedCurriculum.id === item.id}
                     onClick={() => handleSelectCurriculum(item)}
-                    className={`px-3 py-1.5 rounded-sm transition-colors whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground ${selectedCurriculum.id === item.id
+                    className={`px-3 py-1.5 rounded-sm transition-colors whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground touch-manipulation active:scale-[0.97] ${selectedCurriculum.id === item.id
                         ? "bg-card text-foreground font-semibold border border-border shadow-xs"
                         : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -379,24 +379,24 @@ export default function Hero() {
                 ))}
               </nav>
 
-              {/* Dynamic Curriculum Preview Body (Semantic pre safe tag) */}
-              <div ref={previewCardRef} className="p-4 space-y-3 font-mono text-xs relative z-10">
+              {/* Dynamic Curriculum Preview Body */}
+              <div ref={previewCardRef} className="p-3.5 sm:p-4 space-y-3 font-mono text-[11px] sm:text-xs relative z-10">
                 {/* Active Book Row */}
-                <div className="p-3.5 rounded-md bg-secondary/50">
+                <div className="p-3 sm:p-3.5 rounded-md bg-secondary/50">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs">
-                      <BookOpen className="w-3.5 h-3.5 text-foreground" />
-                      {selectedCurriculum.grade} · {selectedCurriculum.subject}
+                    <span className="font-semibold text-foreground flex items-center gap-1.5 text-xs truncate">
+                      <BookOpen className="w-3.5 h-3.5 text-foreground shrink-0" />
+                      <span className="truncate">{selectedCurriculum.grade} · {selectedCurriculum.subject}</span>
                     </span>
                     <Badge variant="blue">
                       {selectedCurriculum.badgeText}
                     </Badge>
                   </div>
 
-                  <div className="text-xs text-muted-foreground space-y-1">
+                  <div className="text-[11px] sm:text-xs text-muted-foreground space-y-1">
                     <div className="flex justify-between">
                       <span>Chapter:</span>
-                      <span className="text-foreground">
+                      <span className="text-foreground truncate ml-2">
                         {selectedCurriculum.chapter} ({selectedCurriculum.pages} pgs)
                       </span>
                     </div>
@@ -407,29 +407,29 @@ export default function Hero() {
                   </div>
                 </div>
 
-                {/* Concept Formula Block (Semantic pre safe tag) */}
-                <pre className="p-3.5 rounded-md bg-secondary/30 font-mono text-xs space-y-1.5 whitespace-pre-wrap">
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground flex items-center justify-between">
+                {/* Concept Formula Block */}
+                <pre className="p-3 sm:p-3.5 rounded-md bg-secondary/30 font-mono text-[11px] sm:text-xs space-y-1.5 whitespace-pre-wrap overflow-x-auto">
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-between">
                     <span>Parsed Concept Formula</span>
-                    <span className="text-xs font-mono text-[var(--pastel-green-text)] font-semibold">OCR Verified</span>
+                    <span className="font-mono text-[var(--pastel-green-text)] font-semibold">OCR Verified</span>
                   </div>
-                  <div className="font-semibold text-foreground font-mono text-xs">
+                  <div className="font-semibold text-foreground font-mono text-xs break-words">
                     {selectedCurriculum.formula}
                   </div>
-                  <p className="text-xs text-muted-foreground font-sans leading-relaxed pt-0.5">
+                  <p className="text-[11px] sm:text-xs text-muted-foreground font-sans leading-relaxed pt-0.5">
                     {selectedCurriculum.snippet}
                   </p>
                 </pre>
 
                 {/* Micro Command Bar */}
-                <div className="pt-3 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-mono">
+                <div className="pt-2.5 border-t border-border flex items-center justify-between text-[11px] sm:text-xs text-muted-foreground font-mono">
                   <span className="flex items-center gap-1">
                     <FileText className="w-3 h-3" />
                     Clean PDF Ready
                   </span>
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-foreground" />
-                    Supabase Synchronized
+                    Supabase Synced
                   </span>
                 </div>
               </div>
@@ -437,8 +437,8 @@ export default function Hero() {
           </div>
         </div>
 
-        {/* Telemetry Stats Band with Semantic list safe tag */}
-        <ul className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-6 border-t border-border list-none p-0 m-0">
+        {/* Telemetry Stats Band */}
+        <ul className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 pt-6 border-t border-border list-none p-0 m-0">
           {stats.map((item, idx) => (
             <li
               key={idx}
@@ -447,15 +447,15 @@ export default function Hero() {
                 e.currentTarget.style.setProperty("--mouse-x", `${e.clientX - rect.left}px`);
                 e.currentTarget.style.setProperty("--mouse-y", `${e.clientY - rect.top}px`);
               }}
-              className="hero-stat-card spotlight-card p-4 rounded-md border border-border bg-card will-change-transform transition-colors hover:border-muted-foreground"
+              className="hero-stat-card spotlight-card p-3.5 sm:p-4 rounded-md border border-border bg-card will-change-transform transition-colors hover:border-muted-foreground touch-manipulation active:scale-[0.98]"
             >
-              <div className="text-xs font-mono uppercase text-muted-foreground tracking-wide mb-1 relative z-10">
+              <div className="text-[10px] sm:text-xs font-mono uppercase text-muted-foreground tracking-wide mb-1 relative z-10">
                 {item.label}
               </div>
-              <div className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-mono relative z-10">
+              <div className="text-xl sm:text-3xl font-bold tracking-tight text-foreground font-mono relative z-10">
                 {item.value}
               </div>
-              <div className="text-xs text-muted-foreground mt-1 relative z-10">
+              <div className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 relative z-10">
                 {item.detail}
               </div>
             </li>

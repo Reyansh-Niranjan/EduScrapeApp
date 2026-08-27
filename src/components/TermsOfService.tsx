@@ -1,21 +1,21 @@
 export default function TermsOfService() {
   return (
-    <section className="min-h-screen pt-28 pb-16 bg-background text-foreground">
-      <div className="container mx-auto px-6 max-w-xl">
-        <p className="text-xs font-mono mb-3 text-muted-foreground uppercase tracking-wider">
+    <section className="min-h-[100dvh] pt-20 sm:pt-28 pb-16 safe-bottom bg-background text-foreground">
+      <div className="container mx-auto px-4 sm:px-6 max-w-xl">
+        <p className="text-[11px] sm:text-xs font-mono mb-2 sm:mb-3 text-muted-foreground uppercase tracking-wider">
           Effective date: June 1, 2026
         </p>
-        <h1 className="text-3xl sm:text-4xl font-bold mb-6 tracking-tight text-foreground">
+        <h1 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 tracking-tight text-foreground">
           Terms of Service
         </h1>
-        <p className="mb-8 text-sm text-muted-foreground leading-relaxed">
+        <p className="mb-6 sm:mb-8 text-xs sm:text-sm text-muted-foreground leading-relaxed">
           These Terms of Service govern your access to and use of EduScrapeApp. By using the service, you agree to these
           terms.
         </p>
 
-        <div className="space-y-8 text-sm leading-relaxed">
+        <div className="space-y-6 sm:space-y-8 text-xs sm:text-sm leading-relaxed">
           <div>
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
+            <h2 className="text-base sm:text-lg font-semibold mb-2.5 sm:mb-3 text-foreground">
               Eligibility and Accounts
             </h2>
             <p className="text-muted-foreground">
@@ -25,7 +25,7 @@ export default function TermsOfService() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
+            <h2 className="text-base sm:text-lg font-semibold mb-2.5 sm:mb-3 text-foreground">
               Acceptable Use
             </h2>
             <ul className="space-y-2 text-muted-foreground list-disc pl-5">
@@ -36,7 +36,7 @@ export default function TermsOfService() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
+            <h2 className="text-base sm:text-lg font-semibold mb-2.5 sm:mb-3 text-foreground">
               Content Ownership
             </h2>
             <p className="text-muted-foreground">
@@ -46,7 +46,7 @@ export default function TermsOfService() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
+            <h2 className="text-base sm:text-lg font-semibold mb-2.5 sm:mb-3 text-foreground">
               Termination
             </h2>
             <p className="text-muted-foreground">
@@ -56,7 +56,7 @@ export default function TermsOfService() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold mb-3 text-foreground">
+            <h2 className="text-base sm:text-lg font-semibold mb-2.5 sm:mb-3 text-foreground">
               Changes to Terms
             </h2>
             <p className="text-muted-foreground">
@@ -66,10 +66,10 @@ export default function TermsOfService() {
           </div>
         </div>
 
-        <div className="mt-10">
+        <div className="mt-8 sm:mt-10">
           <a
             href="/#"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-card text-foreground hover:bg-secondary text-xs font-medium transition-colors"
+            className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-md border border-border bg-card text-foreground hover:bg-secondary text-xs font-medium transition-colors touch-manipulation active:scale-95"
           >
             Back to Home
           </a>
