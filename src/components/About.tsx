@@ -1,107 +1,358 @@
-import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { DownloadCloud, Sparkles, BookCheck, Cpu, Sliders } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 export default function About() {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Interactive Slider State for Cell 2 (OCR Watermark Scrubber: 0 = fully watermarked, 100 = 100% clean)
+  const [scrubberValue, setScrubberValue] = useState<number>(100);
+
+  // Interactive State for Cell 3 (AI Vision Prompt)
+  const [activePromptIndex, setActivePromptIndex] = useState(0);
+  const aiPrompts = [
+    {
+      q: "Explain prime factor tree for 32760 from current page.",
+      a: "32760 = 2³ × 3² × 5 × 7 × 13. Unique prime decomposition verified via Fundamental Theorem of Arithmetic.",
+      grade: "Class 10 Math",
+    },
+    {
+      q: "Calculate drift velocity from electric field vector E = 250 V/m.",
+      a: "v_d = (e · E · τ) / m_e. Evaluates to 4.38 × 10⁻⁴ m/s in standard copper conductor with relaxation time τ = 2.5×10⁻¹⁴ s.",
+      grade: "Class 12 Physics",
+    },
+    {
+      q: "Identify stomatal opening mechanism in leaf epidermis.",
+      a: "Guard cells swell via potassium (K⁺) ion influx and osmotic water uptake, causing stomatal pore dilation.",
+      grade: "Class 10 Science",
+    },
+  ];
+
+  // Calculate dynamic watermark opacity using gsap.utils.mapRange & clamp
+  const watermarkOpacity = gsap.utils.pipe(
+    (val: number) => gsap.utils.clamp(0, 100, val),
+    (val: number) => gsap.utils.mapRange(0, 100, 0.45, 0)(val)
+  )(scrubberValue);
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // Header reveal
+        gsap.from(".about-header-item", {
+          scrollTrigger: {
+            trigger: containerRef.current,
+            start: "top 85%",
+            once: true,
+          },
+          y: 16,
+          autoAlpha: 0,
+          duration: 0.35,
+          stagger: 0.05,
+          ease: "power3.out",
+          immediateRender: false,
+        });
+
+        // Bento Cards staggered entrance
+        gsap.from(".gsap-bento-card", {
+          scrollTrigger: {
+            trigger: ".gsap-bento-grid",
+            start: "top 80%",
+            once: true,
+          },
+          y: 20,
+          autoAlpha: 0,
+          duration: 0.35,
+          stagger: 0.06,
+          ease: "power3.out",
+          immediateRender: false,
+        });
+
+        // QuickTo 3D tilt physics & spotlight coordination
+        const cards = gsap.utils.toArray<HTMLElement>(".gsap-bento-card", containerRef.current);
+        cards.forEach((card) => {
+          const setRotX = gsap.quickTo(card, "rotationX", { duration: 0.35, ease: "power3.out" });
+          const setRotY = gsap.quickTo(card, "rotationY", { duration: 0.35, ease: "power3.out" });
+
+          const onMove = (e: MouseEvent) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Track cursor for spotlight illumination
+            card.style.setProperty("--mouse-x", `${x}px`);
+            card.style.setProperty("--mouse-y", `${y}px`);
+
+            const rotY = gsap.utils.mapRange(0, rect.width, -2.5, 2.5)(x);
+            const rotX = gsap.utils.mapRange(0, rect.height, 2.5, -2.5)(y);
+            setRotX(rotX);
+            setRotY(rotY);
+          };
+
+          const onLeave = () => {
+            setRotX(0);
+            setRotY(0);
+          };
+
+          card.addEventListener("mousemove", onMove);
+          card.addEventListener("mouseleave", onLeave);
+        });
+      });
+
+      return () => mm.revert();
+    },
+    { scope: containerRef }
+  );
+
   return (
-    <section id="about" className="py-20 relative" style={{ background: "var(--theme-bg-secondary)" }}>
-      <div className="container mx-auto px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.h2
-            className="text-4xl md:text-5xl font-bold mb-4"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            style={{ color: "var(--theme-text)" }}
-          >
-            Why <span className="text-purple-600">EduScrapeApp</span> Matters
-          </motion.h2>
-          <motion.div
-            className="w-20 h-1 bg-purple-600 mx-auto mb-12"
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-          ></motion.div>
+    <section
+      id="about"
+      ref={containerRef}
+      className="py-24 bg-background relative [perspective:1200px]"
+    >
+      <div className="container mx-auto px-4 sm:px-6 max-w-6xl">
+        {/* Section Header */}
+        <div className="max-w-3xl mb-16">
+          <div className="about-header-item text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 will-change-transform">
+            SYSTEM ARCHITECTURE
+          </div>
+          <h2 className="about-header-item text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4 will-change-transform">
+            An end-to-end curriculum pipeline.
+          </h2>
+          <p className="about-header-item text-base text-muted-foreground leading-relaxed max-w-[50ch] will-change-transform">
+            EduScrapeApp transforms raw, fragmented education archives into clean, structured digital textbooks through automated crawling, watermark stripping, and dual cloud/hardware delivery.
+          </p>
+        </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              className="text-left"
-              initial={{ opacity: 0, x: -50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <p className="text-lg mb-6 leading-relaxed" style={{ color: "var(--theme-text-secondary)" }}>
-                EduScrapeApp streamlines how schools and tutoring centres gather learning materials. Instead of manually
-                copying resources from dozens of sites, educators define a topic once and let EduScrapeApp surface the
-                most relevant content, complete with readability grading and citation tracking.
-              </p>
-
-              <p className="text-lg mb-8 leading-relaxed" style={{ color: "var(--theme-text-secondary)" }}>
-                Built for curriculum teams, administrators, and classroom teachers alike, the platform reduces prep time,
-                keeps lesson plans aligned with standards, and provides one-click sharing to any device.
-              </p>
-
-              <div className="grid grid-cols-2 gap-6">
-                <motion.div
-                  className="card text-center"
-                  style={{ background: "var(--theme-card-bg)", border: "1px solid var(--theme-border)" }}
-                  whileHover={{ y: -5, scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="mx-auto mb-2 h-8 w-20 rounded" style={{ background: "var(--theme-border)" }} />
-                  <div className="font-medium" style={{ color: "var(--theme-text-secondary)" }}>
-                    Impact metric
-                  </div>
-                </motion.div>
-                <motion.div
-                  className="card text-center"
-                  style={{ background: "var(--theme-card-bg)", border: "1px solid var(--theme-border)" }}
-                  whileHover={{ y: -5, scale: 1.05 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="mx-auto mb-2 h-8 w-20 rounded" style={{ background: "var(--theme-border)" }} />
-                  <div className="font-medium" style={{ color: "var(--theme-text-secondary)" }}>
-                    Impact metric
-                  </div>
-                </motion.div>
+        {/* Bento Grid (Asymmetric 12-column layout) */}
+        <div className="gsap-bento-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
+          {/* Bento Cell 1: Automated Scraping & Catalog Builder (7 cols) */}
+          <div className="gsap-bento-card spotlight-card md:col-span-2 lg:col-span-7 p-6 sm:p-8 rounded-md border border-border bg-card flex flex-col justify-between transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                  INGESTION ENGINE
+                </span>
+                <Badge variant="blue">
+                  PYTHON AUTOMATION
+                </Badge>
               </div>
-            </motion.div>
 
-            <motion.div
-              className="relative"
-              initial={{ opacity: 0, x: 50 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            >
-              <motion.div
-                className="card p-12"
-                style={{ background: "var(--theme-card-bg)", border: "1px solid var(--theme-border)" }}
-                whileHover={{ y: -5, scale: 1.02 }}
-                transition={{ duration: 0.2 }}
-              >
-                <div className="text-center">
-                  <motion.div
-                    className="w-24 h-24 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
-                    initial={{ rotate: -180, scale: 0 }}
-                    whileInView={{ rotate: 0, scale: 1 }}
-                    transition={{ duration: 0.6, delay: 0.3 }}
-                    viewport={{ once: true }}
-                  >
-                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
-                  </motion.div>
-                  <h3 className="text-2xl font-bold mb-3" style={{ color: "var(--theme-text)" }}>
-                    Built for Classrooms
-                  </h3>
-                  <p style={{ color: "var(--theme-text-secondary)" }}>
-                    Secure, scalable infrastructure that keeps educators in control of every source.
-                  </p>
+              <h3 className="text-xl font-bold tracking-tight text-foreground mb-3 flex items-center gap-2">
+                <DownloadCloud className="w-5 h-5 text-foreground shrink-0" />
+                <span>Recursive Catalog Discovery &amp; Taxonomy Sync</span>
+              </h3>
+
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-6 max-w-[48ch]">
+                Recursively scans digital education repositories, cataloging Class 1 through Class 12 materials into standardized JSON taxonomies with grade, subject, and chapter hierarchies.
+              </p>
+
+              {/* Ingestion Stream Mockup (Semantic pre safe tag) */}
+              <pre className="p-4 rounded-md bg-secondary/50 font-mono text-xs space-y-2 mb-6 whitespace-pre-wrap">
+                <div className="text-xs text-muted-foreground flex items-center justify-between font-mono">
+                  <span>Scraper Ingestion Stream</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 </div>
-              </motion.div>
-            </motion.div>
+                <div className="space-y-1 text-muted-foreground text-xs">
+                  <div className="text-foreground font-medium">✓ [HTTP 200] Fetching NCERT Class 10 Mathematics PDF</div>
+                  <div>✓ Parsing Table of Contents: 14 chapters extracted</div>
+                  <div>✓ Uploading sanitized payload to Supabase Storage CDN</div>
+                  <div className="text-[var(--pastel-green-text)] font-semibold">→ Sync Status: Complete (14.2 MB processed)</div>
+                </div>
+              </pre>
+            </div>
+
+            <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-mono relative z-10">
+              <span>Throughput: ~250 pages/min</span>
+              <span>Taxonomy: JSON Schema v2.1</span>
+            </div>
+          </div>
+
+          {/* Bento Cell 2: Interactive OCR Sanitizer & Watermark Removal Scrubber (5 cols) */}
+          <div className="gsap-bento-card spotlight-card md:col-span-1 lg:col-span-5 p-6 sm:p-8 rounded-md border border-border bg-card flex flex-col justify-between transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                  PRE-PROCESSING
+                </span>
+                <Badge variant="green">
+                  OCR SANITIZER
+                </Badge>
+              </div>
+
+              <h3 className="text-xl font-bold tracking-tight text-foreground mb-3 flex items-center gap-2">
+                <Sliders className="w-5 h-5 text-foreground shrink-0" />
+                <span>Watermark Sanitization</span>
+              </h3>
+
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4 max-w-[48ch]">
+                Strips repository stamps, low-contrast background watermarks, and scan artifacts to maximize readability on low-cost displays.
+              </p>
+
+              {/* Interactive Scrubber Simulator (Direct surface) */}
+              <div className="space-y-3 mb-4 font-mono">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Sanitization Level:</span>
+                  <span className="font-semibold text-foreground">{scrubberValue}%</span>
+                </div>
+
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={scrubberValue}
+                  onChange={(e) => setScrubberValue(Number(e.target.value))}
+                  className="w-full h-1.5 bg-border rounded-lg appearance-none cursor-pointer accent-foreground"
+                  aria-label="Sanitization Scrubber Level"
+                />
+
+                {/* Simulated Document Preview with dynamic watermark */}
+                <div className="relative p-3.5 rounded-md bg-secondary/40 select-none min-h-[90px] flex flex-col justify-center">
+                  {/* Dynamic Watermark Stamp */}
+                  <span
+                    className="absolute inset-0 flex items-center justify-center font-bold text-destructive uppercase tracking-widest text-sm transform -rotate-12 pointer-events-none transition-opacity"
+                    style={{ opacity: watermarkOpacity }}
+                  >
+                    STATE REPOSITORY WATERMARK
+                  </span>
+
+                  <div className="relative z-10 text-xs text-foreground space-y-1">
+                    <p className="font-semibold">Theorem 1.2 (Fundamental Arithmetic):</p>
+                    <p className="text-muted-foreground text-xs leading-relaxed max-w-[45ch]">
+                      Every composite number can be expressed as a product of primes uniquely up to factor order.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-mono relative z-10">
+              <span>Artifact Rate: 0.00%</span>
+              <span className="text-[var(--pastel-green-text)] font-semibold">Engine: OpenCV CLAHE</span>
+            </div>
+          </div>
+
+          {/* Bento Cell 3: Interactive Gemini 2.0 Flash Vision Assistant (5 cols) */}
+          <div className="gsap-bento-card spotlight-card md:col-span-1 lg:col-span-5 p-6 sm:p-8 rounded-md border border-border bg-card flex flex-col justify-between transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                  AI ASSISTANT
+                </span>
+                <Badge variant="amber">
+                  GEMINI 2.0 FLASH
+                </Badge>
+              </div>
+
+              <h3 className="text-xl font-bold tracking-tight text-foreground mb-3 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-foreground shrink-0" />
+                <span>Multimodal Concept Explainer</span>
+              </h3>
+
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4 max-w-[48ch]">
+                Extracts mathematical notation, chemical reactions, and biology diagrams directly from textbook page coordinates for instant learning support.
+              </p>
+
+              {/* Interactive AI Prompt Selector (Semantic blockquote safe tag) */}
+              <div className="space-y-3 mb-4">
+                <div role="tablist" aria-label="AI prompt presets" className="flex items-center gap-1.5 overflow-x-auto text-xs font-mono pb-1">
+                  {aiPrompts.map((item, idx) => (
+                    <button
+                      key={idx}
+                      role="tab"
+                      aria-selected={activePromptIndex === idx}
+                      onClick={() => setActivePromptIndex(idx)}
+                      className={`px-3 py-1.5 rounded-sm transition-colors whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground ${activePromptIndex === idx
+                          ? "bg-secondary text-foreground font-semibold border border-border"
+                          : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      {item.grade}
+                    </button>
+                  ))}
+                </div>
+
+                <blockquote className="p-3.5 rounded-md bg-secondary/50 font-mono text-xs space-y-2">
+                  <div className="text-muted-foreground flex items-center gap-1.5">
+                    <span className="text-foreground font-semibold">Q:</span>
+                    <span>{aiPrompts[activePromptIndex].q}</span>
+                  </div>
+                  <div className="text-foreground pt-1.5 border-t border-border/60">
+                    <span className="font-semibold text-foreground">Gemini:</span>{" "}
+                    {aiPrompts[activePromptIndex].a}
+                  </div>
+                </blockquote>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-mono relative z-10">
+              <span>Token Latency: ~180ms</span>
+              <span>Model: gemini-2.0-flash</span>
+            </div>
+          </div>
+
+          {/* Bento Cell 4: Dual Delivery Architecture (7 cols) */}
+          <div className="gsap-bento-card spotlight-card md:col-span-2 lg:col-span-7 p-6 sm:p-8 rounded-md border border-border bg-card flex flex-col justify-between transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]">
+            <div className="relative z-10">
+              <div className="flex items-center justify-between gap-2 mb-4">
+                <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+                  HYBRID DISTRIBUTION
+                </span>
+                <Badge variant="mono">
+                  CLOUD + HARDWARE
+                </Badge>
+              </div>
+
+              <h3 className="text-xl font-bold tracking-tight text-foreground mb-3 flex items-center gap-2">
+                <Cpu className="w-5 h-5 text-foreground shrink-0" />
+                <span>Dual Delivery: Web Portal &amp; Embedded ESP32</span>
+              </h3>
+
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-6 max-w-[48ch]">
+                Students access reading material either online via our high-speed React web portal or completely offline through dedicated low-power ESP32 physical reading units.
+              </p>
+
+              {/* Dual System Comparison (Semantic list safe tag) */}
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                <li className="p-4 rounded-md bg-secondary/50">
+                  <div className="font-semibold text-foreground flex items-center justify-between mb-1.5 text-xs">
+                    <span>Web Platform (Online)</span>
+                    <Badge variant="blue">
+                      ONLINE
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-sans leading-relaxed">
+                    React 19 + Supabase Storage + PDF.js renderer with instant chapter navigation.
+                  </p>
+                </li>
+
+                <li className="p-4 rounded-md bg-secondary/50">
+                  <div className="font-semibold text-foreground flex items-center justify-between mb-1.5 text-xs">
+                    <span>ESP32 Device (Offline)</span>
+                    <Badge variant="amber">
+                      OFFLINE
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground font-sans leading-relaxed">
+                    Dual-core MCU with MicroSD FAT32 interface &amp; hardware D-pad page controls.
+                  </p>
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground font-mono relative z-10">
+              <span className="flex items-center gap-1.5">
+                <BookCheck className="w-3.5 h-3.5 text-foreground" />
+                Sync Protocol: Unified Content Schema
+              </span>
+              <span>100% Autonomous</span>
+            </div>
           </div>
         </div>
       </div>

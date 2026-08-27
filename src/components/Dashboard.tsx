@@ -13,7 +13,6 @@ import {
   UserCircle2,
   Search,
   Plus,
-  Sparkles,
   Menu,
   X,
   Clock,
@@ -59,14 +58,21 @@ const sidebarNav: { id: DashboardTab; label: string; icon: typeof LayoutDashboar
   { id: "books", label: "Your Bookshelf", icon: BookMarked },
 ];
 
+const tabTitles: Record<DashboardTab, string> = {
+  overview: "Dashboard",
+  library: "NCERT Digital Library",
+  notes: "Study Notes",
+  books: "Your Bookshelf",
+};
+
 const weekLabels = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"];
 
 function SectionLoader({ label }: { label: string }) {
   return (
     <div className="flex min-h-[400px] items-center justify-center">
       <div className="text-center">
-        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-purple-500" />
-        <p className="mt-4 text-sm font-medium text-[var(--theme-text-secondary)]">Loading {label}...</p>
+        <div className="mx-auto h-12 w-12 animate-spin rounded-full border-2 border-border border-t-foreground" />
+        <p className="mt-4 text-sm font-medium text-muted-foreground">Loading {label}...</p>
       </div>
     </div>
   );
@@ -187,106 +193,78 @@ function DashboardOverview({
 
   return (
     <motion.div
-      className="p-4 sm:p-6 lg:p-8 space-y-8 max-w-7xl mx-auto"
-      initial={{ opacity: 0, y: 15 }}
+      className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto"
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
     >
-      {/* Hero Welcome Banner */}
-      <div
-        className="relative overflow-hidden rounded-3xl border p-6 sm:p-8 shadow-xl"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(20, 184, 166, 0.12) 100%), var(--theme-card-bg)",
-          borderColor: "var(--theme-border)",
-        }}
-      >
-        {/* Glow circles in banner */}
-        <div className="pointer-events-none absolute top-0 right-0 h-64 w-64 rounded-full bg-purple-500/10 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-teal-500/10 blur-3xl" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/20">
-              <Sparkles className="h-3.5 w-3.5" />
-              <span>{classLabel} Student Hub</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--theme-text)] tracking-tight">
-              {greeting}, {profile.name}! 👋
-            </h1>
-            <p className="text-sm sm:text-base text-[var(--theme-text-secondary)] leading-relaxed">
-              You are currently on a <strong className="text-[var(--theme-text)]">{streak}-day learning streak</strong>. Explore NCERT curriculum books or manage your personal study materials.
-            </p>
+      {/* Distilled Welcome Banner */}
+      <div className="rounded-md border border-border bg-card p-6 sm:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-5 shadow-xs">
+        <div className="space-y-1.5 max-w-2xl">
+          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span>{classLabel} Student Hub</span>
           </div>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            {greeting}, {profile.name}.
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+            {streak > 1
+              ? `${streak}-day learning streak active. Read daily to build consistent mastery.`
+              : "Explore NCERT curriculum textbooks or manage your private study files below."}
+          </p>
+        </div>
 
-          {/* Action buttons inside Hero */}
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={() => onTabChange("library")}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-purple-600 to-teal-500 hover:from-purple-700 hover:to-teal-600 shadow-lg shadow-purple-500/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <BookOpen className="h-4 w-4" />
-              <span>Explore Library</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => onTabChange("books")}
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm border transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{
-                background: "var(--theme-bg)",
-                borderColor: "var(--theme-border)",
-                color: "var(--theme-text)",
-              }}
-            >
-              <BookMarked className="h-4 w-4 text-teal-400" />
-              <span>Your Bookshelf</span>
-            </button>
-          </div>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => onTabChange("library")}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity active:scale-[0.98] cursor-pointer shadow-xs"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            <span>Browse Catalog</span>
+          </button>
         </div>
       </div>
 
-      {/* 4 Bento Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* 1. Activity / Weekly Progress */}
-        <div
-          className="rounded-3xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5"
-          style={{
-            background: "var(--theme-card-bg)",
-            borderColor: "var(--theme-border)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-500">
-              <BarChart3 className="h-5 w-5" />
+      {/* 4 Distilled Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 1. Activity / Monthly Progress */}
+        <div className="rounded-md border border-border bg-card p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-foreground">
+              <BarChart3 className="h-4 w-4" />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
+            <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
               Activity / Mo
             </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-[var(--theme-text)]">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold text-foreground font-mono">
                 {weeklyCounts.reduce((sum, v) => sum + v, 0)}
               </span>
-              <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">files this month</span>
+              <span className="text-xs text-muted-foreground">files processed</span>
             </div>
 
             {/* Micro bar chart */}
-            <div className="mt-4 flex items-end gap-2 pt-2 border-t border-[var(--theme-border)]">
+            <div className="mt-3 flex items-end gap-1.5 pt-2 border-t border-border">
               {weeklyCounts.map((count, index) => {
-                const height = Math.max(12, count * 16 + 12);
+                const isZero = count === 0;
+                const height = Math.max(6, count * 14 + (isZero ? 6 : 8));
                 return (
-                  <div key={weekLabels[index]} className="flex flex-1 flex-col items-center gap-1.5">
-                    <div className="h-16 w-full flex items-end justify-center rounded-lg bg-[var(--theme-bg-secondary)] p-1">
+                  <div key={weekLabels[index]} className="flex flex-1 flex-col items-center gap-1">
+                    <div className="h-12 w-full flex items-end justify-center rounded-xs bg-secondary/70 p-0.5 border-b border-border/80">
                       <div
-                        className="w-full rounded-md bg-gradient-to-t from-purple-600 to-teal-400 transition-all duration-500"
+                        className={`w-full rounded-xs transition-all duration-300 ${
+                          isZero ? "bg-muted-foreground/25" : "bg-foreground/80"
+                        }`}
                         style={{ height: `${height}px` }}
-                        title={`${weekLabels[index]}: ${count} files`}
+                        title={`${weekLabels[index]}: ${count > 0 ? `${count} files` : "No reading activity"}`}
                       />
                     </div>
-                    <span className="text-[9px] font-medium text-[var(--theme-text-secondary)]">
+                    <span className="text-xs font-mono text-muted-foreground">
                       W{index + 1}
                     </span>
                   </div>
@@ -296,177 +274,137 @@ function DashboardOverview({
           </div>
         </div>
 
-        {/* 2. Streak */}
-        <div
-          className="rounded-3xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5"
-          style={{
-            background: "var(--theme-card-bg)",
-            borderColor: "var(--theme-border)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500">
-              <Flame className="h-5 w-5" />
+        {/* 2. Active Streak */}
+        <div className="rounded-md border border-border bg-card p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--pastel-amber-bg)] text-[var(--pastel-amber-text)]">
+              <Flame className="h-4 w-4" />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-amber-500">
+            <span className="text-xs font-mono uppercase tracking-wider text-[var(--pastel-amber-text)]">
               Active Streak
             </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-[var(--theme-text)]">{streak}</span>
-              <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">Days in a row</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold text-foreground font-mono">{streak}</span>
+              <span className="text-xs text-muted-foreground">consecutive days</span>
             </div>
-            <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">
-              Great momentum! Read a chapter today to extend your streak.
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Read any chapter today to maintain your daily streak.
             </p>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[var(--theme-border)] flex items-center justify-between text-xs text-amber-500 font-semibold">
-            <span>🔥 On Fire</span>
-            <span>Level 1 Scholar</span>
+          <div className="mt-3 pt-2.5 border-t border-border flex items-center justify-between text-xs font-mono text-[var(--pastel-amber-text)] font-semibold">
+            <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3" /> Streak Active</span>
+            <span className="text-xs uppercase text-muted-foreground font-normal">Daily</span>
           </div>
         </div>
 
         {/* 3. Your Bookshelf */}
-        <div
-          className="rounded-3xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5"
-          style={{
-            background: "var(--theme-card-bg)",
-            borderColor: "var(--theme-border)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400">
-              <HardDrive className="h-5 w-5" />
+        <div className="rounded-md border border-border bg-card p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-foreground">
+              <HardDrive className="h-4 w-4" />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
-              Private Storage
+            <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+              Private Cloud
             </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-[var(--theme-text)]">{userBooks.length}</span>
-              <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">Books uploaded</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold text-foreground font-mono">{userBooks.length}</span>
+              <span className="text-xs text-muted-foreground">custom files</span>
             </div>
-            <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">
-              {formatBytes(totalBytes)} stored securely in your private cloud.
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              {formatBytes(totalBytes)} stored in private cloud.
             </p>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[var(--theme-border)]">
+          <div className="mt-3 pt-2.5 border-t border-border">
             <button
               type="button"
               onClick={() => onTabChange("books")}
-              className="text-xs font-semibold text-teal-500 hover:text-teal-400 inline-flex items-center gap-1"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors cursor-pointer"
             >
-              <span>Manage Bookshelf</span>
+              <span>Open Bookshelf</span>
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
 
         {/* 4. NCERT Library Catalog */}
-        <div
-          className="rounded-3xl border p-5 sm:p-6 shadow-sm flex flex-col justify-between transition-all hover:shadow-md hover:-translate-y-0.5"
-          style={{
-            background: "var(--theme-card-bg)",
-            borderColor: "var(--theme-border)",
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-400">
-              <BookOpen className="h-5 w-5" />
+        <div className="rounded-md border border-border bg-card p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-foreground">
+              <BookOpen className="h-4 w-4" />
             </div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
+            <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
               NCERT Catalog
             </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-[var(--theme-text)]">{libraryBooks.length}</span>
-              <span className="text-xs font-semibold text-[var(--theme-text-secondary)]">Digital Textbooks</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-2xl font-bold text-foreground font-mono">{libraryBooks.length}</span>
+              <span className="text-xs text-muted-foreground">textbooks ready</span>
             </div>
-            <p className="mt-2 text-xs text-[var(--theme-text-secondary)]">
-              Complete syllabus curriculum across all subjects.
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Class 1–12 full curriculum coverage.
             </p>
           </div>
 
-          <div className="mt-4 pt-3 border-t border-[var(--theme-border)]">
+          <div className="mt-3 pt-2.5 border-t border-border">
             <button
               type="button"
               onClick={() => onTabChange("library")}
-              className="text-xs font-semibold text-sky-500 hover:text-sky-400 inline-flex items-center gap-1"
+              className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors cursor-pointer"
             >
-              <span>Browse Catalog</span>
+              <span>Explore Library</span>
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Main Content Split: Recent Chapter & Fast Navigation Hub */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Recent Chapter Widget */}
-        <div
-          className="lg:col-span-8 rounded-3xl border p-6 sm:p-7 shadow-sm space-y-5"
-          style={{
-            background: "var(--theme-card-bg)",
-            borderColor: "var(--theme-border)",
-          }}
-        >
+      {/* Main Content Split: Continue Reading & Fast Actions */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Continue Reading (8 cols) */}
+        <div className="lg:col-span-8 rounded-md border border-border bg-card p-5 sm:p-6 space-y-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400">
-                <Clock className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-base sm:text-lg font-bold text-[var(--theme-text)]">
-                  Continue Reading
-                </h3>
-                <p className="text-xs text-[var(--theme-text-secondary)]">
-                  Pick up right where you left off
-                </p>
-              </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-bold text-foreground">
+                Continue Reading
+              </h2>
             </div>
 
             <button
               type="button"
               onClick={onRefresh}
-              className="p-2 rounded-xl border text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] transition"
-              style={{
-                borderColor: "var(--theme-border)",
-                background: "var(--theme-bg)",
-              }}
+              aria-label="Refresh files"
+              className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
               title="Refresh files"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-3.5 w-3.5" />
             </button>
           </div>
 
           {latestItem ? (
-            <div
-              className="rounded-2xl border p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all"
-              style={{
-                background: "var(--theme-bg-secondary)",
-                borderColor: "var(--theme-border)",
-              }}
-            >
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-500/20 to-teal-500/20 text-purple-400 flex-shrink-0">
-                  <FileText className="h-6 w-6" />
+            <div className="pt-3 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-secondary text-foreground shrink-0">
+                  <FileText className="h-5 w-5" />
                 </div>
-                <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400">
+                <div className="min-w-0 space-y-0.5">
+                  <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
                     Latest Activity
                   </span>
-                  <h4 className="text-base sm:text-lg font-bold text-[var(--theme-text)]">
+                  <h3 className="text-sm sm:text-base font-bold text-foreground truncate">
                     {formatTitle(latestItem.name)}
-                  </h4>
-                  <p className="text-xs text-[var(--theme-text-secondary)]">
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-mono">
                     {formatBytes(latestItem.size)} · {latestItem.mimeType || "PDF Document"}
                   </p>
                 </div>
@@ -485,109 +423,88 @@ function DashboardOverview({
                     }
                   }
                 }}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-white bg-purple-600 hover:bg-purple-700 shadow-md transition hover:scale-105"
+                className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity shrink-0 cursor-pointer shadow-xs"
               >
                 <span>Open in Reader</span>
-                <BookOpen className="h-4 w-4" />
+                <BookOpen className="h-3.5 w-3.5" />
               </button>
             </div>
           ) : (
-            <div
-              className="rounded-2xl border border-dashed p-8 text-center"
-              style={{ borderColor: "var(--theme-border)" }}
-            >
-              <BookOpen className="mx-auto h-8 w-8 text-[var(--theme-text-secondary)] opacity-50" />
-              <p className="mt-3 text-sm font-semibold text-[var(--theme-text)]">
-                No recent book activity
+            <div className="pt-6 pb-2 border-t border-border text-center space-y-2">
+              <BookOpen className="mx-auto h-7 w-7 text-muted-foreground opacity-40" />
+              <p className="text-xs font-semibold text-foreground">
+                No recent reading session
               </p>
-              <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
-                Open a chapter from the NCERT Library or upload your first book.
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                Open a chapter from the library to resume reading here anytime.
               </p>
               <button
                 type="button"
                 onClick={() => onTabChange("library")}
-                className="mt-4 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-teal-500 hover:bg-teal-600 transition"
+                className="mt-2 inline-flex items-center px-3.5 py-1.5 rounded-md text-xs font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer"
               >
-                Browse Books Now
+                Open NCERT Library
               </button>
             </div>
           )}
         </div>
 
-        {/* Quick Launch Hub */}
-        <div
-          className="lg:col-span-4 rounded-3xl border p-6 sm:p-7 shadow-sm space-y-4"
-          style={{
-            background: "var(--theme-card-bg)",
-            borderColor: "var(--theme-border)",
-          }}
-        >
-          <h3 className="text-base sm:text-lg font-bold text-[var(--theme-text)]">
+        {/* Quick Launch Hub (4 cols) */}
+        <div className="lg:col-span-4 rounded-md border border-border bg-card p-5 sm:p-6 space-y-3">
+          <h2 className="text-sm font-bold text-foreground">
             Quick Actions
-          </h3>
+          </h2>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <button
               type="button"
               onClick={() => onTabChange("library")}
-              className="w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition hover:scale-[1.01] hover:border-purple-500/40 group"
-              style={{
-                background: "var(--theme-bg)",
-                borderColor: "var(--theme-border)",
-              }}
+              className="w-full flex items-center justify-between p-2.5 rounded-md border border-border bg-secondary/30 text-left transition-colors hover:bg-secondary hover:border-muted-foreground group cursor-pointer"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition">
-                  <BookOpen className="h-5 w-5" />
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-md bg-card border border-border text-foreground">
+                  <BookOpen className="h-3.5 w-3.5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[var(--theme-text)]">NCERT Digital Library</p>
-                  <p className="text-[11px] text-[var(--theme-text-secondary)]">Class 1-12 syllabus</p>
+                  <p className="text-xs font-semibold text-foreground">Browse {classLabel}</p>
+                  <p className="text-xs text-muted-foreground">Syllabus textbooks</p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-[var(--theme-text-secondary)] group-hover:translate-x-0.5 transition" />
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
             </button>
 
             <button
               type="button"
               onClick={() => onTabChange("books")}
-              className="w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition hover:scale-[1.01] hover:border-teal-500/40 group"
-              style={{
-                background: "var(--theme-bg)",
-                borderColor: "var(--theme-border)",
-              }}
+              className="w-full flex items-center justify-between p-2.5 rounded-md border border-border bg-secondary/30 text-left transition-colors hover:bg-secondary hover:border-muted-foreground group cursor-pointer"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition">
-                  <BookMarked className="h-5 w-5" />
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-md bg-card border border-border text-foreground">
+                  <Upload className="h-3.5 w-3.5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[var(--theme-text)]">Upload to Bookshelf</p>
-                  <p className="text-[11px] text-[var(--theme-text-secondary)]">Private cloud storage</p>
+                  <p className="text-xs font-semibold text-foreground">Upload Custom PDF</p>
+                  <p className="text-xs text-muted-foreground">Save to cloud storage</p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-[var(--theme-text-secondary)] group-hover:translate-x-0.5 transition" />
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
             </button>
 
             <button
               type="button"
               onClick={() => onTabChange("notes")}
-              className="w-full flex items-center justify-between p-3.5 rounded-2xl border text-left transition hover:scale-[1.01] hover:border-amber-500/40 group"
-              style={{
-                background: "var(--theme-bg)",
-                borderColor: "var(--theme-border)",
-              }}
+              className="w-full flex items-center justify-between p-2.5 rounded-md border border-border bg-secondary/30 text-left transition-colors hover:bg-secondary hover:border-muted-foreground group cursor-pointer"
             >
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition">
-                  <FileText className="h-5 w-5" />
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-md bg-card border border-border text-foreground">
+                  <FileText className="h-3.5 w-3.5" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-[var(--theme-text)]">Study Notes & Notepad</p>
-                  <p className="text-[11px] text-[var(--theme-text-secondary)]">Keep summary takeaways</p>
+                  <p className="text-xs font-semibold text-foreground">New Study Note</p>
+                  <p className="text-xs text-muted-foreground">Take revision notes</p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-[var(--theme-text-secondary)] group-hover:translate-x-0.5 transition" />
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
         </div>
@@ -684,15 +601,15 @@ function BooksSection({
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">Your Bookshelf</h2>
-          <p className="text-xs sm:text-sm text-[var(--theme-text-secondary)] mt-1">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Your Bookshelf</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Private files and custom PDF study materials stored in your cloud
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--theme-text-secondary)]" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search your books..."
@@ -709,7 +626,7 @@ function BooksSection({
               setErrorMessage(null);
               setSuccessMessage(null);
             }}
-            className="flex-shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 shadow-md shadow-teal-500/20 transition hover:scale-[1.02]"
+            className="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
           >
             <UploadCloud className="h-4 w-4" />
             <span>Upload PDF</span>
@@ -720,45 +637,47 @@ function BooksSection({
       {/* Upload Modal */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Upload PDF"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="w-full max-w-lg rounded-3xl border p-6 sm:p-8 shadow-2xl space-y-5"
-              style={{
-                background: "var(--theme-card-bg)",
-                borderColor: "var(--theme-border)",
-              }}
+              className="w-full max-w-lg rounded-md border border-border bg-card p-6 sm:p-8 space-y-5 shadow-lg"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-teal-500/10 text-teal-400">
+                  <div className="p-2 rounded-md bg-secondary text-foreground">
                     <UploadCloud className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-[var(--theme-text)]">Upload Study PDF</h3>
-                    <p className="text-xs text-[var(--theme-text-secondary)]">Save custom notes or books to your cloud</p>
+                    <h3 className="text-base font-bold text-foreground">Upload Study PDF</h3>
+                    <p className="text-xs text-muted-foreground">Save private textbook or notes to cloud</p>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 rounded-xl text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] transition"
+                  aria-label="Close upload dialog"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
 
               {errorMessage && (
-                <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-2">
+                <div className="p-2.5 rounded-md bg-[var(--pastel-red-bg)] border border-destructive/30 text-[var(--pastel-red-text)] text-xs flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 flex-shrink-0" />
                   <span>{errorMessage}</span>
                 </div>
               )}
 
               {successMessage && (
-                <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center gap-2">
+                <div className="p-2.5 rounded-md bg-[var(--pastel-green-bg)] border border-border text-[var(--pastel-green-text)] text-xs flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
                   <span>{successMessage}</span>
                 </div>
@@ -767,8 +686,7 @@ function BooksSection({
               <form onSubmit={handleUploadSubmit} className="space-y-4">
                 {/* Drag and drop box */}
                 <label
-                  className="border-2 border-dashed rounded-3xl p-8 flex flex-col items-center justify-center cursor-pointer transition hover:border-teal-500/50 hover:bg-teal-500/5"
-                  style={{ borderColor: "var(--theme-border)" }}
+                  className="border-2 border-dashed border-border rounded-md p-8 flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-muted-foreground hover:bg-secondary/50"
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
@@ -783,25 +701,25 @@ function BooksSection({
                     className="hidden"
                     onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                   />
-                  <div className="p-3 rounded-2xl bg-teal-500/10 text-teal-400 mb-3">
+                  <div className="p-3 rounded-md bg-secondary text-foreground mb-3">
                     <FileText className="h-6 w-6" />
                   </div>
-                  <p className="text-sm font-semibold text-[var(--theme-text)] text-center">
-                    {selectedFile ? selectedFile.name : "Click to browse or drag & drop PDF"}
+                  <p className="text-sm font-semibold text-foreground text-center">
+                    {selectedFile ? selectedFile.name : "Click to select or drop PDF"}
                   </p>
-                  <p className="text-xs text-[var(--theme-text-secondary)] mt-1">
-                    {selectedFile ? `${formatBytes(selectedFile.size)} selected` : "Supported formats: PDF (up to 50MB)"}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedFile ? `${formatBytes(selectedFile.size)} selected` : "PDF format up to 50MB"}
                   </p>
                 </label>
 
                 {/* Custom Title Input */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-[var(--theme-text-secondary)]">
+                  <label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
                     Display Title
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Organic Chemistry Short Notes"
+                    placeholder="e.g. Class 10 Chemistry Formulas"
                     value={customTitle}
                     onChange={(e) => setCustomTitle(e.target.value)}
                     className="auth-input-field text-sm"
@@ -812,14 +730,14 @@ function BooksSection({
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] transition"
+                    className="px-3.5 py-2 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isUploading || !selectedFile}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-md transition"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-xs font-medium text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer shadow-xs"
                   >
                     {isUploading ? (
                       <>
@@ -842,36 +760,29 @@ function BooksSection({
 
       {/* Book Grid */}
       {filtered.length ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((item) => (
             <div
               key={item.fullPath}
-              className="rounded-3xl border p-5 shadow-sm flex flex-col justify-between gap-4 transition-all hover:shadow-md hover:-translate-y-1"
-              style={{
-                background: "var(--theme-card-bg)",
-                borderColor: "var(--theme-border)",
-              }}
+              className="rounded-md border border-border bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 transition-transform hover:-translate-y-px"
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400 flex-shrink-0">
-                  <BookMarked className="h-6 w-6" />
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-foreground flex-shrink-0">
+                  <BookMarked className="h-4 w-4" />
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-teal-500/10 text-teal-400">
-                  Private
+                <span className="text-xs font-mono text-muted-foreground">
+                  {formatBytes(item.size)}
                 </span>
               </div>
 
               <div>
-                <h3 className="text-base font-bold text-[var(--theme-text)] line-clamp-2">
+                <h3 className="text-sm sm:text-base font-bold text-foreground line-clamp-2">
                   {formatTitle(item.name)}
                 </h3>
-                <p className="text-xs text-[var(--theme-text-secondary)] mt-1">
-                  {formatBytes(item.size)}
-                </p>
               </div>
 
-              <div className="pt-3 border-t border-[var(--theme-border)] flex items-center justify-between">
-                <span className="text-[11px] text-[var(--theme-text-secondary)]">
+              <div className="pt-3 border-t border-border flex items-center justify-between">
+                <span className="text-xs font-mono text-muted-foreground">
                   {toDate(item.createdAt ?? item.updatedAt)?.toLocaleDateString() ?? "Uploaded"}
                 </span>
                 <button
@@ -884,9 +795,9 @@ function BooksSection({
                       onOpenPdf(data.signedUrl, formatTitle(item.name), "Custom Upload", "My Bookshelf");
                     }
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs text-white bg-teal-600 hover:bg-teal-500 transition shadow-sm hover:scale-105"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
                 >
-                  <span>Open PDF</span>
+                  <span>Open</span>
                   <BookOpen className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -894,16 +805,13 @@ function BooksSection({
           ))}
         </div>
       ) : (
-        <div
-          className="rounded-3xl border border-dashed p-12 text-center"
-          style={{ borderColor: "var(--theme-border)" }}
-        >
-          <BookMarked className="mx-auto h-10 w-10 text-[var(--theme-text-secondary)] opacity-40" />
-          <p className="mt-4 text-base font-semibold text-[var(--theme-text)]">
+        <div className="rounded-md border border-dashed border-border p-10 text-center">
+          <BookMarked className="mx-auto h-8 w-8 text-muted-foreground opacity-40" />
+          <p className="mt-3 text-sm font-semibold text-foreground">
             {search ? "No matching files" : "Your bookshelf is empty"}
           </p>
-          <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
-            Upload custom PDFs to your private cloud storage to read and study them anytime.
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Upload custom PDFs to your private cloud storage to study anytime.
           </p>
           <button
             type="button"
@@ -912,10 +820,10 @@ function BooksSection({
               setErrorMessage(null);
               setSuccessMessage(null);
             }}
-            className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 shadow-md shadow-teal-500/20 transition hover:scale-105"
+            className="mt-4 inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
           >
-            <UploadCloud className="h-4 w-4" />
-            <span>Upload Your First PDF</span>
+            <UploadCloud className="h-3.5 w-3.5" />
+            <span>Upload First PDF</span>
           </button>
         </div>
       )}
@@ -980,8 +888,8 @@ function NotesSection() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[var(--theme-text)]">Study Notes</h2>
-          <p className="text-xs sm:text-sm text-[var(--theme-text-secondary)] mt-1">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Study Notes</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
             Capture revision notes, key formulas, and chapter summaries
           </p>
         </div>
@@ -989,7 +897,7 @@ function NotesSection() {
         <button
           type="button"
           onClick={() => setIsAdding(!isAdding)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-white bg-purple-600 hover:bg-purple-700 transition self-start"
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity self-start cursor-pointer shadow-xs"
         >
           <Plus className="h-4 w-4" />
           <span>{isAdding ? "Cancel" : "New Note"}</span>
@@ -1000,13 +908,9 @@ function NotesSection() {
       {isAdding && (
         <form
           onSubmit={handleAddNote}
-          className="p-6 rounded-3xl border shadow-lg space-y-4"
-          style={{
-            background: "var(--theme-card-bg)",
-            borderColor: "var(--theme-border)",
-          }}
+          className="p-5 sm:p-6 rounded-md border border-border bg-card shadow-xs space-y-4"
         >
-          <h3 className="text-base font-bold text-[var(--theme-text)]">Create Study Note</h3>
+          <h3 className="text-sm font-bold text-foreground">Create Study Note</h3>
           <input
             type="text"
             placeholder="Note title (e.g. Chapter 4 Key Concepts)"
@@ -1022,17 +926,17 @@ function NotesSection() {
             rows={4}
             className="auth-input-field text-sm resize-none"
           />
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end gap-2.5">
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)]"
+              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-teal-500 hover:from-purple-700 hover:to-teal-600"
+              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
             >
               Save Note
             </button>
@@ -1042,50 +946,44 @@ function NotesSection() {
 
       {/* Notes Grid */}
       {notes.length ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {notes.map((note) => (
             <div
               key={note.id}
-              className="rounded-3xl border p-5 shadow-sm flex flex-col justify-between gap-4 transition hover:shadow-md"
-              style={{
-                background: "var(--theme-card-bg)",
-                borderColor: "var(--theme-border)",
-              }}
+              className="rounded-md border border-border bg-card p-4 sm:p-5 flex flex-col justify-between gap-4 transition-transform hover:-translate-y-px"
             >
               <div className="space-y-2">
                 <div className="flex items-start justify-between gap-2">
-                  <h4 className="text-base font-bold text-[var(--theme-text)]">{note.title}</h4>
+                  <h4 className="text-sm sm:text-base font-bold text-foreground">{note.title}</h4>
                   <button
                     type="button"
                     onClick={() => handleDelete(note.id)}
-                    className="p-1 rounded-lg text-[var(--theme-text-secondary)] hover:text-red-500 transition"
+                    aria-label={`Delete note: ${note.title}`}
+                    className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors cursor-pointer"
                     title="Delete Note"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
-                <p className="text-xs text-[var(--theme-text-secondary)] whitespace-pre-wrap leading-relaxed">
+                <p className="text-xs text-muted-foreground whitespace-pre-wrap leading-relaxed">
                   {note.content}
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-[var(--theme-border)] text-[11px] text-[var(--theme-text-secondary)]">
-                Saved on {note.date}
+              <div className="pt-2.5 border-t border-border text-xs font-mono text-muted-foreground">
+                Saved {note.date}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div
-          className="rounded-3xl border border-dashed p-12 text-center"
-          style={{ borderColor: "var(--theme-border)" }}
-        >
-          <FileText className="mx-auto h-10 w-10 text-[var(--theme-text-secondary)] opacity-40" />
-          <p className="mt-4 text-base font-semibold text-[var(--theme-text)]">
+        <div className="rounded-md border border-dashed border-border p-10 text-center">
+          <FileText className="mx-auto h-8 w-8 text-muted-foreground opacity-40" />
+          <p className="mt-3 text-sm font-semibold text-foreground">
             No notes written yet
           </p>
-          <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
-            Click &ldquo;New Note&rdquo; above to write and keep study takeaways.
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Click &ldquo;New Note&rdquo; above to record key concepts.
           </p>
         </div>
       )}
@@ -1161,10 +1059,9 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
+      const { data: userData } = await supabase.auth.getUser();
 
-      const user = userData.user;
+      const user = userData?.user;
       if (user) {
         const meta = user.user_metadata ?? {};
         setUserProfile({
@@ -1173,16 +1070,33 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           classLabel: meta.grade ? `Class ${meta.grade}` : "Class 10",
           avatarUrl: meta.avatar_url || meta.picture || null,
         });
+      } else {
+        setUserProfile({
+          name: "Guest Student",
+          email: "student@eduscrapeapp.dev",
+          classLabel: "Class 10",
+          avatarUrl: null,
+        });
       }
 
+      const timeoutPromise = new Promise<StorageItem[]>((_, reject) =>
+        setTimeout(() => reject(new Error("Storage timeout")), 3000)
+      );
+
       const [privateBooks, publicBooks] = await Promise.all([
-        listStorageItems("user-books").catch(() => []),
-        listStorageItems("ncert").catch(() => []),
+        Promise.race([listStorageItems("user-books"), timeoutPromise]).catch(() => []),
+        Promise.race([listStorageItems("ncert"), timeoutPromise]).catch(() => []),
       ]);
 
       setUserBooks(privateBooks);
       setLibraryBooks(publicBooks);
     } catch {
+      setUserProfile({
+        name: "Guest Student",
+        email: "student@eduscrapeapp.dev",
+        classLabel: "Class 10",
+        avatarUrl: null,
+      });
       setUserBooks([]);
       setLibraryBooks([]);
     } finally {
@@ -1206,7 +1120,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const streak = getDailyStreak(userBooks);
 
   return (
-    <div className="min-h-screen bg-[var(--theme-bg)] text-[var(--theme-text)] flex">
+    <div className="min-h-screen bg-background text-foreground flex">
       {/* Mobile Drawer Backdrop */}
       <AnimatePresence>
         {isMobileMenuOpen && (
@@ -1215,46 +1129,44 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setIsMobileMenuOpen(false)}
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden"
           />
         )}
       </AnimatePresence>
 
       {/* Sidebar (Desktop Pinned + Mobile Slide-Over) */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 flex flex-col border-r transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        id="dashboard-sidebar"
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 flex flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out lg:translate-x-0 ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{
-          background: "var(--theme-card-bg)",
-          borderColor: "var(--theme-border)",
-        }}
       >
         {/* Brand Header */}
-        <div className="p-6 flex items-center justify-between border-b border-[var(--theme-border)]">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-tr from-purple-600 to-teal-500 text-white shadow-lg shadow-purple-500/20">
-              <BookOpen className="h-5 w-5" />
+        <div className="p-5 flex items-center justify-between border-b border-border">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground text-background font-mono font-bold text-xs">
+              E
             </div>
             <div>
-              <span className="text-lg font-bold tracking-tight text-[var(--theme-text)]">
-                EduScrape<span className="text-purple-500">App</span>
+              <span className="text-sm font-bold tracking-tight text-foreground">
+                EduScrapeApp
               </span>
-              <p className="text-[10px] uppercase font-bold text-teal-400 tracking-wider">Dashboard</p>
+              <p className="text-xs font-mono uppercase text-muted-foreground tracking-wider">Workspace</p>
             </div>
           </div>
 
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="p-1 rounded-lg text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] lg:hidden"
+            aria-label="Close navigation"
+            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary lg:hidden transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Navigation items */}
-        <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {sidebarNav.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -1267,10 +1179,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   setActiveTab(item.id);
                   setIsMobileMenuOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors duration-150 ${
                   isActive
-                    ? "text-white bg-gradient-to-r from-purple-600 to-purple-700 shadow-md shadow-purple-500/20"
-                    : "text-[var(--theme-text-secondary)] hover:bg-[var(--theme-bg-secondary)] hover:text-[var(--theme-text)]"
+                    ? "bg-foreground text-background font-semibold"
+                    : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
                 <Icon className="h-4 w-4" />
@@ -1281,48 +1193,42 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-[var(--theme-border)] space-y-4">
-          <div className="flex items-center justify-between px-2">
+        <div className="p-3 border-t border-border space-y-3">
+          <div className="flex items-center justify-between px-1">
             <ThemeToggle />
             <button
               type="button"
               onClick={handleLogout}
-              className="p-2 rounded-xl text-[var(--theme-text-secondary)] hover:text-red-500 hover:bg-red-500/10 transition"
+              className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors"
               title="Logout"
+              aria-label="Logout"
             >
               <LogOut className="h-4 w-4" />
             </button>
           </div>
 
           {/* User Profile Mini-Badge */}
-          <div
-            className="flex items-center gap-3 p-2.5 rounded-2xl border"
-            style={{
-              background: "var(--theme-bg-secondary)",
-              borderColor: "var(--theme-border)",
-            }}
-          >
+          <div className="flex items-center gap-3 px-2 py-1.5 rounded-md bg-secondary/50">
             <div className="relative flex-shrink-0">
               {userProfile.avatarUrl ? (
                 <img
                   src={userProfile.avatarUrl}
                   alt={userProfile.name}
-                  className="h-10 w-10 rounded-full object-cover border"
-                  style={{ borderColor: "var(--theme-border)" }}
+                  className="h-8 w-8 rounded-full object-cover border border-border"
                 />
               ) : (
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-tr from-purple-600 to-teal-400 text-white font-bold text-sm shadow-inner">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-foreground text-background font-bold text-xs font-mono">
                   {userProfile.name.charAt(0).toUpperCase()}
                 </div>
               )}
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-[var(--theme-card-bg)]" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-background" />
             </div>
 
             <div className="overflow-hidden text-left">
-              <p className="truncate text-xs font-bold text-[var(--theme-text)]">
+              <p className="truncate text-xs font-bold text-foreground">
                 {userProfile.name}
               </p>
-              <p className="text-[10px] font-medium text-[var(--theme-text-secondary)] uppercase tracking-wider">
+              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
                 {userProfile.classLabel}
               </p>
             </div>
@@ -1333,41 +1239,34 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       {/* Main Content Area */}
       <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
         {/* Top bar header */}
-        <header
-          className="sticky top-0 z-30 flex h-16 sm:h-20 items-center justify-between border-b px-4 sm:px-8 backdrop-blur-xl"
-          style={{
-            background: "var(--theme-bg)",
-            borderColor: "var(--theme-border)",
-          }}
-        >
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background px-4 sm:px-8">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 rounded-xl border text-[var(--theme-text)] lg:hidden"
-              style={{
-                background: "var(--theme-card-bg)",
-                borderColor: "var(--theme-border)",
-              }}
+              aria-label="Open navigation"
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="dashboard-sidebar"
+              className="p-1.5 rounded-md border border-border bg-card text-foreground lg:hidden"
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-4 w-4" />
             </button>
-            <h2 className="text-base sm:text-xl font-bold capitalize text-[var(--theme-text)]">
-              {activeTab === "overview" ? "Dashboard" : activeTab}
+            <h2 className="text-sm sm:text-base font-bold text-foreground">
+              {tabTitles[activeTab]}
             </h2>
           </div>
 
           {/* Quick status chips on top bar */}
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+          <div className="flex items-center gap-2 sm:gap-3 font-mono">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-[var(--pastel-amber-bg)] text-[var(--pastel-amber-text)] border border-border">
               <Flame className="h-3.5 w-3.5" />
               <span>{streak}d Streak</span>
             </div>
-            <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-secondary text-muted-foreground border border-border">
               <BookOpen className="h-3.5 w-3.5" />
               <span>{libraryBooks.length} NCERT</span>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-teal-500/10 text-teal-400 border border-teal-500/20">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-secondary text-muted-foreground border border-border">
               <UserCircle2 className="h-3.5 w-3.5" />
               <span>{userProfile.classLabel}</span>
             </div>

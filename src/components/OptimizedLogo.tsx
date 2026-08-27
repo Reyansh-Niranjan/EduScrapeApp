@@ -13,13 +13,12 @@ export default function OptimizedLogo({
   src,
   alt,
   className = "w-full h-full object-cover",
-  fallbackText = "CC",
+  fallbackText = "EA",
   width = 128,
   height = 128,
 }: OptimizedLogoProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const imageSrc = src;
 
   useEffect(() => {
     const img = new Image();
@@ -30,7 +29,7 @@ export default function OptimizedLogo({
 
   if (hasError) {
     return (
-      <div className={`flex items-center justify-center bg-gradient-to-br from-purple-600 to-teal-600 text-white font-bold text-2xl ${className}`}>
+      <div className={`flex items-center justify-center bg-zinc-900 border border-border text-foreground font-mono font-bold text-xl ${className}`}>
         {fallbackText}
       </div>
     );
@@ -38,19 +37,14 @@ export default function OptimizedLogo({
 
   return (
     <img
-      src={imageSrc}
+      src={src}
       alt={alt}
-      className={`${className} optimized-logo`}
+      className={`${className} transition-opacity duration-200 ${isLoaded ? "opacity-100" : "opacity-60"}`}
       width={width}
       height={height}
       loading="eager"
       fetchPriority="high"
       decoding="async"
-      style={{
-        opacity: isLoaded ? 1 : 0.7,
-        transition: "opacity 0.3s ease-in-out",
-        background: "linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)",
-      }}
       onLoad={() => setIsLoaded(true)}
       onError={() => setHasError(true)}
     />

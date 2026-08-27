@@ -157,13 +157,13 @@ const PdfCoverThumbnail: React.FC<{
   if (loading) {
     return (
       <div
-        className={`flex flex-col items-center justify-center rounded-2xl border border-purple-500/10 skeleton-shimmer overflow-hidden ${
+        className={`flex flex-col items-center justify-center rounded-md border border-border bg-secondary/50 skeleton-shimmer overflow-hidden ${
           aspect === "thumb" ? "h-14 w-11 flex-shrink-0" : "h-52 w-full"
         } ${className}`}
       >
-        <div className="flex flex-col items-center gap-1.5 opacity-40">
-          <BookOpen className={aspect === "thumb" ? "h-4 w-4 text-purple-400" : "h-7 w-7 text-purple-400"} />
-          {aspect !== "thumb" && <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-400" />}
+        <div className="flex flex-col items-center gap-1.5 opacity-40 text-muted-foreground">
+          <BookOpen className={aspect === "thumb" ? "h-4 w-4" : "h-7 w-7"} />
+          {aspect !== "thumb" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
         </div>
       </div>
     );
@@ -172,13 +172,13 @@ const PdfCoverThumbnail: React.FC<{
   if (hasError || !thumbSrc) {
     return (
       <div
-        className={`flex flex-col items-center justify-center bg-gradient-to-tr from-purple-950/40 via-slate-900/60 to-purple-900/30 rounded-2xl border border-purple-500/20 text-purple-300 shadow-inner ${
+        className={`flex flex-col items-center justify-center bg-secondary rounded-md border border-border text-muted-foreground ${
           aspect === "thumb" ? "h-14 w-11 flex-shrink-0" : "h-52 w-full"
         } ${className}`}
       >
-        <BookOpen className={aspect === "thumb" ? "h-5 w-5" : "h-10 w-10 opacity-75"} />
+        <BookOpen className={aspect === "thumb" ? "h-5 w-5" : "h-10 w-10 opacity-60"} />
         {aspect !== "thumb" && (
-          <span className="mt-2 text-[10px] font-bold uppercase tracking-wider text-purple-300/70">
+          <span className="mt-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
             NCERT Book
           </span>
         )}
@@ -188,7 +188,7 @@ const PdfCoverThumbnail: React.FC<{
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl border border-white/10 book-cover-depth ${
+      className={`relative overflow-hidden rounded-md border border-border book-cover-depth ${
         aspect === "thumb" ? "h-14 w-11 flex-shrink-0" : "h-52 w-full"
       } ${className}`}
     >
@@ -198,9 +198,7 @@ const PdfCoverThumbnail: React.FC<{
         className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         loading="lazy"
       />
-      {/* Glossy light reflection sheen overlay */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/10 opacity-80" />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
     </div>
   );
 };
@@ -408,24 +406,24 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Top Header & Search Bar with Glassmorphic Elevation */}
+      {/* Top Header & Search Bar */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 shadow-inner">
-              <GraduationCap className="h-6 w-6" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-foreground">
+              <GraduationCap className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[var(--theme-text)] tracking-tight">
+              <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
                 NCERT Digital Library
               </h2>
               <div className="flex flex-wrap items-center gap-2 mt-1">
-                <span className="inline-flex items-center gap-1.5 text-xs text-[var(--theme-text-secondary)] font-medium">
-                  <BookCheck className="h-3.5 w-3.5 text-teal-400" />
+                <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                  <BookCheck className="h-3.5 w-3.5 text-foreground" />
                   <span>{allBooks.length} Verified Textbooks</span>
                 </span>
                 {normalizedUserClass && (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/15 text-purple-400 border border-purple-500/25 shadow-sm">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono uppercase bg-secondary text-muted-foreground border border-border">
                     <Sparkles className="h-2.5 w-2.5" />
                     <span>Your Class: {normalizedUserClass}</span>
                   </span>
@@ -439,7 +437,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
         <div className="flex items-center gap-3">
           {/* Universal Search Input */}
           <div className="relative flex-1 md:w-80">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--theme-text-secondary)]" />
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search catalog across all classes..."
@@ -451,7 +449,8 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
               <button
                 type="button"
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)]"
+                aria-label="Clear search query"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
               >
                 ✕
               </button>
@@ -459,29 +458,28 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
           </div>
 
           {/* Grid / List View Segmented Toggle */}
-          <div
-            className="flex items-center p-1 rounded-2xl border bg-[var(--theme-card-bg)] shadow-sm"
-            style={{ borderColor: "var(--theme-border)" }}
-          >
+          <div className="flex items-center p-1 rounded-md border border-border bg-card">
             <button
               onClick={() => setViewMode("grid")}
-              className={`p-2 rounded-xl transition ${
+              className={`p-1.5 rounded-sm transition-colors ${
                 viewMode === "grid"
-                  ? "bg-purple-600 text-white shadow-md shadow-purple-500/20"
-                  : "text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)]"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               title="Grid View"
+              aria-label="Grid View"
             >
               <LayoutGrid className="h-4 w-4" />
             </button>
             <button
               onClick={() => setViewMode("list")}
-              className={`p-2 rounded-xl transition ${
+              className={`p-1.5 rounded-sm transition-colors ${
                 viewMode === "list"
-                  ? "bg-purple-600 text-white shadow-md shadow-purple-500/20"
-                  : "text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)]"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
               title="List View"
+              aria-label="List View"
             >
               <List className="h-4 w-4" />
             </button>
@@ -492,26 +490,26 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
       {/* Global Search Mode */}
       {searchQuery ? (
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border bg-[var(--theme-card-bg)]" style={{ borderColor: "var(--theme-border)" }}>
-            <p className="text-xs font-semibold text-[var(--theme-text-secondary)]">
-              Search results for <span className="text-[var(--theme-text)] font-bold">"{searchQuery}"</span> ({searchResults.length} matching textbooks)
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-md border border-border bg-card">
+            <p className="text-xs font-semibold text-muted-foreground">
+              Search results for <span className="text-foreground font-bold">"{searchQuery}"</span> ({searchResults.length} matching textbooks)
             </p>
             <div className="flex items-center gap-3">
               {/* Sort Selector */}
-              <div className="flex items-center gap-1.5 text-xs text-[var(--theme-text-secondary)]">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <ArrowUpDown className="h-3.5 w-3.5" />
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as "name" | "size")}
-                  className="bg-transparent border-none text-xs font-semibold text-[var(--theme-text)] focus:outline-none cursor-pointer"
+                  className="bg-transparent border-none text-xs font-medium text-foreground focus:outline-none cursor-pointer"
                 >
-                  <option value="name" className="bg-slate-900 text-white">Sort by Name</option>
-                  <option value="size" className="bg-slate-900 text-white">Sort by Size</option>
+                  <option value="name" className="bg-card text-foreground">Sort by Name</option>
+                  <option value="size" className="bg-card text-foreground">Sort by Size</option>
                 </select>
               </div>
               <button
                 onClick={() => setSearchQuery("")}
-                className="text-xs font-semibold text-purple-400 hover:underline"
+                className="text-xs font-medium text-muted-foreground hover:text-foreground underline underline-offset-2"
               >
                 Clear Search
               </button>
@@ -525,38 +523,34 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                   <motion.div
                     key={book.fullPath}
                     layout
-                    className="group rounded-3xl border p-4 shadow-sm flex flex-col justify-between gap-3.5 transition-all hover:shadow-2xl hover:-translate-y-1.5"
-                    style={{
-                      background: "var(--theme-card-bg)",
-                      borderColor: "var(--theme-border)",
-                    }}
+                    className="group rounded-md border border-border bg-card p-4 flex flex-col justify-between gap-3.5 transition-transform hover:-translate-y-px"
                   >
                     {/* First Page Dynamic Cover Preview */}
                     <PdfCoverThumbnail fullPath={book.fullPath} title={book.title} />
 
                     <div className="space-y-1.5">
-                      <div className="flex items-center justify-between gap-1 text-[10px] font-bold">
-                        <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                      <div className="flex items-center justify-between gap-1 text-xs font-mono">
+                        <span className="px-2 py-1 rounded-full bg-secondary text-muted-foreground border border-border">
                           {book.className}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20 truncate max-w-[100px]">
+                        <span className="px-2 py-1 rounded-full bg-secondary text-muted-foreground border border-border truncate max-w-[100px]">
                           {book.subjectName}
                         </span>
-                        <span className="font-mono text-[var(--theme-text-secondary)]">{formatBytes(book.size)}</span>
+                        <span className="text-muted-foreground">{formatBytes(book.size)}</span>
                       </div>
 
-                      <h3 className="text-sm font-bold text-[var(--theme-text)] line-clamp-2" title={book.title}>
+                      <h3 className="text-sm font-bold text-foreground line-clamp-2" title={book.title}>
                         {book.title}
                       </h3>
-                      <p className="text-[11px] text-[var(--theme-text-secondary)]">
-                        Edition: <span className="text-[var(--theme-text)] font-semibold">{book.language}</span>
+                      <p className="text-xs text-muted-foreground">
+                        Edition: <span className="text-foreground font-medium">{book.language}</span>
                       </p>
                     </div>
 
                     <button
                       type="button"
                       onClick={() => handleOpenBook(book)}
-                      className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 transition shadow-md shadow-purple-500/20 hover:scale-[1.02] active:scale-[0.98]"
+                      className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity active:scale-[0.98]"
                     >
                       <BookOpen className="h-3.5 w-3.5" />
                       <span>Read Textbook</span>
@@ -566,30 +560,24 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
               </div>
             ) : (
               /* Search List View */
-              <div
-                className="rounded-3xl border overflow-hidden divide-y divide-[var(--theme-border)] shadow-sm"
-                style={{
-                  background: "var(--theme-card-bg)",
-                  borderColor: "var(--theme-border)",
-                }}
-              >
+              <div className="rounded-md border border-border bg-card divide-y divide-border overflow-hidden">
                 {searchResults.map((book) => (
                   <div
                     key={book.fullPath}
-                    className="p-4 flex items-center justify-between gap-4 transition hover:bg-purple-500/5 group"
+                    className="p-4 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/40 group"
                   >
                     <div className="flex items-center gap-3.5 overflow-hidden">
                       <PdfCoverThumbnail fullPath={book.fullPath} title={book.title} aspect="thumb" />
                       <div className="truncate">
-                        <h4 className="text-sm font-bold text-[var(--theme-text)] truncate">{book.title}</h4>
-                        <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--theme-text-secondary)]">
-                          <span className="font-semibold text-purple-400">{book.className}</span>
+                        <h4 className="text-sm font-bold text-foreground truncate">{book.title}</h4>
+                        <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground font-mono">
+                          <span className="font-medium text-foreground">{book.className}</span>
                           <span>•</span>
                           <span>{book.subjectName}</span>
                           <span>•</span>
                           <span>{book.language}</span>
                           <span>•</span>
-                          <span className="font-mono">{formatBytes(book.size)}</span>
+                          <span>{formatBytes(book.size)}</span>
                         </div>
                       </div>
                     </div>
@@ -597,7 +585,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                     <button
                       type="button"
                       onClick={() => handleOpenBook(book)}
-                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 transition shadow-sm hover:scale-105 active:scale-95"
+                      className="flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity active:scale-95"
                     >
                       <BookOpen className="h-3.5 w-3.5" />
                       <span>Read</span>
@@ -607,15 +595,12 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
               </div>
             )
           ) : (
-            <div
-              className="rounded-3xl border border-dashed p-12 text-center"
-              style={{ borderColor: "var(--theme-border)" }}
-            >
-              <Search className="mx-auto h-10 w-10 text-[var(--theme-text-secondary)] opacity-40" />
-              <p className="mt-4 text-base font-semibold text-[var(--theme-text)]">
+            <div className="rounded-md border border-dashed border-border p-12 text-center">
+              <Search className="mx-auto h-10 w-10 text-muted-foreground opacity-40" />
+              <p className="mt-4 text-base font-semibold text-foreground">
                 No matching textbooks found
               </p>
-              <p className="mt-1 text-xs text-[var(--theme-text-secondary)]">
+              <p className="mt-1 text-xs text-muted-foreground">
                 Try searching by subject name (e.g. "Science", "Math", "Physics") or book title.
               </p>
             </div>
@@ -625,16 +610,13 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
         /* Hierarchical Nested Navigation */
         <div className="space-y-6">
           {/* Interactive Breadcrumb Bar */}
-          <div
-            className="flex items-center flex-wrap gap-2 p-3 rounded-2xl border bg-[var(--theme-card-bg)] text-xs font-semibold shadow-sm"
-            style={{ borderColor: "var(--theme-border)" }}
-          >
+          <div className="flex items-center flex-wrap gap-2 p-3 rounded-md border border-border bg-card text-xs font-medium">
             <button
               onClick={handleResetBreadcrumbs}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors ${
                 !selectedClass
-                  ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/20"
-                  : "text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-bg)]"
+                  ? "bg-foreground text-background font-semibold"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
               <Layers className="h-3.5 w-3.5" />
@@ -643,13 +625,13 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
 
             {selectedClass && (
               <>
-                <ChevronRight className="h-3.5 w-3.5 text-[var(--theme-text-secondary)]" />
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                 <button
                   onClick={() => setSelectedSubject(null)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md transition-colors ${
                     selectedClass && !selectedSubject
-                      ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-500/20"
-                      : "text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] hover:bg-[var(--theme-bg)]"
+                      ? "bg-foreground text-background font-semibold"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                   }`}
                 >
                   <FolderOpen className="h-3.5 w-3.5" />
@@ -660,8 +642,8 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
 
             {selectedSubject && (
               <>
-                <ChevronRight className="h-3.5 w-3.5 text-[var(--theme-text-secondary)]" />
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-600 text-white font-bold shadow-md shadow-purple-500/20">
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-foreground text-background font-semibold">
                   <BookMarked className="h-3.5 w-3.5" />
                   <span>{selectedSubject}</span>
                 </div>
@@ -670,15 +652,14 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
           </div>
 
           {/* Class Quick Switcher Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none [mask-image:linear-gradient(to_right,transparent,black_16px,black_calc(100%-16px),transparent)] sm:[mask-image:none]">
             <button
               onClick={() => handleSelectClass(null)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium whitespace-nowrap transition-colors ${
                 !selectedClass
-                  ? "bg-purple-600 text-white shadow-md shadow-purple-500/25 scale-[1.02]"
-                  : "border text-[var(--theme-text-secondary)] hover:bg-[var(--theme-card-bg)] hover:text-[var(--theme-text)]"
+                  ? "bg-foreground text-background"
+                  : "border border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
               }`}
-              style={{ borderColor: "var(--theme-border)" }}
             >
               Overview (All)
             </button>
@@ -688,18 +669,17 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                 <button
                   key={cls.name}
                   onClick={() => handleSelectClass(cls.name)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-mono font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
                     selectedClass === cls.name
-                      ? "bg-purple-600 text-white shadow-md shadow-purple-500/25 scale-[1.02]"
+                      ? "bg-foreground text-background"
                       : isAccountClass
-                      ? "border border-purple-500/40 text-purple-400 hover:bg-purple-500/10"
-                      : "border text-[var(--theme-text-secondary)] hover:bg-[var(--theme-card-bg)] hover:text-[var(--theme-text)]"
+                      ? "border border-foreground/30 text-foreground hover:bg-secondary"
+                      : "border border-border text-muted-foreground hover:bg-secondary hover:text-foreground"
                   }`}
-                  style={{ borderColor: selectedClass === cls.name ? undefined : "var(--theme-border)" }}
                 >
-                  {isAccountClass && <span className="h-1.5 w-1.5 rounded-full bg-purple-400 animate-pulse" />}
+                  {isAccountClass && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
                   <span>{cls.name}</span>
-                  <span className="opacity-70">({cls.totalBooks})</span>
+                  <span className="opacity-70 font-mono">({cls.totalBooks})</span>
                 </button>
               );
             })}
@@ -709,10 +689,10 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
           {!selectedClass && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-[var(--theme-text-secondary)]">
+                <h3 className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
                   Select Grade Level
                 </h3>
-                <span className="text-xs text-[var(--theme-text-secondary)] font-medium">
+                <span className="text-xs font-mono text-muted-foreground">
                   {sortedClasses.length} Classes Available
                 </span>
               </div>
@@ -724,42 +704,38 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                   return (
                     <motion.div
                       key={cls.name}
-                      whileHover={{ y: -4, scale: 1.01 }}
+                      whileHover={{ y: -2 }}
                       onClick={() => handleSelectClass(cls.name)}
-                      className={`cursor-pointer rounded-3xl border p-5 shadow-sm flex flex-col justify-between gap-4 transition-all hover:shadow-2xl ${
-                        isAccountClass ? "ring-2 ring-purple-500/40 border-purple-500/30" : ""
+                      className={`group cursor-pointer rounded-md border p-5 flex flex-col justify-between gap-4 transition-all bg-card ${
+                        isAccountClass ? "border-foreground/30 ring-1 ring-border" : "border-border"
                       }`}
-                      style={{
-                        background: "var(--theme-card-bg)",
-                        borderColor: isAccountClass ? undefined : "var(--theme-border)",
-                      }}
                     >
                       <div className="flex items-start justify-between">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10 text-purple-400 font-extrabold text-base border border-purple-500/20 shadow-inner">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-secondary text-foreground font-bold text-sm font-mono">
                           {cls.classNumber || cls.name.replace(/Class\s*/i, "")}
                         </div>
                         <div className="flex items-center gap-1.5">
                           {isAccountClass && (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                            <span className="px-2.5 py-1 rounded-full text-xs font-mono uppercase tracking-wider bg-secondary text-foreground border border-border">
                               Your Class
                             </span>
                           )}
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-500/10 text-[var(--theme-text-secondary)]">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-mono bg-secondary text-muted-foreground border border-border">
                             {cls.totalBooks} Books
                           </span>
                         </div>
                       </div>
 
                       <div>
-                        <h4 className="text-lg font-bold text-[var(--theme-text)]">{cls.name}</h4>
-                        <p className="text-xs text-[var(--theme-text-secondary)] mt-1 line-clamp-2 leading-relaxed">
+                        <h4 className="text-base font-bold text-foreground">{cls.name}</h4>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
                           {subjectKeys.length} Subjects: {subjectKeys.join(", ")}
                         </p>
                       </div>
 
-                      <div className="pt-3 border-t border-[var(--theme-border)] flex items-center justify-between text-xs font-semibold text-purple-400">
+                      <div className="pt-3 border-t border-border flex items-center justify-between text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                         <span>Open Curriculum</span>
-                        <ChevronRight className="h-4 w-4" />
+                        <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </motion.div>
                   );
@@ -774,57 +750,52 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => setSelectedClass(null)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] transition"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   <span>Back to all classes</span>
                 </button>
-                <span className="text-xs font-bold text-[var(--theme-text)]">
+                <span className="text-xs font-mono text-muted-foreground">
                   {classMap[selectedClass]?.totalBooks || 0} Textbooks in {selectedClass}
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {Object.values(classMap[selectedClass]?.subjects || {}).map((subj) => {
-                  // Use the first book's cover as the preview cover for this subject folder
                   const firstBook = subj.books[0];
                   return (
                     <motion.div
                       key={subj.name}
-                      whileHover={{ y: -4 }}
+                      whileHover={{ y: -2 }}
                       onClick={() => handleSelectSubject(subj.name)}
-                      className="group cursor-pointer rounded-3xl border p-5 shadow-sm flex flex-col justify-between gap-4 transition-all hover:shadow-2xl"
-                      style={{
-                        background: "var(--theme-card-bg)",
-                        borderColor: "var(--theme-border)",
-                      }}
+                      className="group cursor-pointer rounded-md border border-border bg-card p-5 flex flex-col justify-between gap-4 transition-all"
                     >
                       {/* Dynamic Subject Cover Thumbnail */}
                       {firstBook ? (
                         <PdfCoverThumbnail fullPath={firstBook.fullPath} title={firstBook.title} />
                       ) : (
-                        <div className="h-52 w-full flex flex-col items-center justify-center rounded-2xl bg-purple-500/10 text-purple-400">
+                        <div className="h-52 w-full flex flex-col items-center justify-center rounded-md bg-secondary text-muted-foreground">
                           <Folder className="h-10 w-10 opacity-70" />
                         </div>
                       )}
 
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-mono bg-secondary text-muted-foreground border border-border">
                             {subj.books.length} Textbooks
                           </span>
                         </div>
-                        <h4 className="text-base font-bold text-[var(--theme-text)] group-hover:text-purple-400 transition">
+                        <h4 className="text-base font-bold text-foreground transition-colors">
                           {subj.name}
                         </h4>
-                        <p className="text-xs text-[var(--theme-text-secondary)]">
+                        <p className="text-xs text-muted-foreground">
                           NCERT syllabus textbook editions
                         </p>
                       </div>
 
-                      <div className="pt-3 border-t border-[var(--theme-border)] flex items-center justify-between text-xs font-semibold text-purple-400">
+                      <div className="pt-3 border-t border-border flex items-center justify-between text-xs font-medium text-muted-foreground group-hover:text-foreground transition-colors">
                         <span>Browse Books</span>
-                        <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition" />
+                        <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                       </div>
                     </motion.div>
                   );
@@ -836,10 +807,10 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
           {/* VIEW LEVEL 3: BOOK SELECTION (GRID / LIST) WITHIN SELECTED SUBJECT */}
           {selectedClass && selectedSubject && (
             <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border bg-[var(--theme-card-bg)] shadow-sm" style={{ borderColor: "var(--theme-border)" }}>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-md border border-border bg-card">
                 <button
                   onClick={() => setSelectedSubject(null)}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--theme-text-secondary)] hover:text-[var(--theme-text)] transition"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   <span>Back to {selectedClass} subjects</span>
@@ -849,15 +820,15 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                 <div className="flex flex-wrap items-center gap-3">
                   {/* Language Filter */}
                   {availableLanguages.length > 2 && (
-                    <div className="flex items-center gap-1.5 text-xs text-[var(--theme-text-secondary)]">
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <SlidersHorizontal className="h-3.5 w-3.5" />
                       <select
                         value={selectedLanguage}
                         onChange={(e) => setSelectedLanguage(e.target.value)}
-                        className="bg-transparent border-none text-xs font-semibold text-[var(--theme-text)] focus:outline-none cursor-pointer"
+                        className="bg-transparent border-none text-xs font-medium text-foreground focus:outline-none cursor-pointer"
                       >
                         {availableLanguages.map((lang) => (
-                          <option key={lang} value={lang} className="bg-slate-900 text-white">
+                          <option key={lang} value={lang} className="bg-card text-foreground">
                             {lang}
                           </option>
                         ))}
@@ -866,19 +837,19 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                   )}
 
                   {/* Sort Selector */}
-                  <div className="flex items-center gap-1.5 text-xs text-[var(--theme-text-secondary)]">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <ArrowUpDown className="h-3.5 w-3.5" />
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as "name" | "size")}
-                      className="bg-transparent border-none text-xs font-semibold text-[var(--theme-text)] focus:outline-none cursor-pointer"
+                      className="bg-transparent border-none text-xs font-medium text-foreground focus:outline-none cursor-pointer"
                     >
-                      <option value="name" className="bg-slate-900 text-white">Name (A-Z)</option>
-                      <option value="size" className="bg-slate-900 text-white">File Size</option>
+                      <option value="name" className="bg-card text-foreground">Name (A-Z)</option>
+                      <option value="size" className="bg-card text-foreground">File Size</option>
                     </select>
                   </div>
 
-                  <span className="text-xs font-bold text-[var(--theme-text)] pl-2 border-l border-[var(--theme-border)]">
+                  <span className="text-xs font-mono text-muted-foreground pl-2 border-l border-border">
                     {currentSubjectBooks.length} Books
                   </span>
                 </div>
@@ -889,30 +860,26 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                   {currentSubjectBooks.map((book) => (
                     <div
                       key={book.fullPath}
-                      className="group rounded-3xl border p-4 shadow-sm flex flex-col justify-between gap-3.5 transition-all hover:shadow-2xl hover:-translate-y-1.5"
-                      style={{
-                        background: "var(--theme-card-bg)",
-                        borderColor: "var(--theme-border)",
-                      }}
+                      className="group rounded-md border border-border bg-card p-4 flex flex-col justify-between gap-3.5 transition-transform hover:-translate-y-px"
                     >
                       {/* First Page Dynamic Cover */}
                       <PdfCoverThumbnail fullPath={book.fullPath} title={book.title} />
 
                       <div className="space-y-1.5">
-                        <div className="flex items-center justify-between text-[10px] font-bold">
-                          <span className="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                        <div className="flex items-center justify-between text-xs font-mono">
+                          <span className="px-2.5 py-1 rounded-full bg-secondary text-muted-foreground border border-border">
                             {book.language} Edition
                           </span>
-                          <span className="font-mono text-[var(--theme-text-secondary)]">
+                          <span className="text-muted-foreground">
                             {formatBytes(book.size)}
                           </span>
                         </div>
 
-                        <h3 className="text-sm font-bold text-[var(--theme-text)] line-clamp-2 leading-snug" title={book.title}>
+                        <h3 className="text-sm font-bold text-foreground line-clamp-2 leading-snug" title={book.title}>
                           {book.title}
                         </h3>
-                        <p className="text-[11px] text-[var(--theme-text-secondary)] flex items-center gap-1">
-                          <FileCheck2 className="h-3 w-3 text-teal-400" />
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <FileCheck2 className="h-3 w-3 text-foreground" />
                           <span>Official NCERT Edition</span>
                         </p>
                       </div>
@@ -920,7 +887,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                       <button
                         type="button"
                         onClick={() => handleOpenBook(book)}
-                        className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 transition shadow-md shadow-purple-500/20 hover:scale-[1.02] active:scale-[0.98]"
+                        className="w-full inline-flex items-center justify-center gap-1.5 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity active:scale-[0.98]"
                       >
                         <BookOpen className="h-3.5 w-3.5" />
                         <span>Read Textbook</span>
@@ -930,28 +897,22 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                 </div>
               ) : (
                 /* List View */
-                <div
-                  className="rounded-3xl border overflow-hidden divide-y divide-[var(--theme-border)] shadow-sm"
-                  style={{
-                    background: "var(--theme-card-bg)",
-                    borderColor: "var(--theme-border)",
-                  }}
-                >
+                <div className="rounded-md border border-border bg-card divide-y divide-border overflow-hidden">
                   {currentSubjectBooks.map((book) => (
                     <div
                       key={book.fullPath}
-                      className="p-4 flex items-center justify-between gap-4 transition hover:bg-purple-500/5 group"
+                      className="p-4 flex items-center justify-between gap-4 transition-colors hover:bg-secondary/40 group"
                     >
                       <div className="flex items-center gap-3.5 overflow-hidden">
                         <PdfCoverThumbnail fullPath={book.fullPath} title={book.title} aspect="thumb" />
                         <div className="truncate">
-                          <h4 className="text-sm font-bold text-[var(--theme-text)] truncate">{book.title}</h4>
-                          <div className="flex items-center gap-2 mt-1 text-[11px] text-[var(--theme-text-secondary)]">
-                            <span className="font-semibold text-purple-400">{book.language} Edition</span>
+                          <h4 className="text-sm font-bold text-foreground truncate">{book.title}</h4>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground font-mono">
+                            <span className="font-medium text-foreground">{book.language} Edition</span>
                             <span>•</span>
-                            <span className="font-mono">{formatBytes(book.size)}</span>
+                            <span>{formatBytes(book.size)}</span>
                             <span>•</span>
-                            <span className="text-teal-400 font-medium">Cleaned PDF</span>
+                            <span className="text-foreground font-medium">Cleaned PDF</span>
                           </div>
                         </div>
                       </div>
@@ -959,7 +920,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                       <button
                         type="button"
                         onClick={() => handleOpenBook(book)}
-                        className="flex-shrink-0 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold text-xs text-white bg-purple-600 hover:bg-purple-700 transition shadow-sm hover:scale-105 active:scale-95"
+                        className="flex-shrink-0 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity active:scale-95"
                       >
                         <BookOpen className="h-3.5 w-3.5" />
                         <span>Read</span>

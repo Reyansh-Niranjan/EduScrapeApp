@@ -1,190 +1,194 @@
-import { useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
-import ThemeToggle from "./ThemeToggle";
+import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollToPlugin } from "gsap/ScrollToPlugin";
+import { Menu, X, ArrowUpRight } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
+import { Button } from "@/components/ui/button";
+
+gsap.registerPlugin(useGSAP, ScrollTrigger, ScrollToPlugin);
 
 export default function Header() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
+  // Close mobile menu on Escape & lock body scroll
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const scrollToSection = useCallback((sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-      setIsMobileMenuOpen(false);
+    document.addEventListener("keydown", handleKeyDown);
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
     }
-  }, []);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
-  const navigateToHash = useCallback((hash: string) => {
-    window.location.hash = hash;
-    setIsMobileMenuOpen(false);
-  }, []);
+  // GSAP Scroll Progress Indicator (scrubs 0 to 1 based on page scroll)
+  useGSAP(
+    () => {
+      if (progressBarRef.current) {
+        gsap.to(progressBarRef.current, {
+          scaleX: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: document.body,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 0.1,
+          },
+        });
+      }
+    },
+    { scope: headerRef }
+  );
+
+  const navLinks = [
+    { label: "Overview", href: "#home" },
+    { label: "Architecture", href: "#about" },
+    { label: "Ecosystem", href: "#ecosystem" },
+    { label: "Creator", href: "#creator" },
+  ];
+
+  // High-performance GSAP ScrollTo with offset compensation
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setMobileMenuOpen(false);
+
+    gsap.to(window, {
+      duration: 0.85,
+      scrollTo: { y: href, offsetY: 56 },
+      ease: "power2.inOut",
+      overwrite: "auto",
+    });
+  };
+
+  const navigateToLogin = () => {
+    window.history.pushState({}, "", "#login");
+    window.dispatchEvent(new Event("hashchange"));
+  };
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
-      style={{
-        background: "var(--theme-nav-bg)",
-        borderBottom: isScrolled ? "1px solid var(--theme-border)" : "none",
-        boxShadow: isScrolled ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-        borderBottomLeftRadius: "var(--radius-xl)",
-        borderBottomRightRadius: "var(--radius-xl)",
-        overflow: "hidden",
-      }}
+      ref={headerRef}
+      className="fixed top-0 left-0 right-0 z-50 h-14 border-b border-border bg-background/85 backdrop-blur-md transition-colors"
     >
-      <nav className="container mx-auto px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <img src="/logo-icon.svg" alt="EduScrapeApp" className="w-10 h-10 rounded-lg" />
-            <span className="font-bold text-xl" style={{ color: "var(--theme-text)" }}>
+      {/* GSAP Scroll Progress Indicator */}
+      <div
+        ref={progressBarRef}
+        className="absolute top-0 left-0 right-0 h-[2px] bg-foreground origin-left scale-x-0 z-50 pointer-events-none"
+      />
+
+      <div className="container mx-auto px-4 sm:px-6 h-full max-w-6xl flex items-center justify-between">
+        {/* Brand Lockup */}
+        <a
+          href="#home"
+          onClick={(e) => handleNavClick(e, "#home")}
+          className="flex items-center gap-2.5 text-foreground hover:opacity-85 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
+        >
+          <div className="h-7 w-7 rounded-md bg-foreground text-background flex items-center justify-center font-bold font-mono text-xs">
+            E
+          </div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-bold text-sm tracking-tight text-foreground">
               EduScrapeApp
             </span>
           </div>
+        </a>
 
-          <motion.div
-            className="hidden md:flex items-center space-x-8"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <motion.button
-              onClick={() => scrollToSection("home")}
-              className="font-medium"
-              style={{ color: "var(--theme-text-secondary)" }}
-              whileHover={{ color: "#8B5CF6", y: -2 }}
-              transition={{ duration: 0.2 }}
+        {/* Desktop Navigation Links with GSAP Smooth Scroll */}
+        <nav className="hidden md:flex items-center gap-5 text-xs font-medium text-muted-foreground">
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={(e) => handleNavClick(e, link.href)}
+              className="hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
             >
-              Home
-            </motion.button>
-            <motion.button
-              onClick={() => scrollToSection("about")}
-              className="font-medium"
-              style={{ color: "var(--theme-text-secondary)" }}
-              whileHover={{ color: "#8B5CF6", y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              Why EduScrapeApp
-            </motion.button>
-            <motion.button
-              onClick={() => scrollToSection("projects")}
-              className="font-medium"
-              style={{ color: "var(--theme-text-secondary)" }}
-              whileHover={{ color: "#8B5CF6", y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              Features
-            </motion.button>
-            <motion.button
-              onClick={() => scrollToSection("creator")}
-              className="font-medium"
-              style={{ color: "var(--theme-text-secondary)" }}
-              whileHover={{ color: "#8B5CF6", y: -2 }}
-              transition={{ duration: 0.2 }}
-            >
-              Team
-            </motion.button>
-          </motion.div>
+              {link.label}
+            </a>
+          ))}
+        </nav>
 
-          <motion.div
-            className="hidden md:flex items-center space-x-4"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
+        {/* Action Controls & Theme Switcher */}
+        <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle />
+          <Button
+            size="sm"
+            onClick={navigateToLogin}
+            className="text-xs h-8 px-3 py-1.5 gap-1.5 font-medium cursor-pointer"
           >
-            <ThemeToggle />
-            <motion.button
-              onClick={() => navigateToHash("#login")}
-              className="btn-primary"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-            >
-              Login
-            </motion.button>
-          </motion.div>
-
-          <button
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            style={{ color: "var(--theme-text)" }}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+            <span>Sign In</span>
+            <ArrowUpRight className="w-3 h-3 opacity-70" />
+          </Button>
         </div>
 
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
+        {/* Mobile Hamburger Button */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-1.5 rounded-md border border-border text-foreground hover:bg-secondary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
+            aria-label="Toggle Navigation Menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-nav-menu"
+          >
+            {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Drawer Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
           <motion.div
-            className="md:hidden mt-4 pb-4 border-t"
-            style={{ borderColor: "var(--theme-border)" }}
+            id="mobile-nav-menu"
+            role="navigation"
+            aria-label="Mobile navigation"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="md:hidden border-b border-border bg-background px-4 py-4 space-y-3 font-mono text-xs overflow-hidden"
           >
-            <div className="flex flex-col space-y-3 pt-4">
-              <motion.button
-                onClick={() => scrollToSection("home")}
-                className="text-left font-medium transition-colors duration-200 hover:text-purple-500"
-                style={{ color: "var(--theme-text-secondary)" }}
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.2 }}
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => {
+                  setMobileMenuOpen(false);
+                  handleNavClick(e, link.href);
+                }}
+                className="block py-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background rounded-sm"
               >
-                Home
-              </motion.button>
-              <motion.button
-                onClick={() => scrollToSection("about")}
-                className="text-left font-medium transition-colors duration-200 hover:text-purple-500"
-                style={{ color: "var(--theme-text-secondary)" }}
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.2 }}
+                {link.label}
+              </a>
+            ))}
+            <div className="pt-2 border-t border-border">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigateToLogin();
+                }}
+                className="w-full text-xs cursor-pointer"
               >
-                Why EduScrapeApp
-              </motion.button>
-              <motion.button
-                onClick={() => scrollToSection("projects")}
-                className="text-left font-medium transition-colors duration-200 hover:text-purple-500"
-                style={{ color: "var(--theme-text-secondary)" }}
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.2 }}
-              >
-                Features
-              </motion.button>
-              <motion.button
-                onClick={() => scrollToSection("creator")}
-                className="text-left font-medium transition-colors duration-200 hover:text-purple-500"
-                style={{ color: "var(--theme-text-secondary)" }}
-                whileHover={{ x: 5 }}
-                transition={{ duration: 0.2 }}
-              >
-                Team
-              </motion.button>
-              <div className="pt-2 flex items-center justify-between">
-                <span className="text-xs text-[var(--theme-text-secondary)]">Appearance</span>
-                <ThemeToggle />
-              </div>
-              <motion.button
-                onClick={() => navigateToHash("#login")}
-                className="btn-primary text-center mt-2"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ duration: 0.2 }}
-              >
-                Login / Sign Up
-              </motion.button>
+                Sign In to Library
+              </Button>
             </div>
           </motion.div>
         )}
-      </nav>
+      </AnimatePresence>
     </header>
   );
 }
