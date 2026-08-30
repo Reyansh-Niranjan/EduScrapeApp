@@ -1,5 +1,6 @@
-// StudyOS NCERT Chapter Catalog & Subject Mappings
-// Auto-generated & verified for 100% NCERT book code compatibility
+// Auto-generated full StudyOS catalog across all grades 5-12
+export type ClassNumber = "5" | "6" | "7" | "8" | "9" | "10" | "11" | "12";
+export type StreamKey = "all" | "science" | "commerce" | "humanities";
 
 export interface ChapterItem {
   code: string;
@@ -15,111 +16,51 @@ export interface SubjectData {
   icon: string;
   label: string;
   cacheKey: string;
-  groups: ChapterGroup[];
+  chapters?: ChapterItem[];
+  groups?: ChapterGroup[];
 }
 
-export type ClassNumber = '5' | '6' | '7' | '8' | '9' | '10' | '11' | '12';
-export type StreamKey = 'science' | 'commerce' | 'humanities';
-
 export const CLASS_SUBJECT_ORDERS: Record<string, string[]> = {
-  "5": [
-    "c5_mathematics",
-    "c5_evs",
-    "c5_english",
-    "c5_hindi"
+  "5": ["c5_mathematics", "c5_evs", "c5_english", "c5_hindi"],
+  "6": ["c6_science", "c6_mathematics", "c6_social_science", "c6_english", "c6_hindi"],
+  "7": ["c7_science", "c7_mathematics", "c7_social_science", "c7_english", "c7_hindi"],
+  "8": ["c8_science", "c8_mathematics", "c8_social_science", "c8_english", "c8_hindi"],
+  "9": ["c9_science", "c9_mathematics", "c9_social_science", "c9_english", "c9_hindi"],
+  "10": ["science", "mathematics", "social_science", "english", "hindi_a", "hindi_b"],
+  "11": [
+    "c11_physics", "c11_chemistry", "c11_biology", "c11_mathematics",
+    "c11_accountancy", "c11_business_studies", "c11_economics",
+    "c11_history", "c11_political_science", "c11_geography", "c11_sociology", "c11_psychology",
+    "c11_english", "c11_hindi"
   ],
-  "6": [
-    "c6_science",
-    "c6_mathematics",
-    "c6_social_science",
-    "c6_english",
-    "c6_hindi"
+  "12": [
+    "c12_physics", "c12_chemistry", "c12_biology", "c12_mathematics",
+    "c12_accountancy", "c12_business_studies", "c12_economics",
+    "c12_history", "c12_political_science", "c12_geography", "c12_sociology", "c12_psychology",
+    "c12_english", "c12_hindi"
   ],
-  "7": [
-    "c7_science",
-    "c7_mathematics",
-    "c7_social_science",
-    "c7_english",
-    "c7_hindi"
-  ],
-  "8": [
-    "c8_science",
-    "c8_mathematics",
-    "c8_social_science",
-    "c8_english",
-    "c8_hindi"
-  ],
-  "9": [
-    "c9_science",
-    "c9_mathematics",
-    "c9_english",
-    "c9_hindi",
-    "c9_social_science"
-  ],
-  "10": [
-    "science",
-    "mathematics",
-    "social_science",
-    "english",
-    "hindi_a",
-    "hindi_b"
-  ]
 };
 
 export const STREAM_SUBJECT_ORDERS: Record<string, Record<StreamKey, string[]>> = {
   "11": {
-    "science": [
-      "c11_mathematics",
-      "c11_physics",
-      "c11_chemistry",
-      "c11_biology",
-      "c11_english",
-      "c11_hindi"
-    ],
-    "commerce": [
-      "c11_accountancy",
-      "c11_business_studies",
-      "c11_economics",
-      "c11_english",
-      "c11_hindi"
-    ],
-    "humanities": [
-      "c11_geography",
-      "c11_history",
-      "c11_political_science",
-      "c11_sociology",
-      "c11_psychology",
-      "c11_english",
-      "c11_hindi"
-    ]
+    all: CLASS_SUBJECT_ORDERS["11"],
+    science: ["c11_physics", "c11_chemistry", "c11_biology", "c11_mathematics", "c11_english", "c11_hindi"],
+    commerce: ["c11_accountancy", "c11_business_studies", "c11_economics", "c11_mathematics", "c11_english", "c11_hindi"],
+    humanities: ["c11_history", "c11_political_science", "c11_geography", "c11_sociology", "c11_psychology", "c11_economics", "c11_english", "c11_hindi"],
   },
   "12": {
-    "science": [
-      "c12_mathematics",
-      "c12_physics",
-      "c12_chemistry",
-      "c12_biology",
-      "c12_english",
-      "c12_hindi"
-    ],
-    "commerce": [
-      "c12_accountancy",
-      "c12_business_studies",
-      "c12_economics",
-      "c12_english",
-      "c12_hindi"
-    ],
-    "humanities": [
-      "c12_geography",
-      "c12_history",
-      "c12_political_science",
-      "c12_sociology",
-      "c12_psychology",
-      "c12_english",
-      "c12_hindi"
-    ]
-  }
+    all: CLASS_SUBJECT_ORDERS["12"],
+    science: ["c12_physics", "c12_chemistry", "c12_biology", "c12_mathematics", "c12_english", "c12_hindi"],
+    commerce: ["c12_accountancy", "c12_business_studies", "c12_economics", "c12_mathematics", "c12_english", "c12_hindi"],
+    humanities: ["c12_history", "c12_political_science", "c12_geography", "c12_sociology", "c12_psychology", "c12_economics", "c12_english", "c12_hindi"],
+  },
 };
+
+export function isBoardClass(classNum: string | number): boolean {
+  const num = String(classNum).replace(/\D/g, "");
+  return num === "10" || num === "12";
+}
+
 
 export const STUDYOS_CATALOG: Record<string, SubjectData> = {
   "science": {
@@ -4339,33 +4280,3 @@ export const STUDYOS_CATALOG: Record<string, SubjectData> = {
     ]
   }
 };
-
-// Map NCERT book codes (e.g. 'jesc1', 'leph1') to their Subject Data and Chapters
-export const NCERT_BOOK_CODE_MAP: Record<string, { cacheKey: string; subjectLabel: string; classNum: string }> = (() => {
-  const map: Record<string, { cacheKey: string; subjectLabel: string; classNum: string }> = {};
-
-  for (const [cacheKey, subj] of Object.entries(STUDYOS_CATALOG)) {
-    // Determine class
-    let classNum = '10';
-    if (cacheKey.startsWith('c5_')) classNum = '5';
-    else if (cacheKey.startsWith('c6_')) classNum = '6';
-    else if (cacheKey.startsWith('c7_')) classNum = '7';
-    else if (cacheKey.startsWith('c8_')) classNum = '8';
-    else if (cacheKey.startsWith('c9_')) classNum = '9';
-    else if (cacheKey.startsWith('c11_')) classNum = '11';
-    else if (cacheKey.startsWith('c12_')) classNum = '12';
-
-    for (const group of subj.groups) {
-      for (const ch of group.chapters) {
-        if (ch.code && ch.code.length >= 6) {
-          const bookCode = ch.code.slice(0, -2);
-          if (!map[bookCode]) {
-            map[bookCode] = { cacheKey, subjectLabel: subj.label, classNum };
-          }
-        }
-      }
-    }
-  }
-
-  return map;
-})();

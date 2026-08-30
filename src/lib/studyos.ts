@@ -1,8 +1,8 @@
 // StudyOS API Client & Learning Kit Integration Service
 import {
   STUDYOS_CATALOG,
-  NCERT_BOOK_CODE_MAP,
 } from "./studyosCatalog";
+export { isBoardClass } from "./studyosCatalog";
 import type { SubjectData, ChapterItem } from "./studyosCatalog";
 
 export interface PYQQuestion {
@@ -106,38 +106,52 @@ function setToCache<T>(key: string, data: T): void {
   }
 }
 
+import { supabase } from "./supabaseClient";
+
+/**
+ * Ensures user is authenticated with Supabase before allowing any StudyOS API call.
+ * Returns valid Authorization Bearer header.
+ */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data?.session?.access_token) {
+    throw new Error("AUTH_REQUIRED: You must be signed in to access StudyOS materials.");
+  }
+  return {
+    Accept: "application/json",
+    Authorization: `Bearer ${data.session.access_token}`,
+  };
+}
+
 /**
  * Build safe API endpoint URL, prioritizing relative proxy route
  */
 function getApiEndpoint(path: string): string {
-  // In browser, use proxy route /api/studyos
   return `/api/studyos${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 /**
- * Fetch Previous Year Questions for a chapter
+ * Fetch Previous Year Questions for a chapter (Authentication Required)
  */
 export async function fetchPYQs(
   cacheKey: string,
   chapterCode: string
 ): Promise<PYQResponse> {
+  const authHeaders = await getAuthHeaders();
+
   const cacheId = `pyq_${cacheKey}_${chapterCode}`;
   const cached = getFromCache<PYQResponse>(cacheId);
   if (cached) return cached;
 
   const url = getApiEndpoint(`/pyq/${cacheKey}/${chapterCode}`);
-  const fallbackUrl = `https://www.studyos.co.in/api/pyq/${cacheKey}/${chapterCode}`;
 
   try {
-    let res = await fetch(url, {
-      headers: { Accept: "application/json" },
+    const res = await fetch(url, {
+      headers: authHeaders,
     });
 
-    if (!res.ok && res.status === 404) {
-      // Try fallback direct if proxy had path mismatch
-      res = await fetch(fallbackUrl, {
-        headers: { Accept: "application/json" },
-      });
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("AUTH_REQUIRED: Unauthorized. Please sign in to view past year board questions.");
     }
 
     if (!res.ok) {
@@ -154,28 +168,27 @@ export async function fetchPYQs(
 }
 
 /**
- * Fetch full Chapter Study Kit (Mindmap, Cheatsheet, Flashcards, MCQs, Important Questions)
+ * Fetch full Chapter Study Kit (Authentication Required)
  */
 export async function fetchChapterKit(
   cacheKey: string,
   chapterCode: string
 ): Promise<ChapterKitData> {
+  const authHeaders = await getAuthHeaders();
+
   const cacheId = `kit_${cacheKey}_${chapterCode}`;
   const cached = getFromCache<ChapterKitData>(cacheId);
   if (cached) return cached;
 
   const url = getApiEndpoint(`/chapter/${cacheKey}/${chapterCode}`);
-  const fallbackUrl = `https://www.studyos.co.in/api/chapter/${cacheKey}/${chapterCode}`;
 
   try {
-    let res = await fetch(url, {
-      headers: { Accept: "application/json" },
+    const res = await fetch(url, {
+      headers: authHeaders,
     });
 
-    if (!res.ok && res.status === 404) {
-      res = await fetch(fallbackUrl, {
-        headers: { Accept: "application/json" },
-      });
+    if (res.status === 401 || res.status === 403) {
+      throw new Error("AUTH_REQUIRED: Unauthorized. Please sign in to view chapter study kits.");
     }
 
     if (!res.ok) {
@@ -203,6 +216,15 @@ export async function fetchChapterKit(
   }
 }
 
+export function getSubjectChapters(subj?: SubjectData | null): ChapterItem[] {
+  if (!subj) return [];
+  if (subj.chapters && subj.chapters.length > 0) return subj.chapters;
+  if (subj.groups && subj.groups.length > 0) {
+    return subj.groups.flatMap((g) => g.chapters || []);
+  }
+  return [];
+}
+
 /**
  * Matches an NCERT book or chapter from EduScrapeApp's Library/Reader to StudyOS Subject and Chapter
  */
@@ -217,23 +239,24 @@ export function findChaptersForBook(
 } | null {
   const lower = fullPathOrTitle.toLowerCase();
 
-  // 1. Direct NCERT code extraction (e.g. jesc1, jemh1, leph1, lech1, etc.)
-  const codeMatch = lower.match(/([a-z]{4,5}\d{1,2})/);
+  // 1. Direct NCERT code extraction (e.g. jesc1, jemh1, leph1, lech1, eemm1, fesc1, etc.)
+  const codeMatch = lower.match(/([a-z]{4,5}\d{1,3})/);
   if (codeMatch) {
     const rawCode = codeMatch[1];
-    // Check direct book code map
-    const mapped = NCERT_BOOK_CODE_MAP[rawCode] || NCERT_BOOK_CODE_MAP[rawCode.slice(0, 5)];
-    if (mapped && STUDYOS_CATALOG[mapped.cacheKey]) {
-      const subj = STUDYOS_CATALOG[mapped.cacheKey];
-      const allChapters = subj.groups.flatMap((g) => g.chapters);
+    for (const subj of Object.values(STUDYOS_CATALOG)) {
+      const allChapters = getSubjectChapters(subj);
       const active = allChapters.find(
-        (c) => c.code.toLowerCase() === rawCode.toLowerCase()
+        (c) =>
+          c.code.toLowerCase() === rawCode.toLowerCase() ||
+          rawCode.toLowerCase().startsWith(c.code.toLowerCase().slice(0, 4))
       );
-      return {
-        subject: subj,
-        chapters: allChapters,
-        activeChapter: active || allChapters[0],
-      };
+      if (active) {
+        return {
+          subject: subj,
+          chapters: allChapters,
+          activeChapter: active,
+        };
+      }
     }
   }
 
@@ -264,7 +287,7 @@ export function findChaptersForBook(
       (subjClean === "mathematics" && lower.includes("math")) ||
       (subjClean === "science" && lower.includes("science"))
     ) {
-      const allChapters = subj.groups.flatMap((g) => g.chapters);
+      const allChapters = getSubjectChapters(subj);
 
       // Check if a specific chapter matches
       let active: ChapterItem | undefined;

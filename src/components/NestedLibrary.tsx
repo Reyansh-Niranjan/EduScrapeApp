@@ -22,6 +22,7 @@ import {
 import * as pdfjsLib from "pdfjs-dist";
 import { supabase } from "../lib/supabaseClient";
 import { findChaptersForBook } from "../lib/studyos";
+import { isBoardClass } from "../lib/studyosCatalog";
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -602,10 +603,10 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({
                             );
                           }}
                           className="inline-flex items-center justify-center gap-1 h-10 sm:h-9 px-3 rounded-md border border-border bg-secondary/80 hover:bg-secondary text-foreground text-xs font-medium transition-colors touch-manipulation active:scale-95 cursor-pointer shadow-xs"
-                          title="View Board PYQs & Study Kit"
+                          title={isBoardClass(book.className) ? "View Board PYQs & Study Kit" : "View Chapter Study Kit & Cheatsheet"}
                         >
                           <GraduationCap className="h-3.5 w-3.5" />
-                          <span>PYQs</span>
+                          <span>{isBoardClass(book.className) ? "PYQs" : "Study Kit"}</span>
                         </button>
                       )}
                     </div>
@@ -647,10 +648,10 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({
                             );
                           }}
                           className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-md border border-border bg-secondary/80 hover:bg-secondary text-foreground text-xs font-medium transition-colors touch-manipulation active:scale-95 cursor-pointer"
-                          title="View Board PYQs & Study Kit"
+                          title={isBoardClass(book.className) ? "View Board PYQs & Study Kit" : "View Chapter Study Kit & Cheatsheet"}
                         >
                           <GraduationCap className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">PYQs</span>
+                          <span className="hidden sm:inline">{isBoardClass(book.className) ? "PYQs" : "Study Kit"}</span>
                         </button>
                       )}
                       <button
@@ -977,10 +978,10 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({
                               );
                             }}
                             className="inline-flex items-center justify-center gap-1 h-10 sm:h-9 px-3 rounded-md border border-border bg-secondary/80 hover:bg-secondary text-foreground text-xs font-medium transition-colors touch-manipulation active:scale-95 cursor-pointer shadow-xs"
-                            title="View Board PYQs & Study Kit"
+                            title={isBoardClass(book.className) ? "View Board PYQs & Study Kit" : "View Chapter Study Kit & Cheatsheet"}
                           >
                             <GraduationCap className="h-3.5 w-3.5" />
-                            <span>PYQs</span>
+                            <span>{isBoardClass(book.className) ? "PYQs" : "Study Kit"}</span>
                           </button>
                         )}
                       </div>
@@ -1020,10 +1021,10 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({
                               );
                             }}
                             className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-md border border-border bg-secondary/80 hover:bg-secondary text-foreground text-xs font-medium transition-colors touch-manipulation active:scale-95 cursor-pointer"
-                            title="View Board PYQs & Study Kit"
+                            title={isBoardClass(book.className) ? "View Board PYQs & Study Kit" : "View Chapter Study Kit & Cheatsheet"}
                           >
                             <GraduationCap className="h-3.5 w-3.5" />
-                            <span className="hidden sm:inline">PYQs</span>
+                            <span className="hidden sm:inline">{isBoardClass(book.className) ? "PYQs" : "Study Kit"}</span>
                           </button>
                         )}
                         <button

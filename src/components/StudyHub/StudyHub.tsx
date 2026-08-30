@@ -19,11 +19,14 @@ import {
   ArrowLeft,
   Flame,
   SlidersHorizontal,
+  Lock,
+  UserCheck,
 } from "lucide-react";
 import {
   STUDYOS_CATALOG,
   CLASS_SUBJECT_ORDERS,
   STREAM_SUBJECT_ORDERS,
+  isBoardClass,
 } from "../../lib/studyosCatalog";
 import type {
   SubjectData,
@@ -34,6 +37,7 @@ import type {
 import {
   fetchPYQs,
   fetchChapterKit,
+  getSubjectChapters,
   toggleBookmarkPYQ,
   isPYQBookmarked,
   getBookmarkedPYQs,
@@ -58,8 +62,8 @@ interface StudyHubProps {
 const CLASS_OPTIONS: { key: ClassNumber; label: string; isBoard?: boolean }[] = [
   { key: "10", label: "Class 10", isBoard: true },
   { key: "12", label: "Class 12", isBoard: true },
-  { key: "9", label: "Class 9" },
   { key: "11", label: "Class 11" },
+  { key: "9", label: "Class 9" },
   { key: "8", label: "Class 8" },
   { key: "7", label: "Class 7" },
   { key: "6", label: "Class 6" },
@@ -70,21 +74,24 @@ export const StudyHub: React.FC<StudyHubProps> = ({
   initialClass = "10",
   initialCacheKey,
   initialChapterCode,
-  initialTab = "pyq",
+  initialTab,
   onClose,
   onOpenPdfForChapter,
 }) => {
-  const [selectedClass, setSelectedClass] = useState<ClassNumber>(
-    (CLASS_OPTIONS.some((c) => c.key === initialClass) ? initialClass : "10") as ClassNumber
-  );
+  const normClass = (CLASS_OPTIONS.some((c) => c.key === initialClass) ? initialClass : "10") as ClassNumber;
+  const isInitialBoard = isBoardClass(normClass);
+
+  const [selectedClass, setSelectedClass] = useState<ClassNumber>(normClass);
   const [selectedStream, setSelectedStream] = useState<StreamKey>("science");
   const [selectedCacheKey, setSelectedCacheKey] = useState<string>(
-    initialCacheKey || (initialClass === "12" ? "c12_physics" : "science")
+    initialCacheKey || (normClass === "12" ? "c12_physics" : normClass === "11" ? "c11_physics" : normClass === "10" ? "science" : `c${normClass}_mathematics`)
   );
   const [selectedChapterCode, setSelectedChapterCode] = useState<string>(
     initialChapterCode || ""
   );
-  const [activeTab, setActiveTab] = useState<StudyHubTab>(initialTab);
+  const [activeTab, setActiveTab] = useState<StudyHubTab>(
+    initialTab || (isInitialBoard ? "pyq" : "cheatsheet")
+  );
 
   // Data states
   const [loading, setLoading] = useState(false);
@@ -125,10 +132,22 @@ export const StudyHub: React.FC<StudyHubProps> = ({
   // Current Subject Data
   const currentSubject: SubjectData | undefined = STUDYOS_CATALOG[selectedCacheKey];
 
+  // Rendered Groups / Chapters
+  const renderedGroups = useMemo(() => {
+    if (!currentSubject) return [];
+    if (currentSubject.groups && currentSubject.groups.length > 0) {
+      return currentSubject.groups;
+    }
+    if (currentSubject.chapters && currentSubject.chapters.length > 0) {
+      return [{ label: null, chapters: currentSubject.chapters }];
+    }
+    return [];
+  }, [currentSubject]);
+
   // Flattened chapters of current subject
   const allChapters = useMemo(() => {
     if (!currentSubject) return [];
-    return currentSubject.groups.flatMap((g) => g.chapters);
+    return getSubjectChapters(currentSubject);
   }, [currentSubject]);
 
   // Active Chapter Item
@@ -398,7 +417,7 @@ export const StudyHub: React.FC<StudyHubProps> = ({
                 <span>{subj.icon}</span>
                 <span>{subj.label}</span>
                 <span className="text-[10px] opacity-60 font-mono">
-                  [{subj.groups.flatMap((g) => g.chapters).length}]
+                  [{getSubjectChapters(subj).length}]
                 </span>
               </button>
             );
@@ -433,8 +452,8 @@ export const StudyHub: React.FC<StudyHubProps> = ({
 
           {/* Chapter Items List */}
           <div className="flex flex-col gap-1.5 max-h-[calc(100vh-280px)] overflow-y-auto pr-1">
-            {currentSubject?.groups.map((group, gIdx) => {
-              const matching = group.chapters.filter(
+            {renderedGroups.map((group, gIdx) => {
+              const matching = (group.chapters || []).filter(
                 (ch) =>
                   !chapterSearch.trim() ||
                   ch.name.toLowerCase().includes(chapterSearch.toLowerCase()) ||
@@ -502,8 +521,8 @@ export const StudyHub: React.FC<StudyHubProps> = ({
                 </h2>
               </div>
 
-              {/* Board Statistics Pill */}
-              {pyqData?.stats && (
+              {/* Board Statistics or Curriculum Badge */}
+              {isBoardClass(selectedClass) && pyqData?.stats ? (
                 <div className="flex items-center gap-2.5 rounded-sm border border-border bg-secondary/60 px-3 py-1.5 text-xs font-mono">
                   <div className="text-right">
                     <span className="text-foreground font-bold">{pyqData.stats.total || pyqData.total}</span>
@@ -515,12 +534,17 @@ export const StudyHub: React.FC<StudyHubProps> = ({
                     <span>{pyqData.stats.types ? Object.keys(pyqData.stats.types).join(" · ") : "Board Sets"}</span>
                   </div>
                 </div>
-              )}
+              ) : !isBoardClass(selectedClass) ? (
+                <div className="flex items-center gap-2 rounded-sm border border-border bg-secondary/50 px-3 py-1.5 text-xs font-mono text-muted-foreground">
+                  <span className="h-2 w-2 rounded-full bg-[var(--pastel-green-text)] animate-pulse" />
+                  <span>NCERT Study Kit & Cheatsheet</span>
+                </div>
+              ) : null}
             </div>
 
             {/* Mode Switcher Tabs */}
             <div className="flex items-center gap-1 overflow-x-auto scrollbar-none font-mono text-xs">
-              {(selectedClass === "10" || selectedClass === "12") && (
+              {isBoardClass(selectedClass) && (
                 <button
                   type="button"
                   onClick={() => setActiveTab("pyq")}
@@ -622,8 +646,31 @@ export const StudyHub: React.FC<StudyHubProps> = ({
             </div>
           )}
 
-          {/* Error View */}
-          {!loading && error && (
+          {/* Auth Required View */}
+          {!loading && error && error.includes("AUTH_REQUIRED") && (
+            <div className="rounded-md border border-border bg-card p-6 sm:p-8 text-center flex flex-col items-center justify-center space-y-4 shadow-xs">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground">
+                <Lock className="h-6 w-6" />
+              </div>
+              <div className="space-y-1 max-w-md">
+                <h3 className="text-sm sm:text-base font-bold text-foreground">Authentication Required</h3>
+                <p className="text-xs text-muted-foreground">
+                  Access to StudyOS past year board questions, formula sheets, and 3D flashcards requires an authenticated EduScrape account.
+                </p>
+              </div>
+              <div className="flex items-center gap-3 pt-2">
+                <a
+                  href="#login"
+                  className="inline-flex items-center gap-2 rounded-md bg-foreground px-4 py-2 text-xs font-bold text-background hover:opacity-90 transition-opacity"
+                >
+                  <UserCheck className="h-3.5 w-3.5" /> Sign In to EduScrape
+                </a>
+              </div>
+            </div>
+          )}
+
+          {/* Generic Error View */}
+          {!loading && error && !error.includes("AUTH_REQUIRED") && (
             <div className="rounded-md border border-border bg-[var(--pastel-red-bg)] p-4 text-[var(--pastel-red-text)] flex items-start gap-3 text-xs">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <div>

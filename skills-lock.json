@@ -1,6 +1,12 @@
 {
   "version": 1,
   "skills": {
+    "antigravity-agent-manager": {
+      "source": "sickn33/agentic-awesome-skills",
+      "sourceType": "github",
+      "skillPath": "skills/antigravity-agent-manager/SKILL.md",
+      "computedHash": "ebccdbfba826d0dab602bd02b37aeb81fe77cee4500f28489d385cce2683dab7"
+    },
     "design-taste-frontend": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",

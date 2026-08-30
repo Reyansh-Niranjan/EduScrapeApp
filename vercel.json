@@ -1,11 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/api/studyos/:match*",
-      "destination": "https://www.studyos.co.in/api/:match*"
-    },
-    {
-      "source": "/:path*",
+      "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
   ]

@@ -26,6 +26,7 @@ import {
   fetchPYQs,
   fetchChapterKit,
 } from "../lib/studyos";
+import { isBoardClass } from "../lib/studyosCatalog";
 import type {
   PYQResponse,
   ChapterKitData,
@@ -258,24 +259,30 @@ export const PdfReader: React.FC<PdfReaderProps> = ({
     return findChaptersForBook(title, className, subject);
   }, [title, className, subject]);
 
+  const isBoard = isBoardClass(className || "");
+
   useEffect(() => {
     if (!showStudyPanel || !resolvedContext?.subject.cacheKey || !resolvedContext.activeChapter?.code) return;
     setStudyLoading(true);
     const cacheKey = resolvedContext.subject.cacheKey;
     const chapterCode = resolvedContext.activeChapter.code;
 
+    if (!isBoard && studyPanelTab === "pyq") {
+      setStudyPanelTab("cheatsheet");
+    }
+
     Promise.allSettled([
-      fetchPYQs(cacheKey, chapterCode),
+      isBoard ? fetchPYQs(cacheKey, chapterCode) : Promise.resolve(null),
       fetchChapterKit(cacheKey, chapterCode),
     ])
       .then(([pyqRes, kitRes]) => {
-        if (pyqRes.status === "fulfilled") setStudyPYQ(pyqRes.value);
-        if (kitRes.status === "fulfilled") setStudyKit(kitRes.value);
+        if (pyqRes.status === "fulfilled" && pyqRes.value) setStudyPYQ(pyqRes.value);
+        if (kitRes.status === "fulfilled" && kitRes.value) setStudyKit(kitRes.value);
       })
       .finally(() => {
         setStudyLoading(false);
       });
-  }, [showStudyPanel, resolvedContext]);
+  }, [showStudyPanel, resolvedContext, isBoard]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -637,17 +644,19 @@ export const PdfReader: React.FC<PdfReaderProps> = ({
 
                 {/* Tab Controls */}
                 <div className="p-2 border-b border-border flex items-center gap-1 font-mono text-[11px] bg-card">
-                  <button
-                    type="button"
-                    onClick={() => setStudyPanelTab("pyq")}
-                    className={`flex-1 py-1 px-2 rounded-xs text-center transition-colors cursor-pointer ${
-                      studyPanelTab === "pyq"
-                        ? "bg-foreground text-background font-bold shadow-xs"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                    }`}
-                  >
-                    PYQs {studyPYQ?.questions?.length ? `[${studyPYQ.questions.length}]` : ""}
-                  </button>
+                  {isBoard && (
+                    <button
+                      type="button"
+                      onClick={() => setStudyPanelTab("pyq")}
+                      className={`flex-1 py-1 px-2 rounded-xs text-center transition-colors cursor-pointer ${
+                        studyPanelTab === "pyq"
+                          ? "bg-foreground text-background font-bold shadow-xs"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      PYQs {studyPYQ?.questions?.length ? `[${studyPYQ.questions.length}]` : ""}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setStudyPanelTab("cheatsheet")}
