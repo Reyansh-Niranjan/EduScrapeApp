@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
 import { supabase } from "../lib/supabaseClient";
+import { findChaptersForBook } from "../lib/studyos";
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -38,6 +39,7 @@ interface NestedLibraryProps {
   items: StorageItem[];
   userClass?: string;
   onOpenPdf: (url: string, title: string, className?: string, subject?: string) => void;
+  onOpenStudyHub?: (classNum?: string, cacheKey?: string, chapterCode?: string) => void;
 }
 
 interface ParsedBook {
@@ -251,7 +253,12 @@ function extractLanguage(title: string): string {
   return "Standard";
 }
 
-export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, onOpenPdf }) => {
+export const NestedLibrary: React.FC<NestedLibraryProps> = ({
+  items,
+  userClass,
+  onOpenPdf,
+  onOpenStudyHub,
+}) => {
   // Normalize user class (e.g. "Class 10")
   const normalizedUserClass = useMemo(() => {
     if (!userClass) return null;
@@ -574,14 +581,34 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                       </p>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleOpenBook(book)}
-                      className="w-full inline-flex items-center justify-center gap-1.5 h-11 sm:h-9 py-2 rounded-md font-medium text-xs sm:text-sm text-primary-foreground bg-primary hover:opacity-90 transition-opacity touch-manipulation active:scale-[0.97] shadow-xs"
-                    >
-                      <BookOpen className="h-3.5 w-3.5" />
-                      <span>Read Textbook</span>
-                    </button>
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenBook(book)}
+                        className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 py-2 rounded-md font-medium text-xs sm:text-sm text-primary-foreground bg-primary hover:opacity-90 transition-opacity touch-manipulation active:scale-[0.97] shadow-xs cursor-pointer"
+                      >
+                        <BookOpen className="h-3.5 w-3.5" />
+                        <span>Read Book</span>
+                      </button>
+                      {onOpenStudyHub && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const match = findChaptersForBook(book.title, book.className, book.subjectName);
+                            onOpenStudyHub(
+                              book.className.replace(/\D/g, ""),
+                              match?.subject.cacheKey,
+                              match?.activeChapter?.code
+                            );
+                          }}
+                          className="inline-flex items-center justify-center gap-1 h-10 sm:h-9 px-3 rounded-md border border-border bg-secondary/80 hover:bg-secondary text-foreground text-xs font-medium transition-colors touch-manipulation active:scale-95 cursor-pointer shadow-xs"
+                          title="View Board PYQs & Study Kit"
+                        >
+                          <GraduationCap className="h-3.5 w-3.5" />
+                          <span>PYQs</span>
+                        </button>
+                      )}
+                    </div>
                   </motion.div>
                 ))}
               </div>
@@ -607,14 +634,34 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => handleOpenBook(book)}
-                      className="flex-shrink-0 inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity touch-manipulation active:scale-95 shadow-xs"
-                    >
-                      <BookOpen className="h-3.5 w-3.5" />
-                      <span>Read</span>
-                    </button>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {onOpenStudyHub && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const match = findChaptersForBook(book.title, book.className, book.subjectName);
+                            onOpenStudyHub(
+                              book.className.replace(/\D/g, ""),
+                              match?.subject.cacheKey,
+                              match?.activeChapter?.code
+                            );
+                          }}
+                          className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-md border border-border bg-secondary/80 hover:bg-secondary text-foreground text-xs font-medium transition-colors touch-manipulation active:scale-95 cursor-pointer"
+                          title="View Board PYQs & Study Kit"
+                        >
+                          <GraduationCap className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">PYQs</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleOpenBook(book)}
+                        className="inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity touch-manipulation active:scale-95 shadow-xs cursor-pointer"
+                      >
+                        <BookOpen className="h-3.5 w-3.5" />
+                        <span>Read</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -909,14 +956,34 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                         </p>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleOpenBook(book)}
-                        className="w-full inline-flex items-center justify-center gap-1.5 h-11 sm:h-9 py-2 rounded-md font-medium text-xs sm:text-sm text-primary-foreground bg-primary hover:opacity-90 transition-opacity touch-manipulation active:scale-[0.97] shadow-xs"
-                      >
-                        <BookOpen className="h-3.5 w-3.5" />
-                        <span>Read Textbook</span>
-                      </button>
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenBook(book)}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 h-10 sm:h-9 py-2 rounded-md font-medium text-xs sm:text-sm text-primary-foreground bg-primary hover:opacity-90 transition-opacity touch-manipulation active:scale-[0.97] shadow-xs cursor-pointer"
+                        >
+                          <BookOpen className="h-3.5 w-3.5" />
+                          <span>Read Book</span>
+                        </button>
+                        {onOpenStudyHub && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const match = findChaptersForBook(book.title, book.className, book.subjectName);
+                              onOpenStudyHub(
+                                book.className.replace(/\D/g, ""),
+                                match?.subject.cacheKey,
+                                match?.activeChapter?.code
+                              );
+                            }}
+                            className="inline-flex items-center justify-center gap-1 h-10 sm:h-9 px-3 rounded-md border border-border bg-secondary/80 hover:bg-secondary text-foreground text-xs font-medium transition-colors touch-manipulation active:scale-95 cursor-pointer shadow-xs"
+                            title="View Board PYQs & Study Kit"
+                          >
+                            <GraduationCap className="h-3.5 w-3.5" />
+                            <span>PYQs</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -940,14 +1007,34 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({ items, userClass, 
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => handleOpenBook(book)}
-                        className="flex-shrink-0 inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity touch-manipulation active:scale-95 shadow-xs"
-                      >
-                        <BookOpen className="h-3.5 w-3.5" />
-                        <span>Read</span>
-                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {onOpenStudyHub && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const match = findChaptersForBook(book.title, book.className, book.subjectName);
+                              onOpenStudyHub(
+                                book.className.replace(/\D/g, ""),
+                                match?.subject.cacheKey,
+                                match?.activeChapter?.code
+                              );
+                            }}
+                            className="inline-flex items-center justify-center gap-1 h-9 px-3 rounded-md border border-border bg-secondary/80 hover:bg-secondary text-foreground text-xs font-medium transition-colors touch-manipulation active:scale-95 cursor-pointer"
+                            title="View Board PYQs & Study Kit"
+                          >
+                            <GraduationCap className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">PYQs</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenBook(book)}
+                          className="inline-flex items-center justify-center gap-1.5 h-9 px-3.5 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity touch-manipulation active:scale-95 shadow-xs cursor-pointer"
+                        >
+                          <BookOpen className="h-3.5 w-3.5" />
+                          <span>Read</span>
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>

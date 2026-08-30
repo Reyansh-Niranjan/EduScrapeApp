@@ -2,12 +2,10 @@
 # /// script
 # dependencies = [
 #   "requests>=2.31.0",
-#   "pypdf>=4.0.0",
 #   "pymupdf>=1.24.0",
-#   "playwright>=1.40.0",
+#   "pillow>=10.0.0",
 #   "rich>=13.0.0",
 #   "python-dotenv>=1.0.0",
-#   "supabase>=2.0.0",
 # ]
 # ///
 """NCERT Textbook Scraper & Supabase Replenisher (CLI).
@@ -46,6 +44,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from catalog import fetch_catalog, iter_books
 from downloader import download_zip, merge_zip_to_pdf, probe_book, sanitize_filename
+from optimizer import format_size, optimize_pdf
 from supabase_uploader import SupabaseReplenisher
 
 # Load local environment if present
@@ -76,9 +75,12 @@ def process_book_task(
     clean_local: bool,
     keep_zips: bool,
     remove_watermarks: bool,
+    compress: bool,
+    dpi: int,
+    quality: int,
     force: bool,
-) -> Dict[str, str]:
-    """Worker task: probes, downloads, merges, cleans watermarks, and optionally uploads a textbook."""
+) -> Dict[str, Any]:
+    """Worker task: probes, downloads, merges, cleans watermarks, compresses, and optionally uploads a textbook."""
     code = book["code"]
     title = book["title"]
     safe_title = sanitize_filename(title)
@@ -96,6 +98,13 @@ def process_book_task(
 
     # Step 2: Check if already present locally
     if local_pdf_path.exists() and local_pdf_path.stat().st_size > 0 and not force:
+        if compress:
+            optimize_pdf(
+                local_pdf_path,
+                local_pdf_path,
+                target_dpi=dpi,
+                jpeg_quality=quality,
+            )
         if upload_enabled and uploader:
             ok = uploader.upload_file(local_pdf_path, remote_path)
             if clean_local and ok:
@@ -113,26 +122,40 @@ def process_book_task(
     if not download_ok or not local_zip_path.exists():
         return {"status": "download_failed", "title": title, "code": code}
 
-    # Step 5: Extract and merge chapter PDFs into unified textbook PDF (with watermark cleaning)
+    # Step 5: Extract and merge chapter PDFs into unified textbook PDF (with watermark cleaning & compression)
     merged_path = merge_zip_to_pdf(
         local_zip_path,
         local_pdf_path,
         keep_zip=keep_zips,
         remove_watermarks=remove_watermarks,
+        optimize=compress,
+        target_dpi=dpi,
+        jpeg_quality=quality,
     )
     if not merged_path or not merged_path.exists() or merged_path.stat().st_size == 0:
         return {"status": "merge_failed", "title": title, "code": code}
 
-    # Step 6: Upload to Supabase
+    # Step 6: Deep compression pass if requested and watermark remover didn't already run
+    orig_sz = merged_path.stat().st_size
+    final_sz = orig_sz
+    if compress and not remove_watermarks:
+        _, final_sz, _, _ = optimize_pdf(
+            merged_path,
+            merged_path,
+            target_dpi=dpi,
+            jpeg_quality=quality,
+        )
+
+    # Step 7: Upload to Supabase
     if upload_enabled and uploader:
         upload_ok = uploader.upload_file(merged_path, remote_path)
         if clean_local and upload_ok:
             merged_path.unlink(missing_ok=True)
         if upload_ok:
-            return {"status": "uploaded", "title": title, "path": remote_path}
+            return {"status": "uploaded", "title": title, "path": remote_path, "size": final_sz}
         return {"status": "upload_error", "title": title, "path": remote_path}
 
-    return {"status": "downloaded_local", "title": title, "path": str(merged_path)}
+    return {"status": "downloaded_local", "title": title, "path": str(merged_path), "size": final_sz}
 
 
 def main():
@@ -141,12 +164,14 @@ def main():
     parser.add_argument("--subject", default=None, help="Target subject (or all if omitted)")
     parser.add_argument("--out", default="downloads", help="Output directory for downloaded books")
     parser.add_argument("--concurrency", "-c", type=int, default=16, help="Parallel worker threads (default: 16)")
-    parser.add_argument("--playwright", action="store_true", help="Build catalog.json dynamically using Playwright browser")
     parser.add_argument("--upload-to-supabase", action="store_true", help="Sync merged PDFs to Supabase bucket (used by GitHub Actions)")
     parser.add_argument("--clean-local", action="store_true", help="Delete local files after uploading (saves CI disk)")
     parser.add_argument("--force", action="store_true", help="Force re-download and re-upload existing files")
     parser.add_argument("--keep-zips", action="store_true", help="Keep source chapter ZIP files")
     parser.add_argument("--keep-watermarks", action="store_true", help="Do not remove background NCERT watermarks")
+    parser.add_argument("--no-compress", action="store_true", help="Disable multi-pass PDF compression engine")
+    parser.add_argument("--dpi", type=int, default=140, help="Target scan DPI for image downsampling (default: 140)")
+    parser.add_argument("--quality", type=int, default=75, help="JPEG quality 1-95 for embedded images (default: 75)")
     parser.add_argument("--refresh-catalog", action="store_true", help="Re-fetch catalog from NCERT website")
     parser.add_argument("--dry-run", action="store_true", help="Inspect and list matching books without downloading")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose debug logging")
@@ -163,11 +188,11 @@ def main():
         marker_file.unlink(missing_ok=True)
 
     console.print("[bold cyan]==============================================================[/bold cyan]")
-    console.print("[bold cyan]  EduScrapeApp -- NCERT Scraper & Supabase Pipeline           [/bold cyan]")
+    console.print("[bold cyan]  EduScrapeApp -- NCERT Scraper & Optimization Pipeline       [/bold cyan]")
     console.print("[bold cyan]==============================================================[/bold cyan]\n")
 
-    # Step 1: Catalog Extraction (Playwright / Direct NCERT parser / Cache)
-    catalog = fetch_catalog(refresh=args.refresh_catalog, use_playwright=args.playwright)
+    # Step 1: Catalog Extraction (Direct NCERT parser / Cache)
+    catalog = fetch_catalog(refresh=args.refresh_catalog)
     target_books = list(iter_books(catalog, class_filter=args.cls, subject_filter=args.subject))
 
     if not target_books:
@@ -175,6 +200,7 @@ def main():
         return
 
     console.print(f"[*] Found [bold green]{len(target_books)}[/bold green] books for Class [bold cyan]{args.cls}[/bold cyan]")
+    console.print(f"[*] Compression Engine: [bold green]{'Enabled' if not args.no_compress else 'Disabled'}[/bold green] (DPI: {args.dpi}, Quality: {args.quality}%)")
 
     if args.dry_run:
         table = Table(title=f"Catalog Selection (Class {args.cls})", show_header=True, header_style="bold magenta", safe_box=True)
@@ -203,7 +229,7 @@ def main():
         uploader.upload_catalog_json(catalog)
 
     # Step 3: Run Concurrent Pipeline
-    results: List[Dict[str, str]] = []
+    results: List[Dict[str, Any]] = []
     stats = {
         "uploaded": 0,
         "downloaded_local": 0,
@@ -239,6 +265,9 @@ def main():
                     args.clean_local,
                     args.keep_zips,
                     not args.keep_watermarks,
+                    not args.no_compress,
+                    args.dpi,
+                    args.quality,
                     args.force,
                 ): (c, s, b)
                 for c, s, b in target_books
@@ -266,7 +295,7 @@ def main():
     # Step 4: Summary Table
     summary_table = Table(title="Execution Summary", show_header=True, header_style="bold cyan", safe_box=True)
     summary_table.add_column("Metric", style="bold")
-    summary_table.add_column("Count", justify="right")
+    summary_table.add_column("Count / Value", justify="right")
 
     summary_table.add_row("Total Processed", str(len(target_books)))
     if args.upload_to_supabase:
@@ -278,6 +307,7 @@ def main():
 
     summary_table.add_row("Not Published by NCERT", f"[yellow]{stats['not_published']}[/yellow]")
     summary_table.add_row("Failures / Errors", f"[red]{stats['failed']}[/red]")
+    summary_table.add_row("Optimization Status", f"[green]Active (DPI {args.dpi}, Q{args.quality})[/green]" if not args.no_compress else "[dim]Disabled[/dim]")
     summary_table.add_row("Time Elapsed", f"{elapsed:.1f}s")
 
     console.print("\n", summary_table)
@@ -305,3 +335,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

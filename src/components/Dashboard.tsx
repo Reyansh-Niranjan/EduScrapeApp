@@ -22,17 +22,19 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  GraduationCap,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import ThemeToggle from "./ThemeToggle";
 import { PdfReader } from "./PdfReader";
 import { NestedLibrary } from "./NestedLibrary";
+import { StudyHub } from "./StudyHub/StudyHub";
 
 interface DashboardProps {
   onLogout?: () => void;
 }
 
-type DashboardTab = "overview" | "library" | "notes" | "books";
+type DashboardTab = "overview" | "library" | "pyqs" | "notes" | "books";
 
 interface UserProfile {
   name: string;
@@ -53,6 +55,7 @@ interface StorageItem {
 const sidebarNav: { id: DashboardTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
   { id: "library", label: "NCERT Library", icon: BookOpen },
+  { id: "pyqs", label: "Board PYQs", icon: GraduationCap },
   { id: "notes", label: "Study Notes", icon: FileText },
   { id: "books", label: "Your Bookshelf", icon: BookMarked },
 ];
@@ -60,6 +63,7 @@ const sidebarNav: { id: DashboardTab; label: string; icon: typeof LayoutDashboar
 const tabTitles: Record<DashboardTab, string> = {
   overview: "Dashboard",
   library: "NCERT Digital Library",
+  pyqs: "Board Exam PYQs & Study Kits",
   notes: "Study Notes",
   books: "Your Bookshelf",
 };
@@ -1055,9 +1059,19 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     className?: string;
     subject?: string;
   } | null>(null);
+  const [studyHubContext, setStudyHubContext] = useState<{
+    classNum?: string;
+    cacheKey?: string;
+    chapterCode?: string;
+  } | null>(null);
 
   const handleOpenPdf = (url: string, title: string, className?: string, subject?: string) => {
     setActivePdf({ url, title, className, subject });
+  };
+
+  const handleOpenStudyHub = (classNum?: string, cacheKey?: string, chapterCode?: string) => {
+    setStudyHubContext({ classNum, cacheKey, chapterCode });
+    setActiveTab("pyqs");
   };
 
   const fetchData = async () => {
@@ -1269,6 +1283,25 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               items={libraryBooks}
               userClass={userProfile.classLabel}
               onOpenPdf={handleOpenPdf}
+              onOpenStudyHub={handleOpenStudyHub}
+            />
+          ) : activeTab === "pyqs" ? (
+            <StudyHub
+              initialClass={studyHubContext?.classNum || userProfile.classLabel?.replace(/\D/g, "") || "10"}
+              initialCacheKey={studyHubContext?.cacheKey}
+              initialChapterCode={studyHubContext?.chapterCode}
+              onClose={() => setActiveTab("overview")}
+              onOpenPdfForChapter={(code) => {
+                const match = libraryBooks.find((b) =>
+                  b.fullPath.toLowerCase().includes(code.toLowerCase())
+                );
+                if (match) {
+                  const publicUrl = supabase.storage.from("ncert").getPublicUrl(match.fullPath).data.publicUrl;
+                  handleOpenPdf(publicUrl, match.name);
+                } else {
+                  setActiveTab("library");
+                }
+              }}
             />
           ) : activeTab === "notes" ? (
             <NotesSection />
@@ -1308,7 +1341,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   isActive ? "text-foreground font-semibold" : "text-muted-foreground"
                 }`}
               >
-                {item.id === "overview" ? "Dashboard" : item.id === "library" ? "Library" : item.id === "notes" ? "Notes" : "Bookshelf"}
+                {item.id === "overview" ? "Dashboard" : item.id === "library" ? "Library" : item.id === "pyqs" ? "PYQs" : item.id === "notes" ? "Notes" : "Bookshelf"}
               </span>
             </button>
           );

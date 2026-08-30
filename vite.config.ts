@@ -8,6 +8,13 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    proxy: {
+      '/api/studyos': {
+        target: 'https://www.studyos.co.in/api',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/studyos/, ''),
+      },
+    },
   },
   resolve: {
     alias: {

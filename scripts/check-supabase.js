@@ -2,26 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import path from 'path';
 
-// Parse .env.local manually
-let supabaseUrl = "";
-let supabaseAnonKey = "";
-
-try {
-  const envContent = fs.readFileSync('.env.local', 'utf8');
-  for (const line of envContent.split('\n')) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#')) continue;
-    const parts = trimmed.split('=');
-    if (parts.length >= 2) {
-      const key = parts[0].trim();
-      const val = parts.slice(1).join('=').trim();
-      if (key === 'VITE_SUPABASE_URL') supabaseUrl = val;
-      if (key === 'VITE_SUPABASE_ANON_KEY') supabaseAnonKey = val;
-    }
-  }
-} catch (e) {
-  console.error("Error reading .env.local:", e.message);
+// Load environment variables from .env.local
+if (typeof process.loadEnvFile === 'function' && fs.existsSync('.env.local')) {
+  process.loadEnvFile('.env.local');
 }
+
+const supabaseUrl = process.env.VITE_SUPABASE_URL || "";
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase environment variables in .env.local. Url:", supabaseUrl, "Key:", supabaseAnonKey);

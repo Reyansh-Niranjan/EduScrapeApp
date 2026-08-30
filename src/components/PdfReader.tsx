@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -17,8 +17,19 @@ import {
   Sparkles,
   HelpCircle,
   ArrowLeft,
+  GraduationCap,
+  X,
 } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
+import {
+  findChaptersForBook,
+  fetchPYQs,
+  fetchChapterKit,
+} from "../lib/studyos";
+import type {
+  PYQResponse,
+  ChapterKitData,
+} from "../lib/studyos";
 
 // Configure PDF.js worker with matching version
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
@@ -54,6 +65,15 @@ export const PdfReader: React.FC<PdfReaderProps> = ({
   const [pageInputValue, setPageInputValue] = useState<string>("1");
   const [showShortcuts, setShowShortcuts] = useState<boolean>(false);
   const [controlsVisible, setControlsVisible] = useState<boolean>(true);
+
+  // Side Study Drawer States
+  const [showStudyPanel, setShowStudyPanel] = useState<boolean>(false);
+  const [studyPanelTab, setStudyPanelTab] = useState<"pyq" | "cheatsheet" | "flashcards">("pyq");
+  const [studyLoading, setStudyLoading] = useState<boolean>(false);
+  const [studyPYQ, setStudyPYQ] = useState<PYQResponse | null>(null);
+  const [studyKit, setStudyKit] = useState<ChapterKitData | null>(null);
+  const [cardIdx, setCardIdx] = useState(0);
+  const [cardFlipped, setCardFlipped] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -234,6 +254,29 @@ export const PdfReader: React.FC<PdfReaderProps> = ({
   };
 
   // Keyboard navigation
+  const resolvedContext = useMemo(() => {
+    return findChaptersForBook(title, className, subject);
+  }, [title, className, subject]);
+
+  useEffect(() => {
+    if (!showStudyPanel || !resolvedContext?.subject.cacheKey || !resolvedContext.activeChapter?.code) return;
+    setStudyLoading(true);
+    const cacheKey = resolvedContext.subject.cacheKey;
+    const chapterCode = resolvedContext.activeChapter.code;
+
+    Promise.allSettled([
+      fetchPYQs(cacheKey, chapterCode),
+      fetchChapterKit(cacheKey, chapterCode),
+    ])
+      .then(([pyqRes, kitRes]) => {
+        if (pyqRes.status === "fulfilled") setStudyPYQ(pyqRes.value);
+        if (kitRes.status === "fulfilled") setStudyKit(kitRes.value);
+      })
+      .finally(() => {
+        setStudyLoading(false);
+      });
+  }, [showStudyPanel, resolvedContext]);
+
   useEffect(() => {
     if (!isOpen) return;
 
@@ -465,6 +508,23 @@ export const PdfReader: React.FC<PdfReaderProps> = ({
                   </button>
                 </div>
 
+                {/* Study Kit Side Drawer Toggle */}
+                {resolvedContext && (
+                  <button
+                    type="button"
+                    onClick={() => setShowStudyPanel((prev) => !prev)}
+                    className={`inline-flex items-center gap-1.5 h-8 px-2.5 rounded-sm border text-xs font-mono transition-colors cursor-pointer active:scale-95 ${
+                      showStudyPanel
+                        ? "bg-foreground text-background font-bold border-foreground shadow-xs"
+                        : "border-border bg-secondary hover:bg-secondary/80 text-foreground"
+                    }`}
+                    title="Toggle Board PYQs & Study Kit"
+                  >
+                    <GraduationCap className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Study Kit</span>
+                  </button>
+                )}
+
                 {/* Keyboard Shortcuts Dialog Toggle */}
                 <button
                   onClick={() => setShowShortcuts((prev) => !prev)}
@@ -502,45 +562,224 @@ export const PdfReader: React.FC<PdfReaderProps> = ({
           )}
         </AnimatePresence>
 
-        {/* PDF Document Canvas Viewport */}
-        <main
-          ref={mainViewportRef}
-          onClick={() => setControlsVisible((v) => !v)}
-          className={`relative flex flex-1 items-center justify-center overflow-auto p-1 sm:p-6 pb-24 transition-colors duration-300 ${getThemeBg()}`}
-        >
-          {isLoading && (
-            <div className="flex flex-col items-center space-y-3 text-muted-foreground p-6 sm:p-8 rounded-md border border-border bg-card shadow-lg mx-4">
-              <Loader2 className="h-7 w-7 animate-spin text-foreground" />
-              <p className="text-xs sm:text-sm font-semibold text-foreground text-center">Rendering High-DPI PDF Pages...</p>
-              <span className="text-[11px] text-muted-foreground font-mono">Loading NCERT textbook stream</span>
-            </div>
-          )}
-
-          {error && (
-            <div className="flex max-w-md flex-col items-center rounded-md border border-destructive/30 bg-[var(--pastel-red-bg)] text-[var(--pastel-red-text)] p-6 sm:p-8 text-center shadow-lg mx-4">
-              <AlertCircle className="mb-2 h-7 w-7 text-destructive" />
-              <h3 className="mb-1 text-sm sm:text-base font-bold text-foreground">Unable to Display PDF Stream</h3>
-              <p className="mb-3 text-xs leading-relaxed">{error}</p>
-              <a
-                href={pdfUrl}
-                download={`${title}.pdf`}
-                className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-xs font-medium transition-opacity hover:opacity-90 active:scale-95"
-              >
-                Download PDF Directly
-              </a>
-            </div>
-          )}
-
-          <div
-            className={`transition-all duration-300 ${isLoading || error ? "hidden" : "block"}`}
-            style={{
-              filter: getThemeCanvasFilter(),
-              boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.5)",
-            }}
+        {/* PDF Document Canvas Viewport + Optional Side Study Drawer */}
+        <div className="flex flex-1 overflow-hidden relative">
+          <main
+            ref={mainViewportRef}
+            onClick={() => setControlsVisible((v) => !v)}
+            className={`relative flex flex-1 items-center justify-center overflow-auto p-1 sm:p-6 pb-24 transition-colors duration-300 ${getThemeBg()}`}
           >
-            <canvas ref={canvasRef} className="rounded-md bg-white max-w-full" />
-          </div>
-        </main>
+            {isLoading && (
+              <div className="flex flex-col items-center space-y-3 text-muted-foreground p-6 sm:p-8 rounded-md border border-border bg-card shadow-lg mx-4">
+                <Loader2 className="h-7 w-7 animate-spin text-foreground" />
+                <p className="text-xs sm:text-sm font-semibold text-foreground text-center">Rendering High-DPI PDF Pages...</p>
+                <span className="text-[11px] text-muted-foreground font-mono">Loading NCERT textbook stream</span>
+              </div>
+            )}
+
+            {error && (
+              <div className="flex max-w-md flex-col items-center rounded-md border border-destructive/30 bg-[var(--pastel-red-bg)] text-[var(--pastel-red-text)] p-6 sm:p-8 text-center shadow-lg mx-4">
+                <AlertCircle className="mb-2 h-7 w-7 text-destructive" />
+                <h3 className="mb-1 text-sm sm:text-base font-bold text-foreground">Unable to Display PDF Stream</h3>
+                <p className="mb-3 text-xs leading-relaxed">{error}</p>
+                <a
+                  href={pdfUrl}
+                  download={`${title}.pdf`}
+                  className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-xs font-medium transition-opacity hover:opacity-90 active:scale-95"
+                >
+                  Download PDF Directly
+                </a>
+              </div>
+            )}
+
+            <div
+              className={`transition-all duration-300 ${isLoading || error ? "hidden" : "block"}`}
+              style={{
+                filter: getThemeCanvasFilter(),
+                boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.5)",
+              }}
+            >
+              <canvas ref={canvasRef} className="rounded-md bg-white max-w-full" />
+            </div>
+          </main>
+
+          {/* Side Study Drawer */}
+          <AnimatePresence>
+            {showStudyPanel && resolvedContext && (
+              <motion.aside
+                initial={{ x: 380, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 380, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                className="w-full sm:w-96 lg:w-[420px] shrink-0 border-l border-border bg-card flex flex-col z-40 overflow-hidden shadow-2xl h-full select-text"
+              >
+                {/* Drawer Header */}
+                <div className="p-3.5 border-b border-border flex items-center justify-between bg-secondary/30">
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <span className="text-base">{resolvedContext.subject.icon}</span>
+                    <div className="truncate">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground block">
+                        {resolvedContext.subject.label} • {resolvedContext.activeChapter?.code}
+                      </span>
+                      <h3 className="text-xs font-bold truncate text-foreground">
+                        {resolvedContext.activeChapter?.name}
+                      </h3>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowStudyPanel(false)}
+                    className="p-1 rounded-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Tab Controls */}
+                <div className="p-2 border-b border-border flex items-center gap-1 font-mono text-[11px] bg-card">
+                  <button
+                    type="button"
+                    onClick={() => setStudyPanelTab("pyq")}
+                    className={`flex-1 py-1 px-2 rounded-xs text-center transition-colors cursor-pointer ${
+                      studyPanelTab === "pyq"
+                        ? "bg-foreground text-background font-bold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    PYQs {studyPYQ?.questions?.length ? `[${studyPYQ.questions.length}]` : ""}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStudyPanelTab("cheatsheet")}
+                    className={`flex-1 py-1 px-2 rounded-xs text-center transition-colors cursor-pointer ${
+                      studyPanelTab === "cheatsheet"
+                        ? "bg-foreground text-background font-bold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    Notes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStudyPanelTab("flashcards")}
+                    className={`flex-1 py-1 px-2 rounded-xs text-center transition-colors cursor-pointer ${
+                      studyPanelTab === "flashcards"
+                        ? "bg-foreground text-background font-bold shadow-xs"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    Flashcards
+                  </button>
+                </div>
+
+                {/* Drawer Body */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {studyLoading ? (
+                    <div className="py-12 flex flex-col items-center justify-center text-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-foreground mb-2" />
+                      <span className="text-xs font-mono text-muted-foreground">Loading study data...</span>
+                    </div>
+                  ) : studyPanelTab === "pyq" ? (
+                    studyPYQ?.questions && studyPYQ.questions.length > 0 ? (
+                      <div className="space-y-3">
+                        {studyPYQ.questions.map((q, idx) => (
+                          <div key={idx} className="rounded-sm border border-border bg-secondary/20 p-3 space-y-2">
+                            <div className="flex items-center gap-1.5 font-mono text-[9px]">
+                              <span className="px-1 py-0.5 rounded-xs bg-[var(--pastel-amber-bg)] text-[var(--pastel-amber-text)] font-bold">
+                                CBSE {q.year}
+                              </span>
+                              <span className="px-1 py-0.5 rounded-xs bg-secondary text-muted-foreground uppercase">
+                                {q.type || "Q"} • {q.marks || 1}M
+                              </span>
+                            </div>
+                            <p className="text-xs font-semibold leading-relaxed text-foreground">
+                              <span className="font-mono text-muted-foreground mr-1">Q{q.q_num}.</span>
+                              {q.q}
+                            </p>
+                            {q.options && q.options.length > 0 && (
+                              <div className="space-y-1 pt-1 border-t border-border/60">
+                                {q.options.map((opt, oIdx) => (
+                                  <div
+                                    key={oIdx}
+                                    className="p-1.5 rounded-xs border border-border bg-card text-[11px] leading-snug flex items-start gap-1.5"
+                                  >
+                                    <span className="font-mono font-bold text-muted-foreground">
+                                      {String.fromCharCode(65 + oIdx)}.
+                                    </span>
+                                    <span>{opt}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center text-xs text-muted-foreground font-mono">
+                        No past board questions available for this chapter.
+                      </div>
+                    )
+                  ) : studyPanelTab === "cheatsheet" ? (
+                    studyKit?.cheatsheet ? (
+                      <div className="text-xs leading-relaxed whitespace-pre-wrap font-sans text-foreground">
+                        {studyKit.cheatsheet}
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center text-xs text-muted-foreground font-mono">
+                        No smart notes available for this chapter.
+                      </div>
+                    )
+                  ) : studyKit?.flashcards && studyKit.flashcards.length > 0 ? (
+                    <div className="space-y-3">
+                      <div
+                        onClick={() => setCardFlipped(!cardFlipped)}
+                        className="rounded-md border border-border bg-card p-4 min-h-[160px] flex flex-col justify-between cursor-pointer select-none"
+                      >
+                        <span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground font-bold">
+                          {cardFlipped ? "Answer" : `Card ${cardIdx + 1}/${studyKit.flashcards.length} (Tap to flip)`}
+                        </span>
+                        <p className="text-xs font-bold text-center my-auto leading-relaxed">
+                          {cardFlipped ? studyKit.flashcards[cardIdx]?.back : studyKit.flashcards[cardIdx]?.front}
+                        </p>
+                        <span className="text-[10px] text-center text-muted-foreground font-mono">
+                          {cardFlipped ? "Tap to flip back" : studyKit.flashcards[cardIdx]?.hint || "Tap to reveal"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between font-mono text-xs text-muted-foreground">
+                        <button
+                          type="button"
+                          disabled={cardIdx === 0}
+                          onClick={() => {
+                            setCardFlipped(false);
+                            setCardIdx((i) => Math.max(0, i - 1));
+                          }}
+                          className="hover:text-foreground disabled:opacity-30"
+                        >
+                          ← Prev
+                        </button>
+                        <button
+                          type="button"
+                          disabled={cardIdx === studyKit.flashcards.length - 1}
+                          onClick={() => {
+                            setCardFlipped(false);
+                            setCardIdx((i) => Math.min(studyKit.flashcards!.length - 1, i + 1));
+                          }}
+                          className="hover:text-foreground disabled:opacity-30"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center text-xs text-muted-foreground font-mono">
+                      No flashcards available.
+                    </div>
+                  )}
+                </div>
+              </motion.aside>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Mobile Thumb Zone Floating Reading Dock (Bottom) */}
         <AnimatePresence>
