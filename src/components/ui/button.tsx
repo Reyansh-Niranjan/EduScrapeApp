@@ -1,16 +1,15 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Slot } from "radix-ui"
 
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-md border border-transparent text-sm font-medium whitespace-nowrap transition-colors duration-150 outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "group/button inline-flex shrink-0 items-center justify-center rounded-md border border-transparent text-sm font-medium whitespace-nowrap transition-all duration-150 outline-none select-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring touch-manipulation active:scale-[0.97] cursor-pointer disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:opacity-90",
+          "bg-primary text-primary-foreground hover:opacity-90 shadow-xs",
         outline:
           "border-border bg-transparent text-foreground hover:bg-secondary hover:text-foreground",
         secondary:
@@ -22,10 +21,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 gap-2 text-sm",
-        sm: "h-8 px-3 py-1.5 text-xs gap-1.5",
-        lg: "h-10 px-5 py-2 text-sm gap-2 font-semibold",
-        icon: "size-8",
+        default: "h-11 sm:h-9 px-4 py-2 gap-2 text-xs sm:text-sm",
+        sm: "h-9 sm:h-8 px-3 py-1.5 text-xs gap-1.5",
+        lg: "h-12 sm:h-10 px-5 py-2.5 text-sm gap-2 font-semibold",
+        icon: "size-10 sm:size-8",
       },
     },
     defaultVariants: {
@@ -39,16 +38,10 @@ function Button({
   className,
   variant = "default",
   size = "default",
-  asChild = false,
   ...props
-}: React.ComponentProps<"button"> &
-  VariantProps<typeof buttonVariants> & {
-    asChild?: boolean
-  }) {
-  const Comp = asChild ? Slot.Root : "button"
-
+}: React.ComponentProps<"button"> & VariantProps<typeof buttonVariants>) {
   return (
-    <Comp
+    <button
       data-slot="button"
       data-variant={variant}
       data-size={size}

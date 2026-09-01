@@ -326,7 +326,15 @@ kbd {
   padding-right: 0.75rem;
   font-size: 0.875rem;
   outline: none;
+  touch-action: manipulation;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (max-width: 640px) {
+  .auth-input-field {
+    height: 2.75rem;
+    font-size: 1rem; /* 16px prevents iOS Safari viewport auto-zoom */
+  }
 }
 
 .auth-input-field:focus-visible,
@@ -347,7 +355,15 @@ kbd {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  touch-action: manipulation;
   transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+@media (max-width: 640px) {
+  .auth-button {
+    height: 2.75rem;
+    font-size: 0.9375rem;
+  }
 }
 
 .auth-button:hover:not(:disabled) {
@@ -389,6 +405,117 @@ kbd {
   border-radius: var(--radius);
   background-color: var(--card);
   padding: 1.5rem;
+}
+
+/* =========================================================================
+   MOBILE-FIRST ERGONOMIC & TOUCH UTILITIES (Material 3 & Emil Kowalski)
+   ========================================================================= */
+
+/* Mobile Touch Delay Elimination */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile Safe Area Insets (iOS Home Indicator & Dynamic Island) */
+.safe-top {
+  padding-top: max(1rem, env(safe-area-inset-top, 1rem));
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+}
+
+.safe-pb-nav {
+  padding-bottom: max(4.5rem, calc(4rem + env(safe-area-inset-bottom, 0px)));
+}
+
+.safe-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Minimum Accessible Touch Targets (44pt / 48dp) */
+.tap-target-44 {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.tap-target-48 {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+/* Mobile Touch Scrubber & Slider Range Styling */
+input[type="range"].mobile-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 36px; /* Expanded touch zone */
+  touch-action: pan-y;
+}
+
+input[type="range"].mobile-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+}
+
+input[type="range"].mobile-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -9px;
+  height: 24px;
+  width: 24px;
+  border-radius: 9999px;
+  background-color: var(--foreground);
+  border: 2px solid var(--card);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+input[type="range"].mobile-slider:active::-webkit-slider-thumb {
+  transform: scale(1.18);
+}
+
+input[type="range"].mobile-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+}
+
+input[type="range"].mobile-slider::-moz-range-thumb {
+  height: 24px;
+  width: 24px;
+  border-radius: 9999px;
+  background-color: var(--foreground);
+  border: 2px solid var(--card);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+
+input[type="range"].mobile-slider:active::-moz-range-thumb {
+  transform: scale(1.18);
+}
+
+/* Mobile Horizontal Scroll-Snap Strip */
+.mobile-scroll-row {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.mobile-scroll-row::-webkit-scrollbar {
+  display: none;
+}
+
+.mobile-scroll-item {
+  scroll-snap-align: start;
+  flex-shrink: 0;
 }
 
 /* Reduce motion for users who prefer it */

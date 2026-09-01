@@ -16,7 +16,10 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import requests
-from pypdf import PdfWriter
+try:
+    import pymupdf as fitz
+except ImportError:
+    import fitz
 
 logger = logging.getLogger("ncert_scraper.downloader")
 
@@ -169,8 +172,11 @@ def merge_zip_to_pdf(
     out_pdf_path: Path,
     keep_zip: bool = False,
     remove_watermarks: bool = True,
+    optimize: bool = True,
+    target_dpi: int = 140,
+    jpeg_quality: int = 75,
 ) -> Optional[Path]:
-    """Extract chapter PDFs from ZIP archive, merge them into a single PDF, and remove watermarks."""
+    """Extract chapter PDFs from ZIP archive, merge them into a single PDF, and remove watermarks/compress."""
     if not zip_path.exists():
         return None
 
@@ -193,24 +199,25 @@ def merge_zip_to_pdf(
 
         sorted_pdfs = sort_chapter_pdfs(pdf_files)
 
-        writer = PdfWriter()
+        doc = fitz.open()
         for pdf_file in sorted_pdfs:
             try:
-                writer.append(str(pdf_file))
+                doc.insert_file(str(pdf_file))
             except Exception as e:
                 logger.warning(f"Skipping corrupted chapter PDF {pdf_file.name}: {e}")
 
-        if len(writer.pages) == 0:
+        if doc.page_count == 0:
+            doc.close()
             logger.error(f"Merged PDF has 0 pages for {zip_path.name}")
             return None
 
-        with open(out_pdf_path, "wb") as f:
-            writer.write(f)
+        doc.save(str(out_pdf_path), garbage=4, deflate=True)
+        doc.close()
 
         if not keep_zip:
             zip_path.unlink(missing_ok=True)
 
-        # Remove repeated NCERT watermark images and auto-compress oversized books
+        # Remove repeated NCERT watermark images (which automatically invokes optimizer)
         if remove_watermarks:
             try:
                 try:
@@ -220,8 +227,19 @@ def merge_zip_to_pdf(
                 remove_watermarks_from_pdf(out_pdf_path)
             except Exception as w_err:
                 logger.warning(f"Watermark cleaning failed on {out_pdf_path.name}: {w_err}")
+        elif optimize:
+            # If watermarks are kept but optimization is enabled
+            try:
+                try:
+                    from optimizer import optimize_pdf
+                except ImportError:
+                    from scraper.optimizer import optimize_pdf
+                optimize_pdf(out_pdf_path, out_pdf_path, target_dpi=target_dpi, jpeg_quality=jpeg_quality)
+            except Exception as opt_err:
+                logger.warning(f"Optimization failed on {out_pdf_path.name}: {opt_err}")
 
         return out_pdf_path
+
 
     except Exception as e:
         logger.error(f"Failed to merge {zip_path.name}: {e}")

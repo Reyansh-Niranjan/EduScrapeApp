@@ -147,24 +147,24 @@ export default function Projects() {
     <section
       id="ecosystem"
       ref={containerRef}
-      className="py-24 bg-background relative [perspective:1200px]"
+      className="py-14 sm:py-24 bg-background relative [perspective:1200px]"
     >
       <div className="container mx-auto px-4 sm:px-6 max-w-6xl">
         {/* Section Header */}
-        <div className="max-w-3xl mb-16">
-          <div className="projects-header-item text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 will-change-transform">
+        <div className="max-w-3xl mb-8 sm:mb-16">
+          <div className="projects-header-item text-[11px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 will-change-transform">
             DUAL PLATFORM ECOSYSTEM
           </div>
-          <h2 className="projects-header-item text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4 will-change-transform">
+          <h2 className="projects-header-item text-2xl sm:text-4xl font-bold tracking-tight text-foreground mb-3 sm:mb-4 will-change-transform">
             Cloud web hub &amp; offline hardware.
           </h2>
-          <p className="projects-header-item text-base text-muted-foreground leading-relaxed max-w-[50ch] will-change-transform">
+          <p className="projects-header-item text-xs sm:text-base text-muted-foreground leading-relaxed max-w-[50ch] will-change-transform">
             A single, unified content pipeline engineered to serve both high-bandwidth connected environments and remote regions with zero network infrastructure.
           </p>
         </div>
 
         {/* 2-Column Showcase with Parallax Scrub and Spotlight */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-8">
           {ecosystemItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -173,7 +173,7 @@ export default function Projects() {
                 className="gsap-ecosystem-card spotlight-card rounded-md border border-border bg-card overflow-hidden flex flex-col justify-between transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]"
               >
                 {/* Visual Preview Frame with Parallax Image Scrub */}
-                <div className="relative aspect-[16/10] w-full border-b border-border overflow-hidden">
+                <div className="relative aspect-[16/10] w-full border-b border-border overflow-hidden bg-secondary/50">
                   <img
                     src={item.imageUrl}
                     alt={item.name}
@@ -188,28 +188,28 @@ export default function Projects() {
                 </div>
 
                 {/* Content Body */}
-                <div className="p-6 sm:p-8 flex-1 flex flex-col justify-between relative z-10">
+                <div className="p-4 sm:p-8 flex-1 flex flex-col justify-between relative z-10">
                   <div>
-                    <h3 className="text-xl font-bold tracking-tight text-foreground mb-3 flex items-center gap-2">
-                      <Icon className="w-5 h-5 text-foreground" />
+                    <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground mb-2 sm:mb-3 flex items-center gap-2">
+                      <Icon className="w-5 h-5 text-foreground shrink-0" />
                       <span>{item.name}</span>
                     </h3>
 
-                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-6 max-w-[48ch]">
+                    <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4 sm:mb-6 max-w-[48ch]">
                       {item.description}
                     </p>
 
-                    {/* Technical Specs Table (Semantic list safe tag) */}
-                    <div className="pt-4 pb-2 border-t border-border mb-6 font-mono text-xs">
-                      <div className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center justify-between">
+                    {/* Technical Specs Table */}
+                    <div className="pt-3 sm:pt-4 pb-2 border-t border-border mb-4 sm:mb-6 font-mono text-[11px] sm:text-xs">
+                      <div className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider mb-2.5 sm:mb-3 flex items-center justify-between">
                         <span>Architecture Specifications</span>
                         <Terminal className="w-3 h-3 text-muted-foreground" />
                       </div>
-                      <ul className="grid grid-cols-2 gap-y-3 gap-x-4 list-none p-0 m-0">
+                      <ul className="grid grid-cols-2 gap-y-2.5 gap-x-3 sm:gap-y-3 sm:gap-x-4 list-none p-0 m-0">
                         {item.specs.map((spec, sIdx) => (
                           <li key={sIdx} className="flex flex-col">
-                            <span className="text-xs text-muted-foreground">{spec.label}</span>
-                            <span className="font-semibold text-foreground text-xs truncate mt-0.5">
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">{spec.label}</span>
+                            <span className="font-semibold text-foreground text-[11px] sm:text-xs truncate mt-0.5">
                               {spec.value}
                             </span>
                           </li>
@@ -219,7 +219,7 @@ export default function Projects() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-3 pt-2">
+                  <div className="flex items-center gap-2.5 sm:gap-3 pt-2">
                     {item.actionHash ? (
                       <Button
                         size="sm"
@@ -227,9 +227,9 @@ export default function Projects() {
                           window.history.pushState({}, "", item.actionHash!);
                           window.dispatchEvent(new Event("hashchange"));
                         }}
-                        className="flex-1 justify-center text-xs py-1.5 gap-1.5 cursor-pointer shadow-xs hover:shadow-sm"
+                        className="flex-1 justify-center h-10 sm:h-9 text-xs sm:text-sm py-1.5 gap-1.5 cursor-pointer shadow-xs hover:shadow-sm touch-manipulation active:scale-[0.97]"
                       >
-                        {item.actionText}
+                        <span>{item.actionText}</span>
                         <ArrowUpRight className="w-3.5 h-3.5" />
                       </Button>
                     ) : (
@@ -239,8 +239,8 @@ export default function Projects() {
                         rel="noopener noreferrer"
                         className="flex-1"
                       >
-                        <Button size="sm" className="w-full justify-center text-xs py-1.5 gap-1.5 cursor-pointer shadow-xs hover:shadow-sm">
-                          {item.actionText}
+                        <Button size="sm" className="w-full justify-center h-10 sm:h-9 text-xs sm:text-sm py-1.5 gap-1.5 cursor-pointer shadow-xs hover:shadow-sm touch-manipulation active:scale-[0.97]">
+                          <span>{item.actionText}</span>
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Button>
                       </a>
@@ -250,10 +250,10 @@ export default function Projects() {
                       href={item.repoUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="px-3 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground text-xs font-mono inline-flex items-center gap-1.5 transition-colors hover:border-muted-foreground"
+                      className="px-3 h-10 sm:h-9 rounded-md border border-border text-muted-foreground hover:text-foreground text-xs font-mono inline-flex items-center justify-center gap-1.5 transition-colors hover:border-muted-foreground touch-manipulation active:scale-[0.97]"
                     >
                       <Github className="w-3.5 h-3.5" />
-                      Source
+                      <span>Source</span>
                     </a>
                   </div>
                 </div>

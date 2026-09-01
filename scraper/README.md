@@ -1,14 +1,18 @@
-# 📚 NCERT Scraper & Supabase Storage Replenisher
+# 📚 NCERT Scraper & Multi-Engine Compression Pipeline
 
-A high-performance, resilient NCERT textbook extraction and cloud synchronization engine designed for **EduScrapeApp**.
+A high-performance, resilient NCERT textbook extraction, deep PDF size optimization, and cloud synchronization engine designed for **EduScrapeApp**.
 
 ---
 
 ## ⚡ Key Highlights
 
+- **Multi-Engine PDF Optimization**: Integrates best-in-class techniques from three open-source compression projects:
+  - **[pdfEasyCompress](https://github.com/davidAlgis/pdfEasyCompress)**: In-stream scan image downsampling and re-encoding with Pillow, alpha channel white-background blending, with **100% preservation of vector text, fonts, and searchability**.
+  - **[pdfsizeopt](https://github.com/pts/pdfsizeopt)**: Deep stream deflation (`FlateDecode`), XObject garbage collection (`garbage=4`), and content-hash image deduplication.
+  - **[cpdfsqueeze](https://github.com/coherentgraphics/cpdfsqueeze-binaries)**: Structural object squeezing, dictionary coalescing, and binary auto-detection with pure-Python fallback.
 - **Direct JS Parser (Zero Headless Overhead)**: Extracts the full Class 1–12 textbook catalog directly from NCERT's `change1()` script without slow, flaky browser automation.
 - **Resilient Downloader**: Concurrent multi-threaded downloading with HTTP `Range` resume support, exponential backoff, CRC verification, and rapid `HEAD` size probing.
-- **Automated Watermark Removal & Compression**: Uses PyMuPDF stream fingerprinting (`watermark_remover.py`) to detect and strip recurring NCERT watermark image objects across every page, reducing PDF file sizes by 40–80% without degrading text quality.
+- **Automated Watermark Removal**: Uses PyMuPDF stream fingerprinting (`watermark_remover.py`) to detect and strip recurring NCERT watermark image objects across every page.
 - **Smart PDF Assembly**: Unpacks official NCERT chapter ZIPs, orders prelims/cover pages first, and merges chapters into clean, searchable, single-book PDFs.
 - **Supabase Storage Sync**: Automatically uploads PDFs into the `ncert` bucket formatted cleanly as `Class <N>/<Subject>/<Book Title>.pdf` with duplicate detection and catalog syncing.
 - **Automated GitHub Actions**: Scheduled monthly workflow (`.github/workflows/scrape_and_replenish.yml`) and manual `workflow_dispatch` trigger.
@@ -39,18 +43,22 @@ SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key-here
 # Preview books without downloading (dry run)
 python scraper/main.py --class 10 --dry-run
 
-# Download all Class 10 books locally to ./downloads
+# Download all Class 10 books with automated multi-pass compression
 python scraper/main.py --class 10
 
-# Download a specific subject
-python scraper/main.py --class 12 --subject Physics
+# Download a specific subject with custom DPI and JPEG quality
+python scraper/main.py --class 12 --subject Physics --dpi 130 --quality 70
 
 # Download & directly sync to Supabase bucket 'ncert'
 python scraper/main.py --class 10 --upload-to-supabase --clean-local
 
 # Run complete Class 1-12 catalog sync with 8 concurrent workers
 python scraper/main.py --class all --upload-to-supabase --clean-local --concurrency 8
+
+# Standalone PDF Optimizer CLI (test or compress any individual PDF)
+python scraper/optimizer.py input.pdf output.pdf --dpi 140 --quality 75
 ```
+
 
 ---
 

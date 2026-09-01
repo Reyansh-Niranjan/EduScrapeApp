@@ -8,6 +8,23 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    proxy: {
+      '/api/studyos': {
+        target: 'https://www.studyos.co.in/api',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/studyos/, ''),
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            const auth = req.headers['authorization'];
+            if (!auth || !auth.startsWith('Bearer ')) {
+              res.writeHead(401, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({ error: 'Unauthorized: Authentication required to access StudyOS materials.' }));
+              proxyReq.destroy();
+            }
+          });
+        },
+      },
+    },
   },
   resolve: {
     alias: {

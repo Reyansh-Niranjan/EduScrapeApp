@@ -126,7 +126,7 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+    <div className="min-h-[100dvh] bg-background flex flex-col justify-between p-3.5 sm:p-6 lg:p-8 safe-top safe-bottom">
       {/* Top Bar */}
       <motion.div
         initial={shouldReduceMotion ? false : { opacity: 0, y: -8 }}
@@ -137,7 +137,7 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
         <button
           onClick={onCancel}
           aria-label="Back to homepage"
-          className="group inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-card text-xs font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-all duration-150 active:scale-[0.97]"
+          className="group inline-flex items-center gap-1.5 h-9 px-3 rounded-md border border-border bg-card text-xs font-medium text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-all duration-150 active:scale-[0.97] touch-manipulation"
         >
           <ArrowLeft className="w-3.5 h-3.5 transition-transform duration-150 group-hover:-translate-x-0.5" />
           Back to Overview
@@ -150,13 +150,13 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
         initial={shouldReduceMotion ? false : { opacity: 0, y: 14, scale: 0.985 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-4xl mx-auto my-8"
+        className="w-full max-w-4xl mx-auto my-3 sm:my-8"
       >
         <div className="rounded-md border border-border bg-card grid grid-cols-1 md:grid-cols-12 overflow-hidden shadow-xs md:min-h-[580px]">
           
           {/* Left Context Column (5 cols) */}
-          <div className="md:col-span-5 p-6 sm:p-8 bg-secondary/40 border-b md:border-b-0 md:border-r border-border flex flex-col justify-between">
-            <div className="space-y-6">
+          <div className="md:col-span-5 p-4 sm:p-8 bg-secondary/40 border-b md:border-b-0 md:border-r border-border flex flex-col justify-between">
+            <div className="space-y-4 sm:space-y-6">
               <div className="flex items-center gap-2.5">
                 <div className="w-7 h-7 rounded-md bg-foreground text-background flex items-center justify-center font-bold font-mono text-xs">
                   E
@@ -215,14 +215,14 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
           </div>
 
           {/* Right Form Column (7 cols) */}
-          <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-center">
+          <div className="md:col-span-7 p-4 sm:p-8 flex flex-col justify-center">
             <div className="w-full max-w-sm mx-auto">
               
               {/* Animated Mode Tabs with Sliding Spring Pill */}
               <nav
                 role="tablist"
                 aria-label="Authentication mode"
-                className="relative grid grid-cols-2 gap-1 p-1 rounded-md bg-secondary mb-6 text-xs font-medium"
+                className="relative grid grid-cols-2 gap-1 p-1 rounded-md bg-secondary mb-5 sm:mb-6 text-xs font-medium"
               >
                 <button
                   type="button"
@@ -234,7 +234,7 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
                     setErrorMessage(null);
                     setSuccessMessage(null);
                   }}
-                  className={`relative py-1.5 rounded-sm transition-colors text-xs font-medium z-10 cursor-pointer ${
+                  className={`relative py-2 sm:py-1.5 rounded-sm transition-colors text-xs font-medium z-10 cursor-pointer touch-manipulation active:scale-[0.98] ${
                     mode === "sign-in"
                       ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"
@@ -264,7 +264,7 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
                     setErrorMessage(null);
                     setSuccessMessage(null);
                   }}
-                  className={`relative py-1.5 rounded-sm transition-colors text-xs font-medium z-10 cursor-pointer ${
+                  className={`relative py-2 sm:py-1.5 rounded-sm transition-colors text-xs font-medium z-10 cursor-pointer touch-manipulation active:scale-[0.98] ${
                     mode === "create"
                       ? "text-foreground font-semibold"
                       : "text-muted-foreground hover:text-foreground"

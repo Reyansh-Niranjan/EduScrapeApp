@@ -14,11 +14,15 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
 try:
-    import fitz  # PyMuPDF
+    import pymupdf as fitz
     HAS_PYMUPDF = True
 except ImportError:
-    fitz = None
-    HAS_PYMUPDF = False
+    try:
+        import fitz
+        HAS_PYMUPDF = True
+    except ImportError:
+        fitz = None
+        HAS_PYMUPDF = False
 
 logger = logging.getLogger("ncert_scraper.watermark")
 
@@ -32,20 +36,10 @@ DEFAULT_TARGET_SPECS: Set[Tuple[int, int, int]] = {
 
 def read_stream_bytes(doc: fitz.Document, xref: int) -> Optional[bytes]:
     """Read raw stream bytes for an image xref."""
-    if hasattr(doc, "xref_stream_raw"):
-        try:
-            data = doc.xref_stream_raw(xref)
-            if data is not None:
-                return data
-        except Exception:
-            pass
     try:
-        data = doc.xref_stream(xref)
-        if data is not None:
-            return data
+        return doc.xref_stream(xref)
     except Exception:
-        pass
-    return None
+        return None
 
 
 def collect_watermark_xrefs(
@@ -108,9 +102,6 @@ def remove_xrefs_from_document(doc: fitz.Document, xrefs_to_remove: Set[int]) ->
     if not xrefs_to_remove:
         return 0
 
-    if doc.page_count and not hasattr(doc[0], "delete_image"):
-        raise RuntimeError("PyMuPDF version is missing page.delete_image(). Upgrade PyMuPDF.")
-
     removed_occurrences = 0
     for page_index in range(doc.page_count):
         page = doc[page_index]
@@ -129,17 +120,8 @@ def remove_watermarks_from_pdf(
     min_page_ratio: float = 0.3,
     spec_fallback: bool = False,
 ) -> Tuple[int, int]:
-    """Clean watermark images from a PDF file in-place or write to output path.
-
-    Returns:
-        (candidate_xrefs_count, removed_occurrences_count)
-    """
-    if not HAS_PYMUPDF:
-        logger.warning("PyMuPDF (fitz) is not installed; skipping watermark removal.")
-        return 0, 0
-
-    if not input_pdf.exists():
-        logger.error(f"Input PDF not found: {input_pdf}")
+    """Clean watermark images from a PDF file in-place or write to output path."""
+    if not HAS_PYMUPDF or not input_pdf.exists():
         return 0, 0
 
     out_path = output_pdf or input_pdf
@@ -163,7 +145,6 @@ def remove_watermarks_from_pdf(
         out_path.parent.mkdir(parents=True, exist_ok=True)
         tmp_output = out_path.with_name(f"{out_path.name}.tmp")
 
-        # Save with clean garbage collection & deflation
         doc.save(tmp_output, garbage=4, clean=True, deflate=True)
         doc.close()
 
@@ -173,9 +154,19 @@ def remove_watermarks_from_pdf(
 
         logger.info(f"Cleaned {removed_occurrences} watermark instances from {input_pdf.name}")
 
-        # If merged PDF exceeds 48MB (Supabase 50MB hard limit), compress it
-        if out_path.exists() and out_path.stat().st_size > 48 * 1024 * 1024:
-            compress_oversized_pdf(out_path, max_size_bytes=48 * 1024 * 1024)
+        try:
+            from optimizer import optimize_pdf
+            orig, opt, saved_pct, _ = optimize_pdf(
+                input_pdf=out_path,
+                output_pdf=out_path,
+                target_dpi=140,
+                jpeg_quality=75,
+                deduplicate=True,
+            )
+            if saved_pct > 0:
+                logger.info(f"Optimized {input_pdf.name}: {orig / (1024*1024):.1f}MB -> {opt / (1024*1024):.1f}MB ({saved_pct:.1f}% saved)")
+        except ImportError:
+            pass
 
         return len(xrefs_to_remove), removed_occurrences
 
@@ -186,79 +177,6 @@ def remove_watermarks_from_pdf(
         except Exception:
             pass
         return 0, 0
-
-
-def compress_oversized_pdf(
-    pdf_path: Path,
-    max_size_bytes: int = 48 * 1024 * 1024,
-    target_dpi: int = 140,
-) -> bool:
-    """If PDF exceeds max_size_bytes, re-encode pages to guarantee it fits under storage quotas with low memory usage."""
-    if not HAS_PYMUPDF or not pdf_path.exists():
-        return False
-
-    current_size = pdf_path.stat().st_size
-    if current_size <= max_size_bytes:
-        return False
-
-    import gc
-
-    # For massive scans > 150MB, use 120 DPI to prevent runner OOM while preserving readability
-    effective_dpi = 120 if current_size > 150 * 1024 * 1024 else target_dpi
-
-    logger.info(f"Optimizing oversized PDF {pdf_path.name} ({current_size / (1024*1024):.1f}MB > {max_size_bytes / (1024*1024):.0f}MB limit at {effective_dpi} DPI)...")
-
-    src_doc = None
-    out_doc = None
-    tmp_out = pdf_path.with_name(f"{pdf_path.name}.opt.tmp")
-
-    try:
-        src_doc = fitz.open(pdf_path)
-        out_doc = fitz.open()
-
-        for page in src_doc:
-            pix = page.get_pixmap(dpi=effective_dpi)
-            jpg_bytes = pix.tobytes("jpeg", jpg_quality=75)
-            del pix
-
-            new_page = out_doc.new_page(width=page.rect.width, height=page.rect.height)
-            new_page.insert_image(new_page.rect, stream=jpg_bytes)
-            del jpg_bytes
-
-        src_doc.close()
-        src_doc = None
-
-        out_doc.save(tmp_out, garbage=4, clean=True, deflate=True)
-        out_doc.close()
-        out_doc = None
-
-        gc.collect()
-
-        new_size = tmp_out.stat().st_size
-        logger.info(f"Optimized {pdf_path.name}: {current_size / (1024*1024):.1f}MB -> {new_size / (1024*1024):.1f}MB")
-
-        if pdf_path.exists():
-            pdf_path.unlink()
-        tmp_out.rename(pdf_path)
-        return True
-
-    except Exception as e:
-        logger.warning(f"Failed to optimize oversized PDF {pdf_path.name}: {e}")
-        if tmp_out.exists():
-            tmp_out.unlink(missing_ok=True)
-        return False
-    finally:
-        if src_doc:
-            try:
-                src_doc.close()
-            except Exception:
-                pass
-        if out_doc:
-            try:
-                out_doc.close()
-            except Exception:
-                pass
-        gc.collect()
 
 
 if __name__ == "__main__":

@@ -20,14 +20,6 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-try:
-    from supabase import Client, create_client
-    HAS_SUPABASE = True
-except ImportError:
-    Client = None
-    create_client = None
-    HAS_SUPABASE = False
-
 logger = logging.getLogger("ncert_scraper.supabase")
 
 DEFAULT_BUCKET = "ncert"
@@ -54,7 +46,6 @@ class SupabaseReplenisher:
             or os.getenv("VITE_SUPABASE_ANON_KEY")
         )
         self.bucket_name = bucket_name
-        self.client: Optional[Client] = None
         self._remote_files: Optional[Dict[str, int]] = None
 
         # Build resilient HTTP session with high-capacity connection pooling
@@ -70,11 +61,6 @@ class SupabaseReplenisher:
         self.session.mount("http://", adapter)
 
         if self.url and self.key:
-            if HAS_SUPABASE:
-                try:
-                    self.client = create_client(self.url, self.key)
-                except Exception:
-                    pass
             logger.info(f"Connected to Supabase ({self.url})")
         else:
             logger.warning("Supabase URL or Key not found in environment.")

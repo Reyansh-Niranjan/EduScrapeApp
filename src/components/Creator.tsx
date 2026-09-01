@@ -147,49 +147,49 @@ export default function Creator() {
     <section
       id="creator"
       ref={containerRef}
-      className="py-24 bg-background relative [perspective:1200px]"
+      className="py-14 sm:py-24 bg-background relative [perspective:1200px]"
     >
       <div className="container mx-auto px-4 sm:px-6 max-w-6xl">
         {/* Section Header */}
-        <div className="max-w-3xl mb-16">
-          <div className="creator-header-item text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 will-change-transform">
+        <div className="max-w-3xl mb-8 sm:mb-16">
+          <div className="creator-header-item text-[11px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground mb-2 will-change-transform">
             ENGINEERING &amp; AUTHORSHIP
           </div>
-          <h2 className="creator-header-item text-3xl sm:text-4xl font-bold tracking-tight text-foreground mb-4 will-change-transform">
+          <h2 className="creator-header-item text-2xl sm:text-4xl font-bold tracking-tight text-foreground mb-3 sm:mb-4 will-change-transform">
             Designed &amp; engineered by Reyansh Niranjan.
           </h2>
-          <p className="creator-header-item text-base text-muted-foreground leading-relaxed max-w-[50ch] will-change-transform">
+          <p className="creator-header-item text-xs sm:text-base text-muted-foreground leading-relaxed max-w-[50ch] will-change-transform">
             EduScrapeApp is an independent open-source software and hardware engineering project created to democratize access to K–12 educational materials across India.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
           {/* Left Column: Creator Profile (7 cols) */}
-          <div className="gsap-creator-card spotlight-card lg:col-span-7 rounded-md border border-border bg-card p-6 sm:p-8 transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]">
+          <div className="gsap-creator-card spotlight-card lg:col-span-7 rounded-md border border-border bg-card p-4 sm:p-8 transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]">
             {/* Top Telemetry Line */}
-            <div className="flex items-center justify-between pb-4 border-b border-border mb-6 relative z-10">
-              <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                <span>api.github.com/users/Reyansh-Niranjan</span>
+            <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-border mb-4 sm:mb-6 relative z-10">
+              <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono text-muted-foreground truncate mr-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="truncate">api.github.com/users/Reyansh-Niranjan</span>
               </div>
-              <Badge variant="green" className="gap-1">
+              <Badge variant="green" className="gap-1 shrink-0">
                 <ShieldCheck className="w-3 h-3" />
-                VERIFIED AUTHOR
+                <span>AUTHOR</span>
               </Badge>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-8 text-center sm:text-left relative z-10">
-              {/* Direct Avatar Image */}
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 mb-6 sm:mb-8 text-center sm:text-left relative z-10">
+              {/* Avatar Image */}
               <img
                 src={creator?.avatar_url || fallbackAvatar}
                 alt="Reyansh Niranjan"
-                className="h-20 w-20 rounded-md object-cover border border-border bg-secondary shrink-0"
+                className="h-16 w-16 sm:h-20 sm:w-20 rounded-md object-cover border border-border bg-secondary shrink-0 shadow-xs"
               />
 
               {/* Bio Details */}
               <div className="flex-1 min-w-0">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-1">
-                  <h3 className="text-xl font-bold text-foreground">
+                  <h3 className="text-lg sm:text-xl font-bold text-foreground">
                     {creator?.name || "Reyansh Niranjan"}
                   </h3>
                   {creator?.login && (
@@ -197,7 +197,7 @@ export default function Creator() {
                       href={creator.html_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-mono text-muted-foreground hover:text-foreground inline-flex items-center justify-center sm:justify-start gap-1"
+                      className="text-xs font-mono text-muted-foreground hover:text-foreground inline-flex items-center justify-center sm:justify-start gap-1 touch-manipulation"
                     >
                       <Github className="w-3.5 h-3.5" />
                       @{creator.login}
@@ -206,8 +206,8 @@ export default function Creator() {
                   )}
                 </div>
 
-                <div className="text-xs font-mono text-muted-foreground mb-2">
-                  Solo Creator · Full-Stack &amp; Embedded Systems Engineer
+                <div className="text-[11px] sm:text-xs font-mono text-muted-foreground mb-2">
+                  Solo Creator · Full-Stack &amp; Embedded Systems
                 </div>
 
                 <p className="text-xs text-muted-foreground leading-relaxed max-w-[48ch]">
@@ -216,7 +216,7 @@ export default function Creator() {
                 </p>
 
                 {creator?.location && (
-                  <div className="mt-3 flex items-center justify-center sm:justify-start gap-1.5 text-xs text-muted-foreground font-mono">
+                  <div className="mt-2.5 sm:mt-3 flex items-center justify-center sm:justify-start gap-1.5 text-[11px] sm:text-xs text-muted-foreground font-mono">
                     <MapPin className="w-3 h-3" />
                     <span>{creator.location}</span>
                   </div>
@@ -224,23 +224,23 @@ export default function Creator() {
               </div>
             </div>
 
-            {/* Live Metrics Grid (Semantic list safe tag with py-2.5 px-3 padding) */}
-            <ul className="grid grid-cols-3 gap-0 pt-6 border-t border-border font-mono text-center relative z-10 list-none p-0 m-0">
-              <li className="flex flex-col py-2.5 px-3">
-                <span className="text-xs text-muted-foreground uppercase">Public Repos</span>
-                <span className="text-xl font-semibold text-foreground mt-0.5">
+            {/* Live Metrics Grid */}
+            <ul className="grid grid-cols-3 gap-0 pt-4 sm:pt-6 border-t border-border font-mono text-center relative z-10 list-none p-0 m-0">
+              <li className="flex flex-col py-2 px-1 sm:py-2.5 sm:px-3">
+                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Repos</span>
+                <span className="text-lg sm:text-xl font-bold text-foreground mt-0.5">
                   {isLoading ? "–" : creator?.public_repos ?? "14"}
                 </span>
               </li>
-              <li className="flex flex-col py-2.5 px-3 border-x border-border">
-                <span className="text-xs text-muted-foreground uppercase">Followers</span>
-                <span className="text-xl font-semibold text-foreground mt-0.5">
+              <li className="flex flex-col py-2 px-1 sm:py-2.5 sm:px-3 border-x border-border">
+                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Followers</span>
+                <span className="text-lg sm:text-xl font-bold text-foreground mt-0.5">
                   {isLoading ? "–" : creator?.followers ?? "8"}
                 </span>
               </li>
-              <li className="flex flex-col py-2.5 px-3">
-                <span className="text-xs text-muted-foreground uppercase">Following</span>
-                <span className="text-xl font-semibold text-foreground mt-0.5">
+              <li className="flex flex-col py-2 px-1 sm:py-2.5 sm:px-3">
+                <span className="text-[10px] sm:text-xs text-muted-foreground uppercase tracking-wider">Following</span>
+                <span className="text-lg sm:text-xl font-bold text-foreground mt-0.5">
                   {isLoading ? "–" : creator?.following ?? "12"}
                 </span>
               </li>
@@ -248,9 +248,9 @@ export default function Creator() {
           </div>
 
           {/* Right Column: Engineering Pillars (5 cols) */}
-          <div className="gsap-creator-card spotlight-card lg:col-span-5 rounded-md border border-border bg-card p-6 sm:p-8 space-y-4 transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]">
-            <div className="pb-3 border-b border-border flex items-center justify-between relative z-10">
-              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <div className="gsap-creator-card spotlight-card lg:col-span-5 rounded-md border border-border bg-card p-4 sm:p-8 space-y-3 sm:space-y-4 transition-colors hover:border-muted-foreground will-change-transform [transform-style:preserve-3d]">
+            <div className="pb-2.5 sm:pb-3 border-b border-border flex items-center justify-between relative z-10">
+              <h4 className="text-xs sm:text-sm font-semibold text-foreground flex items-center gap-2">
                 <Terminal className="w-4 h-4 text-muted-foreground" />
                 Technical Scope
               </h4>
@@ -259,31 +259,31 @@ export default function Creator() {
               </Badge>
             </div>
 
-            <ul className="space-y-3 relative z-10 list-none p-0 m-0">
+            <ul className="space-y-2.5 sm:space-y-3 relative z-10 list-none p-0 m-0">
               {corePillars.map((pillar, pIdx) => {
                 const Icon = pillar.icon;
                 return (
-                  <li key={pIdx} className="p-3.5 rounded-md bg-secondary/50">
+                  <li key={pIdx} className="p-3 sm:p-3.5 rounded-md bg-secondary/50">
                     <div className="flex items-center justify-between gap-2 mb-1">
                       <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
                         <Icon className="w-3.5 h-3.5 text-muted-foreground" />
                         <span>{pillar.title}</span>
                       </div>
-                      <span className="text-xs font-mono text-muted-foreground uppercase">{pillar.tag}</span>
+                      <span className="text-[10px] font-mono text-muted-foreground uppercase">{pillar.tag}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{pillar.desc}</p>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed">{pillar.desc}</p>
                   </li>
                 );
               })}
             </ul>
 
-            <div className="pt-3 flex items-center justify-between text-xs font-mono text-muted-foreground relative z-10">
+            <div className="pt-2.5 sm:pt-3 flex items-center justify-between text-xs font-mono text-muted-foreground relative z-10">
               <span>Open Source Codebase</span>
               <a
                 href="https://github.com/Reyansh-Niranjan"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-foreground hover:underline inline-flex items-center gap-1 cursor-pointer"
+                className="text-foreground hover:underline inline-flex items-center gap-1 cursor-pointer touch-manipulation"
               >
                 GitHub Profile <ArrowUpRight className="w-3 h-3 opacity-60" />
               </a>

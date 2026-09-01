@@ -13,7 +13,6 @@ import {
   UserCircle2,
   Search,
   Plus,
-  Menu,
   X,
   Clock,
   HardDrive,
@@ -23,17 +22,19 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  GraduationCap,
 } from "lucide-react";
 import { supabase } from "../lib/supabaseClient";
 import ThemeToggle from "./ThemeToggle";
 import { PdfReader } from "./PdfReader";
 import { NestedLibrary } from "./NestedLibrary";
+import { StudyHub } from "./StudyHub/StudyHub";
 
 interface DashboardProps {
   onLogout?: () => void;
 }
 
-type DashboardTab = "overview" | "library" | "notes" | "books";
+type DashboardTab = "overview" | "library" | "pyqs" | "notes" | "books";
 
 interface UserProfile {
   name: string;
@@ -54,6 +55,7 @@ interface StorageItem {
 const sidebarNav: { id: DashboardTab; label: string; icon: typeof LayoutDashboard }[] = [
   { id: "overview", label: "Dashboard", icon: LayoutDashboard },
   { id: "library", label: "NCERT Library", icon: BookOpen },
+  { id: "pyqs", label: "Board PYQs", icon: GraduationCap },
   { id: "notes", label: "Study Notes", icon: FileText },
   { id: "books", label: "Your Bookshelf", icon: BookMarked },
 ];
@@ -61,6 +63,7 @@ const sidebarNav: { id: DashboardTab; label: string; icon: typeof LayoutDashboar
 const tabTitles: Record<DashboardTab, string> = {
   overview: "Dashboard",
   library: "NCERT Digital Library",
+  pyqs: "Board Exam PYQs & Study Kits",
   notes: "Study Notes",
   books: "Your Bookshelf",
 };
@@ -193,19 +196,19 @@ function DashboardOverview({
 
   return (
     <motion.div
-      className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto"
+      className="p-3.5 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-7xl mx-auto"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
     >
       {/* Distilled Welcome Banner */}
-      <div className="rounded-md border border-border bg-card p-6 sm:p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-5 shadow-xs">
-        <div className="space-y-1.5 max-w-2xl">
-          <div className="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-muted-foreground">
+      <div className="rounded-md border border-border bg-card p-4 sm:p-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-5 shadow-xs">
+        <div className="space-y-1 max-w-2xl">
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span>{classLabel} Student Hub</span>
           </div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+          <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-foreground">
             {greeting}, {profile.name}.
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
@@ -219,7 +222,7 @@ function DashboardOverview({
           <button
             type="button"
             onClick={() => onTabChange("library")}
-            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity active:scale-[0.98] cursor-pointer shadow-xs"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 sm:h-9 px-4 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity active:scale-[0.97] touch-manipulation cursor-pointer shadow-xs"
           >
             <BookOpen className="h-3.5 w-3.5" />
             <span>Browse Catalog</span>
@@ -227,35 +230,35 @@ function DashboardOverview({
         </div>
       </div>
 
-      {/* 4 Distilled Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 4 Distilled Metric Cards (2x2 on mobile, 4-col on desktop) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {/* 1. Activity / Monthly Progress */}
-        <div className="rounded-md border border-border bg-card p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-foreground">
-              <BarChart3 className="h-4 w-4" />
+        <div className="rounded-md border border-border bg-card p-3 sm:p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-secondary text-foreground">
+              <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
-            <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-              Activity / Mo
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground">
+              Activity
             </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold text-foreground font-mono">
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl sm:text-2xl font-bold text-foreground font-mono">
                 {weeklyCounts.reduce((sum, v) => sum + v, 0)}
               </span>
-              <span className="text-xs text-muted-foreground">files processed</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground truncate">files</span>
             </div>
 
             {/* Micro bar chart */}
-            <div className="mt-3 flex items-end gap-1.5 pt-2 border-t border-border">
+            <div className="mt-2 sm:mt-3 flex items-end gap-1 pt-1.5 sm:pt-2 border-t border-border">
               {weeklyCounts.map((count, index) => {
                 const isZero = count === 0;
-                const height = Math.max(6, count * 14 + (isZero ? 6 : 8));
+                const height = Math.max(5, count * 10 + (isZero ? 5 : 7));
                 return (
-                  <div key={weekLabels[index]} className="flex flex-1 flex-col items-center gap-1">
-                    <div className="h-12 w-full flex items-end justify-center rounded-xs bg-secondary/70 p-0.5 border-b border-border/80">
+                  <div key={weekLabels[index]} className="flex flex-1 flex-col items-center gap-0.5">
+                    <div className="h-8 sm:h-12 w-full flex items-end justify-center rounded-xs bg-secondary/70 p-0.5 border-b border-border/80">
                       <div
                         className={`w-full rounded-xs transition-all duration-300 ${
                           isZero ? "bg-muted-foreground/25" : "bg-foreground/80"
@@ -264,7 +267,7 @@ function DashboardOverview({
                         title={`${weekLabels[index]}: ${count > 0 ? `${count} files` : "No reading activity"}`}
                       />
                     </div>
-                    <span className="text-xs font-mono text-muted-foreground">
+                    <span className="text-[9px] sm:text-xs font-mono text-muted-foreground">
                       W{index + 1}
                     </span>
                   </div>
@@ -275,94 +278,94 @@ function DashboardOverview({
         </div>
 
         {/* 2. Active Streak */}
-        <div className="rounded-md border border-border bg-card p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-[var(--pastel-amber-bg)] text-[var(--pastel-amber-text)]">
-              <Flame className="h-4 w-4" />
+        <div className="rounded-md border border-border bg-card p-3 sm:p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-[var(--pastel-amber-bg)] text-[var(--pastel-amber-text)]">
+              <Flame className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
-            <span className="text-xs font-mono uppercase tracking-wider text-[var(--pastel-amber-text)]">
-              Active Streak
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-[var(--pastel-amber-text)]">
+              Streak
             </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold text-foreground font-mono">{streak}</span>
-              <span className="text-xs text-muted-foreground">consecutive days</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl sm:text-2xl font-bold text-foreground font-mono">{streak}</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">days</span>
             </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              Read any chapter today to maintain your daily streak.
+            <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground line-clamp-2">
+              Read daily to keep your streak active.
             </p>
           </div>
 
-          <div className="mt-3 pt-2.5 border-t border-border flex items-center justify-between text-xs font-mono text-[var(--pastel-amber-text)] font-semibold">
-            <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3" /> Streak Active</span>
-            <span className="text-xs uppercase text-muted-foreground font-normal">Daily</span>
+          <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2.5 border-t border-border flex items-center justify-between text-[10px] sm:text-xs font-mono text-[var(--pastel-amber-text)] font-semibold">
+            <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3" /> Active</span>
+            <span className="text-[9px] sm:text-xs uppercase text-muted-foreground font-normal">Daily</span>
           </div>
         </div>
 
         {/* 3. Your Bookshelf */}
-        <div className="rounded-md border border-border bg-card p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-foreground">
-              <HardDrive className="h-4 w-4" />
+        <div className="rounded-md border border-border bg-card p-3 sm:p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-secondary text-foreground">
+              <HardDrive className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
-            <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-              Private Cloud
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground">
+              Bookshelf
             </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold text-foreground font-mono">{userBooks.length}</span>
-              <span className="text-xs text-muted-foreground">custom files</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl sm:text-2xl font-bold text-foreground font-mono">{userBooks.length}</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">files</span>
             </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              {formatBytes(totalBytes)} stored in private cloud.
+            <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground truncate">
+              {formatBytes(totalBytes)} cloud storage.
             </p>
           </div>
 
-          <div className="mt-3 pt-2.5 border-t border-border">
+          <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2.5 border-t border-border">
             <button
               type="button"
               onClick={() => onTabChange("books")}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-[11px] sm:text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors cursor-pointer touch-manipulation"
             >
-              <span>Open Bookshelf</span>
-              <ChevronRight className="h-3.5 w-3.5" />
+              <span>Bookshelf</span>
+              <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </button>
           </div>
         </div>
 
         {/* 4. NCERT Library Catalog */}
-        <div className="rounded-md border border-border bg-card p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-foreground">
-              <BookOpen className="h-4 w-4" />
+        <div className="rounded-md border border-border bg-card p-3 sm:p-5 flex flex-col justify-between transition-transform hover:-translate-y-px">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <div className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md bg-secondary text-foreground">
+              <BookOpen className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
-            <span className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
-              NCERT Catalog
+            <span className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-muted-foreground">
+              Catalog
             </span>
           </div>
 
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-bold text-foreground font-mono">{libraryBooks.length}</span>
-              <span className="text-xs text-muted-foreground">textbooks ready</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl sm:text-2xl font-bold text-foreground font-mono">{libraryBooks.length}</span>
+              <span className="text-[10px] sm:text-xs text-muted-foreground">books</span>
             </div>
-            <p className="mt-1.5 text-xs text-muted-foreground">
-              Class 1–12 full curriculum coverage.
+            <p className="mt-1 text-[10px] sm:text-xs text-muted-foreground">
+              Class 1–12 full curriculum.
             </p>
           </div>
 
-          <div className="mt-3 pt-2.5 border-t border-border">
+          <div className="mt-2 sm:mt-3 pt-1.5 sm:pt-2.5 border-t border-border">
             <button
               type="button"
               onClick={() => onTabChange("library")}
-              className="text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors cursor-pointer"
+              className="text-[11px] sm:text-xs font-medium text-muted-foreground hover:text-foreground inline-flex items-center gap-1 transition-colors cursor-pointer touch-manipulation"
             >
-              <span>Explore Library</span>
-              <ChevronRight className="h-3.5 w-3.5" />
+              <span>Library</span>
+              <ChevronRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
             </button>
           </div>
         </div>
@@ -599,17 +602,17 @@ function BooksSection({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Your Bookshelf</h2>
+          <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-foreground">Your Bookshelf</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             Private files and custom PDF study materials stored in your cloud
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3">
           <div className="relative w-full sm:w-64">
-            <Search className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search your books..."
@@ -626,7 +629,7 @@ function BooksSection({
               setErrorMessage(null);
               setSuccessMessage(null);
             }}
-            className="flex-shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-md text-xs font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+            className="flex-shrink-0 inline-flex items-center justify-center gap-2 h-11 sm:h-10 px-4 py-2 rounded-md text-xs sm:text-sm font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer touch-manipulation active:scale-[0.97] shadow-xs"
           >
             <UploadCloud className="h-4 w-4" />
             <span>Upload PDF</span>
@@ -634,21 +637,27 @@ function BooksSection({
         </div>
       </div>
 
-      {/* Upload Modal */}
+      {/* Upload Modal (Bottom Sheet on Mobile, Dialog on Desktop) */}
       <AnimatePresence>
         {isModalOpen && (
           <div
             role="dialog"
             aria-modal="true"
             aria-label="Upload PDF"
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs"
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="w-full max-w-lg rounded-md border border-border bg-card p-6 sm:p-8 space-y-5 shadow-lg"
+              initial={{ opacity: 0, y: "100%" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 350 }}
+              className="w-full max-w-lg rounded-t-2xl sm:rounded-md border-t sm:border border-border bg-card p-5 sm:p-8 space-y-4 sm:space-y-5 shadow-2xl safe-bottom max-h-[90dvh] overflow-y-auto"
             >
+              {/* Sheet Drag Handle for Mobile */}
+              <div className="flex justify-center -mt-2 pb-1 sm:hidden">
+                <div className="w-10 h-1 rounded-full bg-border" />
+              </div>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <div className="p-2 rounded-md bg-secondary text-foreground">
@@ -663,7 +672,7 @@ function BooksSection({
                   type="button"
                   onClick={() => setIsModalOpen(false)}
                   aria-label="Close upload dialog"
-                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                  className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer touch-manipulation active:scale-95"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -686,7 +695,7 @@ function BooksSection({
               <form onSubmit={handleUploadSubmit} className="space-y-4">
                 {/* Drag and drop box */}
                 <label
-                  className="border-2 border-dashed border-border rounded-md p-8 flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-muted-foreground hover:bg-secondary/50"
+                  className="border-2 border-dashed border-border rounded-md p-6 sm:p-8 flex flex-col items-center justify-center cursor-pointer transition-colors hover:border-muted-foreground hover:bg-secondary/50 touch-manipulation"
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
@@ -701,13 +710,13 @@ function BooksSection({
                     className="hidden"
                     onChange={(e) => e.target.files?.[0] && handleFileSelect(e.target.files[0])}
                   />
-                  <div className="p-3 rounded-md bg-secondary text-foreground mb-3">
+                  <div className="p-3 rounded-md bg-secondary text-foreground mb-2 sm:mb-3">
                     <FileText className="h-6 w-6" />
                   </div>
-                  <p className="text-sm font-semibold text-foreground text-center">
-                    {selectedFile ? selectedFile.name : "Click to select or drop PDF"}
+                  <p className="text-xs sm:text-sm font-semibold text-foreground text-center">
+                    {selectedFile ? selectedFile.name : "Tap to choose PDF from device"}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-[11px] sm:text-xs text-muted-foreground mt-1">
                     {selectedFile ? `${formatBytes(selectedFile.size)} selected` : "PDF format up to 50MB"}
                   </p>
                 </label>
@@ -730,14 +739,14 @@ function BooksSection({
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-3.5 py-2 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+                    className="h-10 px-4 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer touch-manipulation"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isUploading || !selectedFile}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-xs font-medium text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer shadow-xs"
+                    className="inline-flex items-center justify-center gap-2 h-11 sm:h-10 px-5 rounded-md text-xs sm:text-sm font-medium text-primary-foreground bg-primary hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity cursor-pointer touch-manipulation active:scale-[0.97] shadow-xs"
                   >
                     {isUploading ? (
                       <>
@@ -881,14 +890,14 @@ function NotesSection() {
 
   return (
     <motion.div
-      className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto"
+      className="p-3.5 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-7xl mx-auto"
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">Study Notes</h2>
+          <h2 className="text-lg sm:text-2xl font-bold tracking-tight text-foreground">Study Notes</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             Capture revision notes, key formulas, and chapter summaries
           </p>
@@ -897,7 +906,7 @@ function NotesSection() {
         <button
           type="button"
           onClick={() => setIsAdding(!isAdding)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity self-start cursor-pointer shadow-xs"
+          className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-md font-medium text-xs sm:text-sm text-primary-foreground bg-primary hover:opacity-90 transition-opacity self-start sm:self-auto cursor-pointer touch-manipulation active:scale-[0.97] shadow-xs"
         >
           <Plus className="h-4 w-4" />
           <span>{isAdding ? "Cancel" : "New Note"}</span>
@@ -908,7 +917,7 @@ function NotesSection() {
       {isAdding && (
         <form
           onSubmit={handleAddNote}
-          className="p-5 sm:p-6 rounded-md border border-border bg-card shadow-xs space-y-4"
+          className="p-4 sm:p-6 rounded-md border border-border bg-card shadow-xs space-y-3.5 sm:space-y-4"
         >
           <h3 className="text-sm font-bold text-foreground">Create Study Note</h3>
           <input
@@ -924,19 +933,19 @@ function NotesSection() {
             value={newContent}
             onChange={(e) => setNewContent(e.target.value)}
             rows={4}
-            className="auth-input-field text-sm resize-none"
+            className="auth-input-field text-sm resize-none h-28 sm:h-24 p-3"
           />
-          <div className="flex justify-end gap-2.5">
+          <div className="flex justify-end gap-2.5 pt-1">
             <button
               type="button"
               onClick={() => setIsAdding(false)}
-              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
+              className="h-10 px-4 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer touch-manipulation"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-3.5 py-1.5 rounded-md text-xs font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+              className="h-10 px-4 rounded-md text-xs sm:text-sm font-medium text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer touch-manipulation active:scale-[0.97] shadow-xs"
             >
               Save Note
             </button>
@@ -1044,16 +1053,25 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const [userBooks, setUserBooks] = useState<StorageItem[]>([]);
   const [libraryBooks, setLibraryBooks] = useState<StorageItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activePdf, setActivePdf] = useState<{
     url: string;
     title: string;
     className?: string;
     subject?: string;
   } | null>(null);
+  const [studyHubContext, setStudyHubContext] = useState<{
+    classNum?: string;
+    cacheKey?: string;
+    chapterCode?: string;
+  } | null>(null);
 
   const handleOpenPdf = (url: string, title: string, className?: string, subject?: string) => {
     setActivePdf({ url, title, className, subject });
+  };
+
+  const handleOpenStudyHub = (classNum?: string, cacheKey?: string, chapterCode?: string) => {
+    setStudyHubContext({ classNum, cacheKey, chapterCode });
+    setActiveTab("pyqs");
   };
 
   const fetchData = async () => {
@@ -1120,49 +1138,25 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   const streak = getDailyStreak(userBooks);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
-      {/* Mobile Drawer Backdrop */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Sidebar (Desktop Pinned + Mobile Slide-Over) */}
+    <div className="min-h-[100dvh] bg-background text-foreground flex flex-col lg:flex-row">
+      {/* Desktop Sidebar (Pinned on lg screens) */}
       <aside
         id="dashboard-sidebar"
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 flex flex-col border-r border-border bg-card transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className="hidden lg:flex fixed top-0 bottom-0 left-0 z-50 w-64 flex-col border-r border-border bg-card"
       >
         {/* Brand Header */}
         <div className="p-5 flex items-center justify-between border-b border-border">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground text-background font-mono font-bold text-xs">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground text-background font-mono font-bold text-xs shadow-xs">
               E
             </div>
             <div>
               <span className="text-sm font-bold tracking-tight text-foreground">
                 EduScrapeApp
               </span>
-              <p className="text-xs font-mono uppercase text-muted-foreground tracking-wider">Workspace</p>
+              <p className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider">Workspace</p>
             </div>
           </div>
-
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-label="Close navigation"
-            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary lg:hidden transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         {/* Navigation items */}
@@ -1175,13 +1169,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               <button
                 key={item.id}
                 type="button"
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors duration-150 ${
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer ${
                   isActive
-                    ? "bg-foreground text-background font-semibold"
+                    ? "bg-foreground text-background font-semibold shadow-xs"
                     : "text-muted-foreground hover:bg-secondary hover:text-foreground"
                 }`}
               >
@@ -1199,7 +1190,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             <button
               type="button"
               onClick={handleLogout}
-              className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors"
+              className="p-2 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors cursor-pointer"
               title="Logout"
               aria-label="Logout"
             >
@@ -1228,7 +1219,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               <p className="truncate text-xs font-bold text-foreground">
                 {userProfile.name}
               </p>
-              <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+              <p className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">
                 {userProfile.classLabel}
               </p>
             </div>
@@ -1237,44 +1228,47 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
-        {/* Top bar header */}
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background px-4 sm:px-8">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="Open navigation"
-              aria-expanded={isMobileMenuOpen}
-              aria-controls="dashboard-sidebar"
-              className="p-1.5 rounded-md border border-border bg-card text-foreground lg:hidden"
-            >
-              <Menu className="h-4 w-4" />
-            </button>
-            <h2 className="text-sm sm:text-base font-bold text-foreground">
+      <div className="flex-1 lg:pl-64 flex flex-col min-h-[100dvh]">
+        {/* Top App Bar with mobile-first ergonomics */}
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 backdrop-blur-md px-3.5 sm:px-8 safe-top">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground text-background font-mono font-bold text-xs lg:hidden shadow-xs">
+              E
+            </div>
+            <h2 className="text-sm sm:text-base font-bold text-foreground truncate">
               {tabTitles[activeTab]}
             </h2>
           </div>
 
-          {/* Quick status chips on top bar */}
-          <div className="flex items-center gap-2 sm:gap-3 font-mono">
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-[var(--pastel-amber-bg)] text-[var(--pastel-amber-text)] border border-border">
-              <Flame className="h-3.5 w-3.5" />
-              <span>{streak}d Streak</span>
+          {/* Top Bar Controls & Telemetry */}
+          <div className="flex items-center gap-1.5 sm:gap-3 font-mono">
+            <div className="flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[11px] sm:text-xs bg-[var(--pastel-amber-bg)] text-[var(--pastel-amber-text)] border border-border">
+              <Flame className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span>{streak}d</span>
             </div>
-            <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-secondary text-muted-foreground border border-border">
-              <BookOpen className="h-3.5 w-3.5" />
-              <span>{libraryBooks.length} NCERT</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-secondary text-muted-foreground border border-border">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-secondary text-muted-foreground border border-border">
               <UserCircle2 className="h-3.5 w-3.5" />
               <span>{userProfile.classLabel}</span>
+            </div>
+
+            {/* Mobile Actions in Header */}
+            <div className="lg:hidden flex items-center gap-1">
+              <ThemeToggle />
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-secondary transition-colors touch-manipulation active:scale-95"
+                title="Logout"
+                aria-label="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </header>
 
-        {/* Dynamic Tab Body */}
-        <main className="flex-1 overflow-y-auto">
+        {/* Dynamic Tab Body with safe bottom padding for Mobile Navigation Bar */}
+        <main className="flex-1 overflow-y-auto pb-24 lg:pb-8 safe-pb-nav">
           {activeTab === "overview" ? (
             <DashboardOverview
               profile={userProfile}
@@ -1289,6 +1283,25 @@ export default function Dashboard({ onLogout }: DashboardProps) {
               items={libraryBooks}
               userClass={userProfile.classLabel}
               onOpenPdf={handleOpenPdf}
+              onOpenStudyHub={handleOpenStudyHub}
+            />
+          ) : activeTab === "pyqs" ? (
+            <StudyHub
+              initialClass={studyHubContext?.classNum || userProfile.classLabel?.replace(/\D/g, "") || "10"}
+              initialCacheKey={studyHubContext?.cacheKey}
+              initialChapterCode={studyHubContext?.chapterCode}
+              onClose={() => setActiveTab("overview")}
+              onOpenPdfForChapter={(code) => {
+                const match = libraryBooks.find((b) =>
+                  b.fullPath.toLowerCase().includes(code.toLowerCase())
+                );
+                if (match) {
+                  const publicUrl = supabase.storage.from("ncert").getPublicUrl(match.fullPath).data.publicUrl;
+                  handleOpenPdf(publicUrl, match.name);
+                } else {
+                  setActiveTab("library");
+                }
+              }}
             />
           ) : activeTab === "notes" ? (
             <NotesSection />
@@ -1297,6 +1310,43 @@ export default function Dashboard({ onLogout }: DashboardProps) {
           ) : null}
         </main>
       </div>
+
+      {/* Material 3 Bottom Navigation Bar in the Thumb Zone for Mobile (<1024px) */}
+      <nav
+        role="navigation"
+        aria-label="Mobile Navigation"
+        className="fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border safe-bottom-nav flex items-center justify-around h-16 px-1 lg:hidden shadow-lg"
+      >
+        {sidebarNav.map((item) => {
+          const Icon = item.icon;
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActiveTab(item.id)}
+              className="flex-1 flex flex-col items-center justify-center py-1 px-0.5 rounded-lg transition-transform active:scale-[0.92] touch-manipulation focus-visible:outline-none"
+            >
+              <div
+                className={`flex items-center justify-center h-7 px-3.5 rounded-full transition-all duration-200 ${
+                  isActive
+                    ? "bg-foreground text-background font-semibold shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+              </div>
+              <span
+                className={`text-[10px] mt-0.5 tracking-tight font-medium ${
+                  isActive ? "text-foreground font-semibold" : "text-muted-foreground"
+                }`}
+              >
+                {item.id === "overview" ? "Dashboard" : item.id === "library" ? "Library" : item.id === "pyqs" ? "PYQs" : item.id === "notes" ? "Notes" : "Bookshelf"}
+              </span>
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Fullscreen In-App PDF.js Reader Modal */}
       <PdfReader
