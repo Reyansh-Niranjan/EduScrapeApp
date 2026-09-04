@@ -31,7 +31,7 @@
   <img src="https://img.shields.io/badge/TypeScript-5.x-141413?style=flat-square&logo=typescript&logoColor=3178C6" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.x-141413?style=flat-square&logo=tailwindcss&logoColor=06B6D4" alt="Tailwind CSS" />
   <img src="https://img.shields.io/badge/Supabase-Backend-141413?style=flat-square&logo=supabase&logoColor=3ECF8E" alt="Supabase" />
-  <img src="https://img.shields.io/badge/Gemini_2.0-Flash-141413?style=flat-square&logo=google&logoColor=8E75FF" alt="Gemini 2.0 Flash" />
+  <img src="https://img.shields.io/badge/Python-3.11_Pipeline-141413?style=flat-square&logo=python&logoColor=3776AB" alt="Python Pipeline" />
   <img src="https://img.shields.io/badge/Atlas-ESP32_Hardware-141413?style=flat-square&logo=espressif&logoColor=E7352C" alt="Atlas Hardware" />
 </p>
 
@@ -53,7 +53,7 @@
 ### Problems Solved
 - ⏰ **Curriculum Discovery Grunt Work** — Automates resource finding and eliminates manual downloading.
 - 📚 **Broken Structuring & Missing Taxonomies** — Automatically categorizes textbooks from Class 1 through Class 12.
-- 🔍 **Diagram & Visual Querying** — Multimodal vision AI understands equations, graphs, and textbook figures.
+- ⚡ **Bloated Downloads & Intrusive Watermarks** — Multi-engine compression and automated watermark removal deliver lightweight, distraction-free PDFs.
 - 📡 **Offline & Low-Connectivity Resilience** — Companion **Atlas** hardware device caches curricula onto SD cards for rural environments.
 
 ---
@@ -65,9 +65,14 @@
 - **In-Browser Reader:** Full-screen reader with zoom, keyboard navigation, and instant download.
 - **Watermark Cleaned:** Processed PDFs stripped of visual artifacts for clean printing and study.
 
-### 🤖 AI Assistant & Deep Visual Search
-- **Multimodal Vision:** Streams textbook pages directly to **Gemini 2.0 Flash** via OpenRouter for diagram explanation.
-- **Context-Aware Assistance:** Helps students navigate topics directly aligned with their grade level.
+### ⚙️ Automated Ingestion & Compression Pipeline
+- **Direct Catalog Parser:** Fast, resilient extraction directly from the NCERT portal without headless browser overhead.
+- **Stream Watermark Removal:** PyMuPDF fingerprinting automatically identifies and strips recurring watermarks.
+- **Vector-Preserving Optimization:** Downsamples raster assets and coalesces stream dictionaries (`pdfEasyCompress`, `pdfsizeopt`) while keeping vector text 100% sharp.
+
+### 📝 Integrated Study Hub & Exam Preparation
+- **Board PYQs & Practice:** Dedicated repository of past-year question papers (PYQs) and interactive MCQ quizzes categorized by grade and subject.
+- **Visual Learning & Revision:** Chapter mindmaps, quick-reference flashcards, formula cheatsheets, and personalized study notes alongside textbook reading.
 
 <a id="hardware-companion"></a>
 ### ⚡ Dual Ecosystem: Cloud + Embedded Hardware
@@ -84,7 +89,13 @@ NovaSlate
 │   ├── Landing Page (Precision Minimalist Bento Grid)
 │   ├── User Workspaces (Student, Teacher, Admin)
 │   ├── In-Browser PDF Reader
-│   └── Vision AI Assistant
+│   └── Study Hub & Notes Workspace
+│
+├── ⚙️ Ingestion & Compression Pipeline (Python)
+│   ├── Direct JS NCERT Catalog Parser
+│   ├── Multi-Threaded Resilient Downloader
+│   ├── Stream Watermark Stripper (PyMuPDF)
+│   └── Multi-Engine PDF Optimizer (pdfEasyCompress, pdfsizeopt)
 │
 ├── 📦 Content Delivery (Supabase Storage CDN)
 │   ├── Class1/ through Class12/ (Optimized PDF archives)
@@ -111,7 +122,7 @@ NovaSlate
 | **Typography** | Geist Sans, Geist Mono, Instrument Serif |
 | **Backend & DB** | Supabase (PostgreSQL, Auth, RLS) |
 | **Storage & CDN** | Supabase Storage Content Delivery |
-| **AI Models** | Gemini 2.0 Flash (OpenRouter) |
+| **Data & Compression** | Python 3.11, PyMuPDF, Pillow, pdfsizeopt, cpdfsqueeze |
 | **Hardware** | Atlas (ESP32, C++, MicroSD FAT32) |
 
 ---

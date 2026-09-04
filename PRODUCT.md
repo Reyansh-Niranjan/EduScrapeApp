@@ -24,10 +24,10 @@ The full end-to-end pipeline: automated scraping → readability grading → cur
 
 ## Operating Context
 
-- Students sign in, set their grade, then browse a grade → subject → chapter hierarchy to open ZIP-hosted PDF textbooks.
+- Students sign in, set their grade, then browse a grade → subject → chapter hierarchy to open textbooks.
 - Teachers access the same library across all grades and download materials.
 - Admins manage content, user accounts, and publish announcements from an admin panel.
-- An AI assistant (with vision-powered Deep Visual Search) helps students navigate the library and understand textbook content including diagrams.
+- Built-in Study Hub provides board exam PYQs (Previous Year Questions) and dedicated note-taking alongside curriculum reading.
 - Content is hosted as high-density PDF archives.
 - A companion Atlas ESP32 device downloads and stores resources on an SD card for offline access in low-connectivity areas.
 
@@ -36,16 +36,18 @@ The full end-to-end pipeline: automated scraping → readability grading → cur
 **Confirmed capabilities:**
 - Grade-based digital library (Class 1–12) with subject hierarchy
 - In-browser PDF viewer with navigation, zoom, and download
-- AI chatbot assistant with tool-calling, web search, and Gemini 2.0 Flash vision model
+- Study Hub with board exam PYQs, interactive MCQ quizzes, chapter mindmaps, flashcards, cheatsheets, and revision notes
+- Multi-engine PDF compression pipeline with automated watermark removal
 - Role-based access (Student, Teacher, Admin)
 - Dark/light theme toggle
 - User profile with grade configuration and onboarding
 
 **Technical stack:**
 - Frontend: React 19 + TypeScript + Tailwind CSS 3 + Vite
+- Ingestion & Compression: Python 3.11, PyMuPDF, Pillow, pdfsizeopt
 - Auth & data: Supabase
-- Content delivery: Firebase Hosting
-- AI: OpenRouter API (tool-calling + writer model flow), Gemini 2.0 Flash for vision
+- Content delivery: Supabase Storage CDN
+- Offline hardware: Atlas (ESP32, C++, MicroSD FAT32)
 - Icons: Lucide React
 - Typography: Geist Sans & Geist Mono (Utilitarian Minimalist Editorial)
 - Deploy targets: Netlify, Vercel
