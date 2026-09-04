@@ -275,7 +275,7 @@ class SupabaseReplenisher:
         unified_manifest = {
             "meta": {
                 "version": "2.0.0",
-                "app": "EduScrapeApp",
+                "app": "NovaSlate",
                 "source": "NCERT Official",
                 "last_updated": datetime.now(timezone.utc).isoformat(),
                 "total_classes": len(enriched_classes),

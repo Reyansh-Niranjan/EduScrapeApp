@@ -24,9 +24,12 @@
     <circle cx="34" cy="20" r="4.5" fill="#52525B" opacity="0.6"/>
     <circle cx="48" cy="20" r="4.5" fill="#52525B" opacity="0.6"/>
     
+    <!-- Brand Title in Header -->
+    <text x="80" y="24" fill="#A1A1AA" font-size="11" class="mono" font-weight="600">NOVASLATE // WORKSPACE</text>
+
     <!-- URL Address Bar -->
     <rect x="360" y="8" width="420" height="24" rx="4" fill="#141416" stroke="#2E2E33" stroke-width="1"/>
-    <text x="570" y="24" fill="#A1A1AA" font-size="11" class="mono" text-anchor="middle">eduscrapeapp.web.app/library/class-10/math</text>
+    <text x="570" y="24" fill="#A1A1AA" font-size="11" class="mono" text-anchor="middle">novaslate.web.app/library/class-10/math</text>
     
     <!-- Status Indicator in Top Right -->
     <rect x="1000" y="10" width="120" height="20" rx="10" fill="#193120" stroke="#2D5A34" stroke-width="1"/>
@@ -162,7 +165,7 @@
           <!-- Watermark-Free Guarantee Seal -->
           <g transform="translate(0, 316)">
             <line x1="0" y1="0" x2="480" y2="0" stroke="#E5E5E5" stroke-width="1"/>
-            <text x="0" y="22" fill="#71717A" font-size="9.5" class="mono">SCRAPED &amp; WATERMARK-SANITIZED VIA EDUSCRAPEAPP AUTOMATION PIPELINE</text>
+            <text x="0" y="22" fill="#71717A" font-size="9.5" class="mono">CURATED &amp; WATERMARK-SANITIZED VIA NOVASLATE AUTOMATION PIPELINE</text>
           </g>
         </g>
       </g>
@@ -228,7 +231,7 @@
         <!-- Hardware Push Trigger -->
         <g transform="translate(0, 396)">
           <rect width="248" height="42" rx="6" fill="#EDEDED"/>
-          <text x="124" y="25" fill="#111111" font-size="11.5" class="sans" font-weight="600" text-anchor="middle">Push to ESP32 Device →</text>
+          <text x="124" y="25" fill="#111111" font-size="11.5" class="sans" font-weight="600" text-anchor="middle">Push to Atlas Device →</text>
         </g>
       </g>
     </g>

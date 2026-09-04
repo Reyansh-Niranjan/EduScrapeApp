@@ -159,7 +159,7 @@ export default function Creator() {
             Designed &amp; engineered by Reyansh Niranjan.
           </h2>
           <p className="creator-header-item text-xs sm:text-base text-muted-foreground leading-relaxed max-w-[50ch] will-change-transform">
-            EduScrapeApp is an independent open-source software and hardware engineering project created to democratize access to K–12 educational materials across India.
+            NovaSlate is an independent open-source software and hardware engineering project created to democratize access to K–12 educational materials across India.
           </p>
         </div>
 
@@ -212,7 +212,7 @@ export default function Creator() {
 
                 <p className="text-xs text-muted-foreground leading-relaxed max-w-[48ch]">
                   {creator?.bio ||
-                    "Architect of EduScrapeApp and the ESP32 offline educational ecosystem. Focused on automated data extraction pipelines, modern web applications, and offline-first physical hardware."}
+                    "Architect of NovaSlate and the Atlas ESP32 offline educational ecosystem. Focused on automated data extraction pipelines, modern web applications, and offline-first physical hardware."}
                 </p>
 
                 {creator?.location && (

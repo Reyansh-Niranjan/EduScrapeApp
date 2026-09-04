@@ -1,5 +1,5 @@
 ---
-name: EduScrapeApp
+name: NovaSlate
 description: Utilitarian Minimalist Curriculum Platform with High-Craft GSAP Motion
 colors:
   primary: "#141413"
@@ -92,13 +92,13 @@ components:
     padding: "24px 28px"
 ---
 
-# Design System: EduScrapeApp
+# Design System: NovaSlate
 
 ## Overview
 
 **Creative North Star: "The Editorial Hardware Laboratory"**
 
-EduScrapeApp embodies the disciplined restraint of precision scientific instrumentation combined with the typography of an elite architectural journal. The interface prioritizes scannability, dense tabular taxonomy, high-contrast monochrome surfaces, and 60fps compositor physics over generic SaaS gradient mush and decorative filler.
+NovaSlate embodies the disciplined restraint of precision scientific instrumentation combined with the typography of an elite architectural journal. The interface prioritizes scannability, dense tabular taxonomy, high-contrast monochrome surfaces, and 60fps compositor physics over generic SaaS gradient mush and decorative filler.
 
 Every component feels machined and tactile: hairline 1px borders, subtle millimeter dot-matrix grids, Faux-OS window chrome, and spot pastels reserved strictly for telemetry and semantic status. Motion is purposeful, fluid, and non-blocking, orchestrated through GSAP timelines, ScrollTrigger batch reveals, and quickTo 3D cursor physics.
 

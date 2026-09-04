@@ -126,7 +126,7 @@ export default function About() {
             An end-to-end curriculum pipeline.
           </h2>
           <p className="about-header-item text-xs sm:text-base text-muted-foreground leading-relaxed max-w-[50ch] will-change-transform">
-            EduScrapeApp transforms raw, fragmented education archives into clean, structured digital textbooks through automated crawling, watermark stripping, and dual cloud/hardware delivery.
+            NovaSlate transforms raw, fragmented education archives into clean, structured digital textbooks through automated crawling, watermark stripping, and dual cloud/hardware delivery.
           </p>
         </div>
 
@@ -337,11 +337,11 @@ export default function About() {
 
               <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground mb-2 sm:mb-3 flex items-center gap-2">
                 <Cpu className="w-5 h-5 text-foreground shrink-0" />
-                <span>Dual Delivery: Web Portal &amp; Embedded ESP32</span>
+                <span>Dual Delivery: Web Portal &amp; Atlas ESP32</span>
               </h3>
 
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4 sm:mb-6 max-w-[48ch]">
-                Students access reading material either online via our high-speed React web portal or completely offline through dedicated low-power ESP32 physical reading units.
+                Students access reading material either online via our high-speed React web portal or completely offline through dedicated low-power Atlas physical reading units.
               </p>
 
               {/* Dual System Comparison */}
@@ -360,7 +360,7 @@ export default function About() {
 
                 <li className="p-3 sm:p-4 rounded-md bg-secondary/50">
                   <div className="font-semibold text-foreground flex items-center justify-between mb-1 text-[11px] sm:text-xs">
-                    <span>ESP32 Device (Offline)</span>
+                    <span>Atlas Device (Offline)</span>
                     <Badge variant="amber">
                       OFFLINE
                     </Badge>

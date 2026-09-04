@@ -16,11 +16,11 @@ web
 
 ## Product Purpose
 
-EduScrapeApp is an automated curriculum curation platform. It scrapes, grades, organizes, and delivers educational resources so students and educators can access quality materials from a single place instead of hunting across dozens of websites. Success means a student can find, open, and study their textbook in seconds — on any device, even with limited connectivity.
+NovaSlate is an automated curriculum curation platform. It scrapes, grades, organizes, and delivers educational resources so students and educators can access quality materials from a single place instead of hunting across dozens of websites. Success means a student can find, open, and study their textbook in seconds — on any device, even with limited connectivity.
 
 ## Positioning
 
-The full end-to-end pipeline: automated scraping → readability grading → curriculum-aligned curation → instant delivery → optional offline ESP32 device. No competing platform covers the entire chain from raw web content to an offline hardware reader.
+The full end-to-end pipeline: automated scraping → readability grading → curriculum-aligned curation → instant delivery → optional offline Atlas ESP32 device. No competing platform covers the entire chain from raw web content to an offline hardware reader.
 
 ## Operating Context
 
@@ -28,8 +28,8 @@ The full end-to-end pipeline: automated scraping → readability grading → cur
 - Teachers access the same library across all grades and download materials.
 - Admins manage content, user accounts, and publish announcements from an admin panel.
 - An AI assistant (with vision-powered Deep Visual Search) helps students navigate the library and understand textbook content including diagrams.
-- Content is hosted on Firebase (`eduscrape-host.web.app`) as ZIP archives containing PDFs.
-- A companion ESP32 device downloads and stores resources on an SD card for offline access in low-connectivity areas.
+- Content is hosted as high-density PDF archives.
+- A companion Atlas ESP32 device downloads and stores resources on an SD card for offline access in low-connectivity areas.
 
 ## Capabilities and Constraints
 
@@ -56,7 +56,7 @@ The full end-to-end pipeline: automated scraping → readability grading → cur
 
 ## Brand Commitments
 
-- Name "EduScrapeApp" and vector monogram logo.
+- Name "NovaSlate" and vector monogram logo.
 - Premium utilitarian minimalism: warm monochrome palette, crisp 1px borders, muted pastels, zero AI-slop gradients.
 
 ## Evidence on Hand

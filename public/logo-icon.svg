@@ -1,20 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <linearGradient id="logo-icon-primary" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#FAFAFA"/>
+    <linearGradient id="novaslate-icon-primary" x1="10" y1="12" x2="52" y2="52" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="60%" stop-color="#E4E4E7"/>
       <stop offset="100%" stop-color="#A1A1AA"/>
     </linearGradient>
-    <linearGradient id="logo-icon-accent" x1="16" y1="16" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#34D399"/>
-      <stop offset="100%" stop-color="#059669"/>
+    <linearGradient id="novaslate-icon-accent" x1="42" y1="10" x2="52" y2="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <linearGradient id="novaslate-icon-diag" x1="18" y1="18" x2="46" y2="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#71717A"/>
     </linearGradient>
   </defs>
   
-  <rect x="2" y="2" width="60" height="60" rx="14" fill="#09090B" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#09090B" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
   
-  <rect x="18" y="16" width="5" height="32" rx="2.5" fill="url(#logo-icon-primary)"/>
-  <path d="M25 18.5 H42 C44.2091 18.5 46 20.2909 46 22.5 C46 24.7091 44.2091 26.5 42 26.5 H25 V18.5 Z" fill="url(#logo-icon-primary)"/>
-  <rect x="25" y="29.5" width="13" height="5" rx="2.5" fill="url(#logo-icon-primary)"/>
-  <path d="M25 37.5 H42 C44.2091 37.5 46 39.2909 46 41.5 C46 43.7091 44.2091 45.5 42 45.5 H25 V37.5 Z" fill="url(#logo-icon-primary)"/>
-  <circle cx="45" cy="22.5" r="2.5" fill="url(#logo-icon-accent)"/>
+  <rect x="16" y="16" width="6.5" height="32" rx="3" fill="url(#novaslate-icon-primary)"/>
+  <rect x="41.5" y="16" width="6.5" height="32" rx="3" fill="url(#novaslate-icon-primary)"/>
+  <path d="M19 18.5 L45 42.5 C46.2 43.6 46.5 45.2 45 46.5 C43.8 47.5 42.2 47 41 45.8 L16.5 22.8 C15.5 21.8 15.6 20.2 16.8 19.2 C17.5 18.6 18.3 18.2 19 18.5 Z" fill="url(#novaslate-icon-diag)"/>
+  <rect x="25.5" y="29.5" width="13" height="5" rx="2.5" fill="#FAFAFA" opacity="0.95"/>
+  <path d="M47 10 L48.2 13 L51.2 14.2 L48.2 15.4 L47 18.4 L45.8 15.4 L42.8 14.2 L45.8 13 Z" fill="url(#novaslate-icon-accent)"/>
+  <circle cx="47" cy="14.2" r="0.9" fill="#FFFFFF"/>
 </svg>

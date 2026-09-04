@@ -9,7 +9,7 @@ export default function PrivacyPolicy() {
           Privacy Policy
         </h1>
         <p className="mb-6 sm:mb-8 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          This Privacy Policy explains how EduScrapeApp collects, uses, and protects your information when you use the
+          This Privacy Policy explains how NovaSlate collects, uses, and protects your information when you use the
           website and services.
         </p>
 
@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
               How We Use Information
             </h2>
             <ul className="space-y-2 text-muted-foreground list-disc pl-5">
-              <li>Provide, personalize, and maintain the EduScrapeApp experience.</li>
+              <li>Provide, personalize, and maintain the NovaSlate experience.</li>
               <li>Secure your account and prevent abuse or unauthorized access.</li>
               <li>Improve reliability, analytics, and feature performance.</li>
             </ul>

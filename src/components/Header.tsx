@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger, ScrollToPlugin);
 
@@ -108,12 +109,10 @@ export default function Header() {
           onClick={(e) => handleNavClick(e, "#home")}
           className="flex items-center gap-2.5 text-foreground hover:opacity-85 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground rounded-sm touch-manipulation active:scale-[0.97]"
         >
-          <div className="h-7 w-7 rounded-md bg-foreground text-background flex items-center justify-center font-bold font-mono text-xs shadow-xs">
-            E
-          </div>
+          <Logo className="h-7 w-7" />
           <div className="flex items-baseline gap-1.5">
             <span className="font-bold text-sm tracking-tight text-foreground">
-              EduScrapeApp
+              NovaSlate
             </span>
           </div>
         </a>
@@ -205,10 +204,8 @@ export default function Header() {
                   {/* Sheet Header */}
                   <div className="flex items-center justify-between border-b border-border pb-3">
                     <div className="flex items-center gap-2">
-                      <div className="h-6 w-6 rounded bg-foreground text-background flex items-center justify-center font-mono font-bold text-xs">
-                        E
-                      </div>
-                      <span className="font-bold text-sm text-foreground">Navigation</span>
+                      <Logo className="h-6 w-6" />
+                      <span className="font-bold text-sm text-foreground">NovaSlate</span>
                     </div>
                     <button
                       onClick={() => setMobileMenuOpen(false)}
@@ -259,7 +256,7 @@ export default function Header() {
                         Class 1–12 Open Access
                       </span>
                       <a
-                        href="https://github.com/Reyansh-Niranjan/eduscrapeappweb"
+                        href="https://github.com/Reyansh-Niranjan/novaslate"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-foreground hover:underline"

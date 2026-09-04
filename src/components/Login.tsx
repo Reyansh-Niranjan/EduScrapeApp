@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import { supabase } from "../lib/supabaseClient";
+import Logo from "./Logo";
 
 interface LoginProps {
   onCancel?: () => void;
@@ -158,11 +159,9 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
           <div className="md:col-span-5 p-4 sm:p-8 bg-secondary/40 border-b md:border-b-0 md:border-r border-border flex flex-col justify-between">
             <div className="space-y-4 sm:space-y-6">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-md bg-foreground text-background flex items-center justify-center font-bold font-mono text-xs">
-                  E
-                </div>
+                <Logo className="w-7 h-7" />
                 <span className="font-semibold text-sm text-foreground tracking-tight">
-                  EduScrapeApp
+                  NovaSlate
                 </span>
               </div>
 
@@ -532,7 +531,7 @@ export default function Login({ onCancel, onSuccess }: LoginProps) {
         transition={{ duration: 0.3, delay: 0.15 }}
         className="w-full max-w-5xl mx-auto text-center text-xs font-mono text-muted-foreground"
       >
-        EduScrapeApp · Class 1–12 Automated Curriculum Platform
+        NovaSlate · Class 1–12 Automated Curriculum Platform
       </motion.div>
     </div>
   );

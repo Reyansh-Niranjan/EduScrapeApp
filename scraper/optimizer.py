@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""EduScrapeApp PDF Compression & Optimization Engine.
+"""NovaSlate PDF Compression & Optimization Engine.
 
 Combines in-stream image downsampling with Pillow and PyMuPDF stream deflation/garbage collection.
 Preserves vector text, fonts, and searchable layers.
@@ -221,7 +221,7 @@ def format_size(num_bytes: int) -> str:
 
 def main():
     """Standalone CLI entry point for testing and compressing individual PDFs."""
-    parser = argparse.ArgumentParser(description="EduScrapeApp In-Process PDF Compression Engine")
+    parser = argparse.ArgumentParser(description="NovaSlate In-Process PDF Compression Engine")
     parser.add_argument("input", type=Path, help="Input PDF file path")
     parser.add_argument("output", type=Path, nargs="?", default=None, help="Output PDF file path (optional)")
     parser.add_argument("--dpi", type=int, default=140, help="Target image scan DPI (default: 140)")

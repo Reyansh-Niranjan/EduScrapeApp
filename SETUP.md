@@ -1,4 +1,4 @@
-# Setup & Deployment (EduScrapeAppWeb)
+# Setup & Deployment (NovaSlate Web)
 
 This repository contains:
 - **Frontend**: React + Vite + Tailwind (in `src/`)

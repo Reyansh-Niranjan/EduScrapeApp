@@ -1,6 +1,6 @@
 # 📚 NCERT Scraper & Multi-Engine Compression Pipeline
 
-A high-performance, resilient NCERT textbook extraction, deep PDF size optimization, and cloud synchronization engine designed for **EduScrapeApp**.
+A high-performance, resilient NCERT textbook extraction, deep PDF size optimization, and cloud synchronization engine designed for **NovaSlate**.
 
 ---
 

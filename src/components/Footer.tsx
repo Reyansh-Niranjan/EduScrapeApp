@@ -1,4 +1,5 @@
 import { Github, Terminal } from "lucide-react";
+import Logo from "./Logo";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -10,11 +11,9 @@ export default function Footer() {
           {/* Brand Col */}
           <div className="sm:col-span-2 md:col-span-5 space-y-2.5">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded bg-foreground text-background flex items-center justify-center font-mono font-bold text-xs">
-                E
-              </div>
+              <Logo className="h-6 w-6" />
               <span className="font-bold text-sm tracking-tight text-foreground">
-                EduScrapeApp
+                NovaSlate
               </span>
             </div>
             <p className="text-xs text-muted-foreground max-w-sm leading-relaxed">
@@ -51,7 +50,7 @@ export default function Footer() {
             <div className="space-y-1.5">
               <div>
                 <a
-                  href="https://github.com/Reyansh-Niranjan/eduscrapeappweb"
+                  href="https://github.com/Reyansh-Niranjan/novaslate"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-1 text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5 touch-manipulation"
@@ -62,13 +61,13 @@ export default function Footer() {
               </div>
               <div>
                 <a
-                  href="https://github.com/Reyansh-Niranjan/EduScrapeApp"
+                  href="https://github.com/Reyansh-Niranjan/novaslate"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="py-1 text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5 touch-manipulation"
                 >
                   <Terminal className="w-3.5 h-3.5" />
-                  ESP32 Hardware Firmware
+                  Atlas Hardware Firmware
                 </a>
               </div>
               <div className="pt-1 flex gap-3 text-muted-foreground">
@@ -83,7 +82,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-4 sm:pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-muted-foreground text-xs font-mono text-center sm:text-left">
           <div>
-            &copy; {currentYear} EduScrapeApp. Engineered by{" "}
+            &copy; {currentYear} NovaSlate. Engineered by{" "}
             <a
               href="https://github.com/Reyansh-Niranjan"
               target="_blank"

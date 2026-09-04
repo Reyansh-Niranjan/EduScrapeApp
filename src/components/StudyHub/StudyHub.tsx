@@ -655,7 +655,7 @@ export const StudyHub: React.FC<StudyHubProps> = ({
               <div className="space-y-1 max-w-md">
                 <h3 className="text-sm sm:text-base font-bold text-foreground">Authentication Required</h3>
                 <p className="text-xs text-muted-foreground">
-                  Access to StudyOS past year board questions, formula sheets, and 3D flashcards requires an authenticated EduScrape account.
+                  Access to StudyOS past year board questions, formula sheets, and 3D flashcards requires an authenticated NovaSlate account.
                 </p>
               </div>
               <div className="flex items-center gap-3 pt-2">
@@ -663,7 +663,7 @@ export const StudyHub: React.FC<StudyHubProps> = ({
                   href="#login"
                   className="inline-flex items-center gap-2 rounded-md bg-foreground px-4 py-2 text-xs font-bold text-background hover:opacity-90 transition-opacity"
                 >
-                  <UserCheck className="h-3.5 w-3.5" /> Sign In to EduScrape
+                  <UserCheck className="h-3.5 w-3.5" /> Sign In to NovaSlate
                 </a>
               </div>
             </div>

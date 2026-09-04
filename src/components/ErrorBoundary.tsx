@@ -33,7 +33,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
 
     if (looksLikeChunkLoadFailure) {
       try {
-        const key = "eduscrape:autoReloadedAfterChunkError";
+        const key = "novaslate:autoReloadedAfterChunkError";
         const alreadyReloaded = sessionStorage.getItem(key) === "1";
         if (!alreadyReloaded) {
           sessionStorage.setItem(key, "1");

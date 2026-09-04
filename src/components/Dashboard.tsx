@@ -29,6 +29,7 @@ import ThemeToggle from "./ThemeToggle";
 import { PdfReader } from "./PdfReader";
 import { NestedLibrary } from "./NestedLibrary";
 import { StudyHub } from "./StudyHub/StudyHub";
+import Logo from "./Logo";
 
 interface DashboardProps {
   onLogout?: () => void;
@@ -846,7 +847,7 @@ function BooksSection({
 function NotesSection() {
   const [notes, setNotes] = useState<Array<{ id: string; title: string; content: string; date: string }>>(() => {
     try {
-      const saved = localStorage.getItem("eduscrape_local_notes");
+      const saved = localStorage.getItem("novaslate_local_notes") || localStorage.getItem("eduscrape_local_notes");
       return saved ? JSON.parse(saved) : [
         {
           id: "1",
@@ -866,7 +867,7 @@ function NotesSection() {
 
   const saveNotes = (updated: typeof notes) => {
     setNotes(updated);
-    localStorage.setItem("eduscrape_local_notes", JSON.stringify(updated));
+    localStorage.setItem("novaslate_local_notes", JSON.stringify(updated));
   };
 
   const handleAddNote = (e: React.FormEvent) => {
@@ -1091,7 +1092,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
       } else {
         setUserProfile({
           name: "Guest Student",
-          email: "student@eduscrapeapp.dev",
+          email: "student@novaslate.dev",
           classLabel: "Class 10",
           avatarUrl: null,
         });
@@ -1111,7 +1112,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
     } catch {
       setUserProfile({
         name: "Guest Student",
-        email: "student@eduscrapeapp.dev",
+        email: "student@novaslate.dev",
         classLabel: "Class 10",
         avatarUrl: null,
       });
@@ -1123,6 +1124,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, []);
 
@@ -1147,12 +1149,10 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         {/* Brand Header */}
         <div className="p-5 flex items-center justify-between border-b border-border">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground text-background font-mono font-bold text-xs shadow-xs">
-              E
-            </div>
+            <Logo className="h-8 w-8" />
             <div>
               <span className="text-sm font-bold tracking-tight text-foreground">
-                EduScrapeApp
+                NovaSlate
               </span>
               <p className="text-[10px] font-mono uppercase text-muted-foreground tracking-wider">Workspace</p>
             </div>
@@ -1232,9 +1232,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         {/* Top App Bar with mobile-first ergonomics */}
         <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 backdrop-blur-md px-3.5 sm:px-8 safe-top">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-foreground text-background font-mono font-bold text-xs lg:hidden shadow-xs">
-              E
-            </div>
+            <Logo className="h-7 w-7 lg:hidden" />
             <h2 className="text-sm sm:text-base font-bold text-foreground truncate">
               {tabTitles[activeTab]}
             </h2>

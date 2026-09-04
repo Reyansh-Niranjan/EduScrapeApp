@@ -354,7 +354,7 @@ export default function Hero() {
                   <div className="window-dot" />
                 </div>
                 <span className="text-muted-foreground text-[11px] sm:text-xs truncate px-2 font-mono">
-                  eduscrape://{selectedCurriculum.id}
+                  novaslate://{selectedCurriculum.id}
                 </span>
                 <Badge variant="green">
                   LIVE

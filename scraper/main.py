@@ -188,7 +188,7 @@ def main():
         marker_file.unlink(missing_ok=True)
 
     console.print("[bold cyan]==============================================================[/bold cyan]")
-    console.print("[bold cyan]  EduScrapeApp -- NCERT Scraper & Optimization Pipeline       [/bold cyan]")
+    console.print("[bold cyan]  NovaSlate -- NCERT Scraper & Optimization Pipeline          [/bold cyan]")
     console.print("[bold cyan]==============================================================[/bold cyan]\n")
 
     # Step 1: Catalog Extraction (Direct NCERT parser / Cache)

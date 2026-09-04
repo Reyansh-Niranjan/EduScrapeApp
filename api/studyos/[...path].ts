@@ -49,7 +49,7 @@ export default async function handler(req: Request) {
     const upstreamRes = await fetch(targetUrl, {
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'Mozilla/5.0 EduScrapeApp/1.0',
+        'User-Agent': 'Mozilla/5.0 NovaSlate/1.0',
       },
     });
 

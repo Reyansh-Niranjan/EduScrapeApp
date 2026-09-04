@@ -226,7 +226,7 @@ export function getSubjectChapters(subj?: SubjectData | null): ChapterItem[] {
 }
 
 /**
- * Matches an NCERT book or chapter from EduScrapeApp's Library/Reader to StudyOS Subject and Chapter
+ * Matches an NCERT book or chapter from NovaSlate's Library/Reader to StudyOS Subject and Chapter
  */
 export function findChaptersForBook(
   fullPathOrTitle: string,

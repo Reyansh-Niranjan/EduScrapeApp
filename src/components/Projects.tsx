@@ -14,7 +14,7 @@ export default function Projects() {
   const ecosystemItems = [
     {
       id: "web-hub",
-      name: "EduScrapeApp Web Platform",
+      name: "NovaSlate Web Platform",
       badge: "CLOUD PLATFORM",
       badgeVariant: "blue" as const,
       description:
@@ -26,14 +26,14 @@ export default function Projects() {
         { label: "AI Explainer", value: "Gemini 2.0 Flash" },
       ],
       icon: Globe,
-      repoUrl: "https://github.com/Reyansh-Niranjan/eduscrapeappweb",
-      imageUrl: "/eduscrape_web_banner.svg",
+      repoUrl: "https://github.com/Reyansh-Niranjan/novaslate",
+      imageUrl: "/novaslate_web_banner.svg",
       actionText: "Open Digital Library",
       actionHash: "#login",
     },
     {
       id: "hardware-device",
-      name: "EduScraper ESP32 Hardware Device",
+      name: "Atlas ESP32 Hardware Device",
       badge: "EMBEDDED HARDWARE",
       badgeVariant: "amber" as const,
       description:
@@ -45,10 +45,10 @@ export default function Projects() {
         { label: "Page Latency", value: "<12ms Instant Render" },
       ],
       icon: Cpu,
-      repoUrl: "https://github.com/Reyansh-Niranjan/EduScrapeApp",
+      repoUrl: "https://github.com/Reyansh-Niranjan/novaslate",
       imageUrl: "/esp32_device.jpeg",
       actionText: "View Hardware Firmware",
-      actionLink: "https://github.com/Reyansh-Niranjan/EduScrapeApp",
+      actionLink: "https://github.com/Reyansh-Niranjan/novaslate",
     },
   ];
 

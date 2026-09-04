@@ -9,7 +9,7 @@ export default function TermsOfService() {
           Terms of Service
         </h1>
         <p className="mb-6 sm:mb-8 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-          These Terms of Service govern your access to and use of EduScrapeApp. By using the service, you agree to these
+          These Terms of Service govern your access to and use of NovaSlate. By using the service, you agree to these
           terms.
         </p>
 
@@ -40,7 +40,7 @@ export default function TermsOfService() {
               Content Ownership
             </h2>
             <p className="text-muted-foreground">
-              You retain ownership of content you submit. You grant EduScrapeApp a limited license to host and display the
+              You retain ownership of content you submit. You grant NovaSlate a limited license to host and display the
               content solely to provide the service.
             </p>
           </div>
