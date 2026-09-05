@@ -27,7 +27,13 @@ import {
 import { supabase } from "../lib/supabaseClient";
 import ThemeToggle from "./ThemeToggle";
 import { PdfReader } from "./PdfReader";
-import { NestedLibrary } from "./NestedLibrary";
+import { NestedLibrary, getInternetArchiveUrl, SAMPLE_NCERT_CATALOG } from "./NestedLibrary";
+import {
+  saveLocalUserBook,
+  getLocalUserBooks,
+  getLocalUserBookBlob,
+  deleteLocalUserBook,
+} from "../lib/userBooks";
 import { StudyHub } from "./StudyHub/StudyHub";
 import Logo from "./Logo";
 
@@ -51,6 +57,8 @@ interface StorageItem {
   updatedAt: string | null;
   size: number | null;
   mimeType: string | null;
+  url?: string;
+  id?: string;
 }
 
 const sidebarNav: { id: DashboardTab; label: string; icon: typeof LayoutDashboard }[] = [
@@ -417,15 +425,12 @@ function DashboardOverview({
               <button
                 type="button"
                 onClick={async () => {
-                  if (libraryBooks.some((b) => b.fullPath === latestItem.fullPath)) {
-                    const pubUrl = supabase.storage.from("ncert").getPublicUrl(latestItem.fullPath).data.publicUrl;
-                    onOpenPdf?.(pubUrl, formatTitle(latestItem.name), "NCERT", "Textbook");
-                  } else {
-                    const { data } = await supabase.storage.from("user-books").createSignedUrl(latestItem.fullPath, 3600);
-                    if (data?.signedUrl) {
-                      onOpenPdf?.(data.signedUrl, formatTitle(latestItem.name), "Custom Upload", "My Bookshelf");
-                    }
+                  let targetUrl = latestItem.url || getInternetArchiveUrl(latestItem.fullPath);
+                  if (latestItem.id) {
+                    const blob = await getLocalUserBookBlob(latestItem.id);
+                    if (blob) targetUrl = URL.createObjectURL(blob);
                   }
+                  onOpenPdf?.(targetUrl, formatTitle(latestItem.name), "Reading", "Recent");
                 }}
                 className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity shrink-0 cursor-pointer shadow-xs"
               >
@@ -565,20 +570,7 @@ function BooksSection({
     setSuccessMessage(null);
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData?.user?.id ?? "anonymous";
-      const cleanTitle = (customTitle.trim() || selectedFile.name.replace(/\.pdf$/i, "")).replace(/[^a-zA-Z0-9_-]/g, "_");
-      const filePath = `${userId}/${Date.now()}_${cleanTitle}.pdf`;
-
-      const { error } = await supabase.storage
-        .from("user-books")
-        .upload(filePath, selectedFile, {
-          cacheControl: "3600",
-          upsert: true,
-          contentType: "application/pdf",
-        });
-
-      if (error) throw error;
+      await saveLocalUserBook(selectedFile, customTitle);
 
       setSuccessMessage("PDF uploaded to your bookshelf!");
       setSelectedFile(null);
@@ -795,21 +787,33 @@ function BooksSection({
                 <span className="text-xs font-mono text-muted-foreground">
                   {toDate(item.createdAt ?? item.updatedAt)?.toLocaleDateString() ?? "Uploaded"}
                 </span>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const { data } = await supabase.storage
-                      .from("user-books")
-                      .createSignedUrl(item.fullPath, 60 * 60);
-                    if (data?.signedUrl) {
-                      onOpenPdf(data.signedUrl, formatTitle(item.name), "Custom Upload", "My Bookshelf");
-                    }
-                  }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
-                >
-                  <span>Open</span>
-                  <BookOpen className="h-3.5 w-3.5" />
-                </button>
+                <div className="flex items-center gap-1.5">
+                  {item.id && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await deleteLocalUserBook(item.id!);
+                        if (onRefresh) onRefresh();
+                      }}
+                      className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                      title="Delete local book"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const blob = item.id ? await getLocalUserBookBlob(item.id) : null;
+                      const targetUrl = blob ? URL.createObjectURL(blob) : item.url || getInternetArchiveUrl(item.fullPath);
+                      onOpenPdf(targetUrl, formatTitle(item.name), "Custom Upload", "My Bookshelf");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium text-xs text-primary-foreground bg-primary hover:opacity-90 transition-opacity cursor-pointer shadow-xs"
+                  >
+                    <span>Open</span>
+                    <BookOpen className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -1002,47 +1006,39 @@ function NotesSection() {
 }
 
 /* =========================================================================
-   STORAGE LOADER
+   CATALOG LOADER (Zero Supabase Storage - PostgreSQL + Local Fallback)
    ========================================================================= */
-async function listStorageItems(bucket: string) {
-  const collected: StorageItem[] = [];
+async function listCatalogItems(): Promise<StorageItem[]> {
+  try {
+    const { data, error } = await supabase
+      .from("catalog")
+      .select("*")
+      .eq("is_available", true)
+      .order("class", { ascending: true });
 
-  const walk = async (path = "", depth = 0) => {
-    const { data, error } = await supabase.storage.from(bucket).list(path, {
-      limit: 100,
-      sortBy: { column: "created_at", order: "desc" },
-    });
-
-    if (error) throw error;
-
-    for (const item of data ?? []) {
-      const fullPath = path ? `${path}/${item.name}` : item.name;
-      const metadata = item.metadata && typeof item.metadata === "object" ? item.metadata : null;
-      const isFolder = metadata === null && !/\.[a-z0-9]+$/i.test(item.name) && depth < 3;
-
-      if (isFolder) {
-        await walk(fullPath, depth + 1);
-        continue;
-      }
-
-      collected.push({
-        name: item.name,
-        fullPath,
-        createdAt: item.created_at ?? null,
-        updatedAt: item.updated_at ?? null,
-        size: typeof metadata?.size === "number" ? metadata.size : null,
-        mimeType: typeof metadata?.mimetype === "string" ? metadata.mimetype : null,
-      });
+    if (error || !data || data.length === 0) {
+      return getFallbackCatalog();
     }
-  };
 
-  await walk();
+    return data.map((row: any) => ({
+      name: row.title ? `${row.title}.pdf` : (row.file_path.split("/").pop() || "Textbook.pdf"),
+      fullPath: row.file_path,
+      createdAt: row.created_at ?? null,
+      updatedAt: row.updated_at ?? null,
+      size: typeof row.size_bytes === "number" ? row.size_bytes : null,
+      mimeType: "application/pdf",
+      url: row.url || getInternetArchiveUrl(row.file_path),
+    }));
+  } catch {
+    return getFallbackCatalog();
+  }
+}
 
-  return collected.sort((a, b) => {
-    const aTime = toDate(a.updatedAt ?? a.createdAt)?.getTime() ?? 0;
-    const bTime = toDate(b.updatedAt ?? b.createdAt)?.getTime() ?? 0;
-    return bTime - aTime;
-  });
+function getFallbackCatalog(): StorageItem[] {
+  return SAMPLE_NCERT_CATALOG.map((item) => ({
+    ...item,
+    url: item.url || getInternetArchiveUrl(item.fullPath),
+  }));
 }
 
 /* =========================================================================
@@ -1098,13 +1094,19 @@ export default function Dashboard({ onLogout }: DashboardProps) {
         });
       }
 
-      const timeoutPromise = new Promise<StorageItem[]>((_, reject) =>
-        setTimeout(() => reject(new Error("Storage timeout")), 3000)
-      );
-
       const [privateBooks, publicBooks] = await Promise.all([
-        Promise.race([listStorageItems("user-books"), timeoutPromise]).catch(() => []),
-        Promise.race([listStorageItems("ncert"), timeoutPromise]).catch(() => []),
+        getLocalUserBooks().then((books) =>
+          books.map((b) => ({
+            id: b.id,
+            name: b.name,
+            fullPath: b.fullPath,
+            createdAt: b.createdAt,
+            updatedAt: b.updatedAt,
+            size: b.size,
+            mimeType: b.mimeType,
+          }))
+        ),
+        listCatalogItems(),
       ]);
 
       setUserBooks(privateBooks);
@@ -1294,8 +1296,8 @@ export default function Dashboard({ onLogout }: DashboardProps) {
                   b.fullPath.toLowerCase().includes(code.toLowerCase())
                 );
                 if (match) {
-                  const publicUrl = supabase.storage.from("ncert").getPublicUrl(match.fullPath).data.publicUrl;
-                  handleOpenPdf(publicUrl, match.name);
+                  const targetUrl = match.url || getInternetArchiveUrl(match.fullPath);
+                  handleOpenPdf(targetUrl, match.name);
                 } else {
                   setActiveTab("library");
                 }

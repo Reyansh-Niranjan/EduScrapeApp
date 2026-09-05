@@ -8,10 +8,11 @@
 #   "python-dotenv>=1.0.0",
 # ]
 # ///
-"""NCERT Textbook Scraper & Supabase Replenisher (CLI).
+"""NCERT Textbook Scraper & Internet Archive (IAS3) Replenisher (CLI).
 
 Automates textbook discovery, multi-threaded downloading, PDF merging,
-watermark cleaning, and cloud synchronization to Supabase Storage.
+watermark cleaning, deep compression, and zero-cost cloud hosting on Internet Archive (IAS3).
+Synchronizes book metadata to Supabase PostgreSQL `catalog` table.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ import sys
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from dotenv import load_dotenv
 from rich.console import Console
@@ -44,8 +45,8 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from catalog import fetch_catalog, iter_books
 from downloader import download_zip, merge_zip_to_pdf, probe_book, sanitize_filename
+from ia_uploader import IAUploader, InternetArchiveReplenisher
 from optimizer import format_size, optimize_pdf
-from supabase_uploader import SupabaseReplenisher
 
 # Load local environment if present
 load_dotenv()
@@ -70,7 +71,7 @@ def process_book_task(
     subject: str,
     book: Dict[str, str],
     out_dir: Path,
-    uploader: Optional[SupabaseReplenisher],
+    uploader: Optional[InternetArchiveReplenisher],
     upload_enabled: bool,
     clean_local: bool,
     keep_zips: bool,
@@ -80,7 +81,7 @@ def process_book_task(
     quality: int,
     force: bool,
 ) -> Dict[str, Any]:
-    """Worker task: probes, downloads, merges, cleans watermarks, compresses, and optionally uploads a textbook."""
+    """Worker task: probes, downloads, merges, cleans watermarks, compresses, and uploads a textbook to IAS3."""
     code = book["code"]
     title = book["title"]
     safe_title = sanitize_filename(title)
@@ -91,7 +92,7 @@ def process_book_task(
     local_pdf_path = out_dir / f"Class {cls}" / safe_subject / f"{safe_title}.pdf"
     local_zip_path = out_dir / f"Class {cls}" / safe_subject / f"{safe_title}.zip"
 
-    # Step 1: Check if already in Supabase
+    # Step 1: Check if already in Internet Archive
     if upload_enabled and uploader and not force:
         if uploader.exists(remote_path):
             return {"status": "skipped_remote", "title": title, "path": remote_path}
@@ -107,6 +108,8 @@ def process_book_task(
             )
         if upload_enabled and uploader:
             ok = uploader.upload_file(local_pdf_path, remote_path)
+            if ok:
+                uploader.sync_catalog_record(cls, safe_subject, title, code, remote_path, local_pdf_path.stat().st_size)
             if clean_local and ok:
                 local_pdf_path.unlink(missing_ok=True)
             return {"status": "uploaded" if ok else "upload_error", "title": title, "path": remote_path}
@@ -146,9 +149,11 @@ def process_book_task(
             jpeg_quality=quality,
         )
 
-    # Step 7: Upload to Supabase
+    # Step 7: Upload to Internet Archive (IAS3) & sync DB record
     if upload_enabled and uploader:
         upload_ok = uploader.upload_file(merged_path, remote_path)
+        if upload_ok:
+            uploader.sync_catalog_record(cls, safe_subject, title, code, remote_path, final_sz)
         if clean_local and upload_ok:
             merged_path.unlink(missing_ok=True)
         if upload_ok:
@@ -159,12 +164,12 @@ def process_book_task(
 
 
 def main():
-    parser = argparse.ArgumentParser(description="NCERT Textbook Scraper & Supabase Replenisher")
+    parser = argparse.ArgumentParser(description="NCERT Textbook Scraper & Internet Archive (IAS3) Replenisher")
     parser.add_argument("--class", dest="cls", default="all", help="Target class (1-12 or 'all')")
     parser.add_argument("--subject", default=None, help="Target subject (or all if omitted)")
     parser.add_argument("--out", default="downloads", help="Output directory for downloaded books")
     parser.add_argument("--concurrency", "-c", type=int, default=16, help="Parallel worker threads (default: 16)")
-    parser.add_argument("--upload-to-supabase", action="store_true", help="Sync merged PDFs to Supabase bucket (used by GitHub Actions)")
+    parser.add_argument("--upload-to-ia", action="store_true", help="Sync merged PDFs to Internet Archive item (zero egress)")
     parser.add_argument("--clean-local", action="store_true", help="Delete local files after uploading (saves CI disk)")
     parser.add_argument("--force", action="store_true", help="Force re-download and re-upload existing files")
     parser.add_argument("--keep-zips", action="store_true", help="Keep source chapter ZIP files")
@@ -179,6 +184,8 @@ def main():
     args = parser.parse_args()
     setup_logger(args.verbose)
 
+    upload_enabled = args.upload_to_ia
+
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -188,7 +195,7 @@ def main():
         marker_file.unlink(missing_ok=True)
 
     console.print("[bold cyan]==============================================================[/bold cyan]")
-    console.print("[bold cyan]  NovaSlate -- NCERT Scraper & Optimization Pipeline          [/bold cyan]")
+    console.print("[bold cyan]  NovaSlate -- NCERT Scraper & Internet Archive Pipeline      [/bold cyan]")
     console.print("[bold cyan]==============================================================[/bold cyan]\n")
 
     # Step 1: Catalog Extraction (Direct NCERT parser / Cache)
@@ -217,15 +224,15 @@ def main():
             console.print(f"[dim]... and {len(target_books) - 40} more books.[/dim]")
         return
 
-    # Step 2: Initialize Supabase Replenisher if enabled
-    uploader: Optional[SupabaseReplenisher] = None
-    if args.upload_to_supabase:
-        uploader = SupabaseReplenisher()
-        if not uploader.is_configured():
-            console.print("[bold red][!] Error: Supabase credentials missing. Check SUPABASE_URL and SUPABASE_KEY / SUPABASE_SERVICE_ROLE_KEY.[/bold red]")
+    # Step 2: Initialize Internet Archive Replenisher if enabled
+    uploader: Optional[InternetArchiveReplenisher] = None
+    if upload_enabled:
+        uploader = IAUploader()
+        if not uploader.is_ia_configured():
+            console.print("[bold red][!] Error: Internet Archive credentials missing. Check IA_ACCESS_KEY and IA_SECRET_KEY.[/bold red]")
             sys.exit(1)
-        console.print("[green][+] Connected to Supabase Storage bucket 'ncert'[/green]")
-        # Sync catalog.json to bucket root
+        console.print(f"[green][+] Connected to Internet Archive item: '{uploader.bucket_name}'[/green]")
+        # Sync catalog to DB & IA
         uploader.upload_catalog_json(catalog)
 
     # Step 3: Run Concurrent Pipeline
@@ -261,7 +268,7 @@ def main():
                     b,
                     out_dir,
                     uploader,
-                    args.upload_to_supabase,
+                    upload_enabled,
                     args.clean_local,
                     args.keep_zips,
                     not args.keep_watermarks,
@@ -298,9 +305,9 @@ def main():
     summary_table.add_column("Count / Value", justify="right")
 
     summary_table.add_row("Total Processed", str(len(target_books)))
-    if args.upload_to_supabase:
-        summary_table.add_row("Uploaded to Supabase", f"[bold green]{stats['uploaded']}[/bold green]")
-        summary_table.add_row("Already in Supabase (Skipped)", f"[dim]{stats['skipped_remote']}[/dim]")
+    if upload_enabled:
+        summary_table.add_row("Uploaded to Internet Archive", f"[bold green]{stats['uploaded']}[/bold green]")
+        summary_table.add_row("Already on Archive.org (Skipped)", f"[dim]{stats['skipped_remote']}[/dim]")
     else:
         summary_table.add_row("Downloaded & Merged", f"[bold green]{stats['downloaded_local']}[/bold green]")
         summary_table.add_row("Already Local (Skipped)", f"[dim]{stats['skipped_local']}[/dim]")
@@ -313,26 +320,25 @@ def main():
     console.print("\n", summary_table)
 
     # Step 5: Final Dynamic Catalog Sync
-    if args.upload_to_supabase and uploader:
-        console.print("[bold cyan][*] Refreshing and syncing master catalog.json & supabase_catalog.json...[/bold cyan]")
+    if upload_enabled and uploader:
+        console.print("[bold cyan][*] Refreshing and syncing master catalog to Internet Archive & Supabase PostgreSQL...[/bold cyan]")
         uploader.fetch_existing_files(refresh=True)
         uploader.upload_catalog_json(catalog)
-        console.print("[bold green][+] Final Master Catalog synced to Supabase Storage root successfully![/bold green]")
+        console.print("[bold green][+] Final Master Catalog synced to Internet Archive & PostgreSQL successfully![/bold green]")
 
     # Step 6: Create Completion Marker if all books are finished
     total_target = len(target_books)
-    if args.upload_to_supabase:
+    if upload_enabled:
         completed_target = stats.get("uploaded", 0) + stats.get("skipped_remote", 0) + stats.get("not_published", 0)
     else:
         completed_target = stats.get("downloaded_local", 0) + stats.get("skipped_local", 0) + stats.get("not_published", 0)
 
     if completed_target >= total_target and stats.get("failed", 0) == 0:
         Path("all_completed.marker").write_text("COMPLETE", encoding="utf-8")
-        console.print("[bold green][✓] 100% of target textbooks completed and synced to Supabase![/bold green]")
+        console.print("[bold green][✓] 100% of target textbooks completed and synced to Internet Archive![/bold green]")
 
     console.print("\n[bold green][+] NCERT Pipeline Completed Successfully![/bold green]\n")
 
 
 if __name__ == "__main__":
     main()
-

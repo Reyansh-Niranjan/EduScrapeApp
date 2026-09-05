@@ -162,7 +162,7 @@ export default function About() {
                 <div className="space-y-1 text-muted-foreground text-[11px] sm:text-xs">
                   <div className="text-foreground font-medium">✓ [HTTP 200] Fetching NCERT Class 10 Math PDF</div>
                   <div>✓ Parsing Table of Contents: 14 chapters extracted</div>
-                  <div>✓ Uploading sanitized payload to Supabase Storage</div>
+                  <div>✓ Uploading sanitized payload to Internet Archive (IAS3)</div>
                   <div className="text-[var(--pastel-green-text)] font-semibold">→ Sync Status: Complete (14.2 MB processed)</div>
                 </div>
               </pre>
@@ -354,7 +354,7 @@ export default function About() {
                     </Badge>
                   </div>
                   <p className="text-[11px] sm:text-xs text-muted-foreground font-sans leading-relaxed">
-                    React 19 + Supabase Storage + PDF.js renderer with instant chapter navigation.
+                    React 19 + Internet Archive (IAS3) + PDF.js renderer with instant chapter navigation.
                   </p>
                 </li>
 

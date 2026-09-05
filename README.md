@@ -76,7 +76,7 @@
 
 <a id="hardware-companion"></a>
 ### ⚡ Dual Ecosystem: Cloud + Embedded Hardware
-- **Web Platform:** Cloud-orchestrated web application powered by Supabase Storage and PostgreSQL.
+- **Web Platform:** Cloud-orchestrated web application powered by Internet Archive (IAS3) and Supabase PostgreSQL.
 - **Atlas Device:** Autonomous ESP32 micro-device featuring an SD card reader and custom C++ display engine for classrooms without internet.
 
 ---
@@ -97,7 +97,7 @@ NovaSlate
 │   ├── Stream Watermark Stripper (PyMuPDF)
 │   └── Multi-Engine PDF Optimizer (pdfEasyCompress, pdfsizeopt)
 │
-├── 📦 Content Delivery (Supabase Storage CDN)
+├── 📦 Content Delivery (Internet Archive IAS3 CDN - Zero Egress)
 │   ├── Class1/ through Class12/ (Optimized PDF archives)
 │   └── structure.json & catalog.json
 │
@@ -121,7 +121,7 @@ NovaSlate
 | **Frontend UI** | React 19, TypeScript, Tailwind CSS, Radix UI Primitives, Lucide Icons, Framer Motion, GSAP |
 | **Typography** | Geist Sans, Geist Mono, Instrument Serif |
 | **Backend & DB** | Supabase (PostgreSQL, Auth, RLS) |
-| **Storage & CDN** | Supabase Storage Content Delivery |
+| **Storage & CDN** | Internet Archive (IAS3) Zero-Egress Content Delivery |
 | **Data & Compression** | Python 3.11, PyMuPDF, Pillow, pdfsizeopt, cpdfsqueeze |
 | **Hardware** | Atlas (ESP32, C++, MicroSD FAT32) |
 

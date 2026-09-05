@@ -1,4 +1,4 @@
-name: NCERT Scraper & Supabase Replenish
+name: NCERT Scraper & Internet Archive Replenish
 
 on:
   schedule:
@@ -30,14 +30,14 @@ on:
         required: false
         default: '16'
       force:
-        description: 'Force re-download and overwrite existing Supabase files'
+        description: 'Force re-download and overwrite existing Internet Archive files'
         required: false
         default: false
         type: boolean
 
 jobs:
   scrape-and-sync:
-    name: Scrape NCERT & Sync to Supabase
+    name: Scrape NCERT & Sync to Internet Archive (IAS3)
     runs-on: ubuntu-latest
     timeout-minutes: 180
     permissions:
@@ -66,6 +66,8 @@ jobs:
 
       - name: Run NCERT Scraper & Sync Pipeline
         env:
+          IA_ACCESS_KEY: ${{ secrets.IA_ACCESS_KEY }}
+          IA_SECRET_KEY: ${{ secrets.IA_SECRET_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
@@ -86,7 +88,7 @@ jobs:
           RETRY_COUNT=0
 
           until python scraper/main.py \
-            --upload-to-supabase \
+            --upload-to-ia \
             --clean-local \
             --class "$TARGET_CLASS" \
             --concurrency "$CONCURRENCY" \
@@ -133,24 +135,26 @@ jobs:
         run: |
           pip install requests
 
-      - name: Check Live Supabase Status & Trigger Subsequent Run
+      - name: Check Live Internet Archive & Supabase Status
         env:
           GH_TOKEN: ${{ github.token }}
+          IA_ACCESS_KEY: ${{ secrets.IA_ACCESS_KEY }}
+          IA_SECRET_KEY: ${{ secrets.IA_SECRET_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           echo "======================================================================="
-          echo "Verifying live Supabase Storage against NCERT Catalog..."
+          echo "Verifying live Internet Archive (IAS3) against NCERT Catalog..."
           echo "======================================================================="
           
           STATUS=0
           python -c "
           import json, os, sys
-          from scraper.supabase_uploader import SupabaseUploader
+          from scraper.ia_uploader import IAUploader
 
-          u = SupabaseUploader()
-          if not u.is_configured():
-              print('Supabase not configured in environment, triggering continuation.')
+          u = IAUploader()
+          if not u.is_ia_configured():
+              print('Internet Archive credentials not configured, triggering continuation.')
               sys.exit(42)
 
           existing = u.fetch_existing_files()
@@ -176,7 +180,7 @@ jobs:
                       if rel_p in existing and existing[rel_p] > 0:
                           found += 1
 
-          print(f'Supabase Status: {found}/{total} textbooks synchronized and verified.')
+          print(f'Internet Archive Status: {found}/{total} textbooks synchronized and verified.')
           if total > 0 and found >= total:
               print('ALL_DONE')
               sys.exit(0)
@@ -196,5 +200,5 @@ jobs:
               -f concurrency="${{ github.event.inputs.concurrency || '16' }}" \
               -f force="false"
           else
-            echo "🎉 100% of target textbooks have been synchronized to Supabase! Pipeline complete."
+            echo "🎉 100% of target textbooks have been synchronized to Internet Archive! Pipeline complete."
           fi

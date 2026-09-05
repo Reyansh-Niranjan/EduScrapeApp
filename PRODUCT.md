@@ -46,7 +46,7 @@ The full end-to-end pipeline: automated scraping → readability grading → cur
 - Frontend: React 19 + TypeScript + Tailwind CSS 3 + Vite
 - Ingestion & Compression: Python 3.11, PyMuPDF, Pillow, pdfsizeopt
 - Auth & data: Supabase
-- Content delivery: Supabase Storage CDN
+- Content delivery: Internet Archive (IAS3) Zero-Egress CDN
 - Offline hardware: Atlas (ESP32, C++, MicroSD FAT32)
 - Icons: Lucide React
 - Typography: Geist Sans & Geist Mono (Utilitarian Minimalist Editorial)

@@ -14,7 +14,8 @@ A high-performance, resilient NCERT textbook extraction, deep PDF size optimizat
 - **Resilient Downloader**: Concurrent multi-threaded downloading with HTTP `Range` resume support, exponential backoff, CRC verification, and rapid `HEAD` size probing.
 - **Automated Watermark Removal**: Uses PyMuPDF stream fingerprinting (`watermark_remover.py`) to detect and strip recurring NCERT watermark image objects across every page.
 - **Smart PDF Assembly**: Unpacks official NCERT chapter ZIPs, orders prelims/cover pages first, and merges chapters into clean, searchable, single-book PDFs.
-- **Supabase Storage Sync**: Automatically uploads PDFs into the `ncert` bucket formatted cleanly as `Class <N>/<Subject>/<Book Title>.pdf` with duplicate detection and catalog syncing.
+- **Internet Archive (IAS3) Hosting**: Automatically uploads PDFs into the `novaslate-ncert-library` Internet Archive item with zero egress fees and unlimited storage.
+- **Supabase PostgreSQL Metadata Sync**: Synchronizes book metadata strictly into the `catalog` table via REST API (`/rest/v1/catalog`) with PostgREST duplicate merging.
 - **Automated GitHub Actions**: Scheduled monthly workflow (`.github/workflows/scrape_and_replenish.yml`) and manual `workflow_dispatch` trigger.
 
 ---
@@ -33,6 +34,10 @@ pip install -r requirements.txt
 Create a `.env` in the root or `scraper/` folder (or use existing `.env.local`):
 
 ```env
+IA_ACCESS_KEY=your-ia-access-key
+IA_SECRET_KEY=your-ia-secret-key
+IA_BUCKET=novaslate-ncert-library
+
 SUPABASE_URL=https://your-project-ref.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key-here
 ```
@@ -49,16 +54,15 @@ python scraper/main.py --class 10
 # Download a specific subject with custom DPI and JPEG quality
 python scraper/main.py --class 12 --subject Physics --dpi 130 --quality 70
 
-# Download & directly sync to Supabase bucket 'ncert'
-python scraper/main.py --class 10 --upload-to-supabase --clean-local
+# Download & sync to Internet Archive & Supabase PostgreSQL catalog table
+python scraper/main.py --class 10 --upload-to-ia --clean-local
 
 # Run complete Class 1-12 catalog sync with 8 concurrent workers
-python scraper/main.py --class all --upload-to-supabase --clean-local --concurrency 8
+python scraper/main.py --class all --upload-to-ia --clean-local --concurrency 8
 
 # Standalone PDF Optimizer CLI (test or compress any individual PDF)
 python scraper/optimizer.py input.pdf output.pdf --dpi 140 --quality 75
 ```
-
 
 ---
 
@@ -68,6 +72,8 @@ To enable automated textbook replenishment in your GitHub repository:
 
 1. Go to your GitHub repository -> **Settings** -> **Secrets and variables** -> **Actions**.
 2. Add the following repository secrets:
-   - `SUPABASE_URL`: Your Supabase Project URL (e.g. `https://xyz.supabase.co`).
-   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase `service_role` secret key (found in Supabase Dashboard under Project Settings -> API).
-3. Under the **Actions** tab on GitHub, you can now trigger the **"NCERT Scraper & Supabase Replenish"** workflow manually or let it run automatically on its monthly schedule.
+   - `IA_ACCESS_KEY`: Internet Archive S3 Access Key.
+   - `IA_SECRET_KEY`: Internet Archive S3 Secret Key.
+   - `SUPABASE_URL`: Your Supabase Project URL.
+   - `SUPABASE_SERVICE_ROLE_KEY`: Your Supabase `service_role` secret key.
+3. Under the **Actions** tab on GitHub, you can now trigger the **"NCERT Scraper & Internet Archive Replenish"** workflow manually or let it run automatically on its monthly schedule.

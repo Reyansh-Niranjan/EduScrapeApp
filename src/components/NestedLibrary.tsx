@@ -20,12 +20,19 @@ import {
   BookCheck,
 } from "lucide-react";
 import * as pdfjsLib from "pdfjs-dist";
-import { supabase } from "../lib/supabaseClient";
 import { findChaptersForBook } from "../lib/studyos";
 import { isBoardClass } from "../lib/studyosCatalog";
 
 // Configure PDF.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+export const IA_BUCKET = "novaslate-ncert-library";
+
+export function getInternetArchiveUrl(fullPath: string): string {
+  const clean = fullPath.replace(/\\/g, "/").replace(/^\/+/, "");
+  const safe = clean.split("/").map((seg) => encodeURIComponent(seg)).join("/");
+  return `https://archive.org/download/${IA_BUCKET}/${safe}`;
+}
 
 export interface StorageItem {
   name: string;
@@ -34,6 +41,7 @@ export interface StorageItem {
   updatedAt: string | null;
   size: number | null;
   mimeType: string | null;
+  url?: string;
 }
 
 interface NestedLibraryProps {
@@ -67,7 +75,7 @@ interface ParsedClass {
   totalBooks: number;
 }
 
-const SAMPLE_NCERT_CATALOG: StorageItem[] = [
+export const SAMPLE_NCERT_CATALOG: StorageItem[] = [
   { name: "Mathematics - Chapter 1 Real Numbers.pdf", fullPath: "Class 10/Mathematics/Mathematics - Chapter 1 Real Numbers.pdf", createdAt: null, updatedAt: null, size: 4200000, mimeType: "application/pdf" },
   { name: "Science - Chapter 1 Chemical Reactions.pdf", fullPath: "Class 10/Science/Science - Chapter 1 Chemical Reactions.pdf", createdAt: null, updatedAt: null, size: 5800000, mimeType: "application/pdf" },
   { name: "Social Science - India and Contemporary World.pdf", fullPath: "Class 10/Social Science/Social Science - India and Contemporary World.pdf", createdAt: null, updatedAt: null, size: 8400000, mimeType: "application/pdf" },
@@ -97,15 +105,15 @@ const thumbnailCache = new Map<string, string>();
 
 /**
  * Dynamic First-Page PDF Cover Thumbnail
- * Renders page 1 of any NCERT PDF dynamically via PDF.js with signed Supabase URLs
+ * Renders page 1 of any NCERT PDF dynamically via PDF.js with Internet Archive URLs
  */
 const PdfCoverThumbnail: React.FC<{
   fullPath: string;
   title: string;
-  bucket?: string;
+  url?: string;
   className?: string;
   aspect?: "portrait" | "thumb";
-}> = ({ fullPath, title, bucket = "ncert", className = "", aspect = "portrait" }) => {
+}> = ({ fullPath, title, url, className = "", aspect = "portrait" }) => {
   const [thumbSrc, setThumbSrc] = useState<string | null>(thumbnailCache.get(fullPath) || null);
   const [loading, setLoading] = useState<boolean>(!thumbnailCache.has(fullPath));
   const [hasError, setHasError] = useState<boolean>(false);
@@ -124,12 +132,7 @@ const PdfCoverThumbnail: React.FC<{
     const renderCover = async () => {
       try {
         setLoading(true);
-        // Create signed URL to support both Private and Public Supabase buckets
-        const { data: signedData } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(fullPath, 60 * 60);
-
-        const targetUrl = signedData?.signedUrl || supabase.storage.from(bucket).getPublicUrl(fullPath).data.publicUrl;
+        const targetUrl = url || getInternetArchiveUrl(fullPath);
 
         loadingTask = pdfjsLib.getDocument({
           url: targetUrl,
@@ -156,7 +159,6 @@ const PdfCoverThumbnail: React.FC<{
         };
 
         await page.render(renderContext).promise;
-
         const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
         thumbnailCache.set(fullPath, dataUrl);
 
@@ -180,7 +182,7 @@ const PdfCoverThumbnail: React.FC<{
         loadingTask.destroy();
       }
     };
-  }, [fullPath, bucket]);
+  }, [fullPath, url]);
 
   if (loading) {
     return (
@@ -308,7 +310,7 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({
       const classNumMatch = className.match(/\d+/);
       const classNumber = classNumMatch ? parseInt(classNumMatch[0], 10) : 0;
       const formatted = formatTitle(rawTitle);
-      const publicUrl = supabase.storage.from("ncert").getPublicUrl(item.fullPath).data.publicUrl;
+      const publicUrl = item.url || getInternetArchiveUrl(item.fullPath);
       const lang = extractLanguage(formatted);
 
       const parsedBook: ParsedBook = {
@@ -400,19 +402,9 @@ export const NestedLibrary: React.FC<NestedLibraryProps> = ({
     }
   }, [classMap, selectedClass, selectedSubject, selectedLanguage, sortBy]);
 
-  // Open book with signed URL to support both public and private Supabase buckets
-  const handleOpenBook = async (book: ParsedBook) => {
-    try {
-      const { data } = await supabase.storage.from("ncert").createSignedUrl(book.fullPath, 60 * 60);
-      if (data?.signedUrl) {
-        onOpenPdf(data.signedUrl, book.title, book.className, book.subjectName);
-        return;
-      }
-    } catch (e) {
-      console.warn("Signed URL creation failed:", e);
-    }
-    const pubUrl = supabase.storage.from("ncert").getPublicUrl(book.fullPath).data.publicUrl;
-    onOpenPdf(pubUrl, book.title, book.className, book.subjectName);
+  // Open book directly with Internet Archive URL
+  const handleOpenBook = (book: ParsedBook) => {
+    onOpenPdf(book.publicUrl, book.title, book.className, book.subjectName);
   };
 
   // Navigation handlers
